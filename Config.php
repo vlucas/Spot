@@ -16,6 +16,7 @@ class Spot_Config
 	 * @param string $dsn DSN string for this connection
 	 * @param array $options Array of key => value options for adapter
 	 * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
+	 * @return Spot_Adapter_Interface Spot adapter instance
 	 * @throws Spot_Exception
 	 */
 	public function addConnection($name, $dsn, array $options = array(), $default = false)
@@ -42,6 +43,7 @@ class Spot_Config
 	 * Get connection by name
 	 *
 	 * @param string $name Unique name of the connection to be returned
+	 * @return Spot_Adapter_Interface Spot adapter instance
 	 * @throws Spot_Exception
 	 */
 	public function getConnection($name)
