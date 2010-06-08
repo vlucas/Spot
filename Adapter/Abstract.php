@@ -28,7 +28,7 @@ abstract class Spot_Adapter_Abstract
 		$this->_dsn = $dsn;
 		if(is_string($dsn)) {
 			// Parse DSN string
-			$this->_dsnParts = $this->parseDSN($dsn);
+			$this->_dsnParts = self::parseDSN($dsn);
 			
 		} elseif(is_array($dsn)) {
 			// Array of keys => values
@@ -172,7 +172,7 @@ abstract class Spot_Adapter_Abstract
      *  + username: User name for login
      *  + password: Password for login
      */
-    public function parseDSN( $dsn )
+    public static function parseDSN( $dsn )
     {
         if ( $dsn == 'sqlite::memory:' )
         {

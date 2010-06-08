@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__) . '/init.php';
 /**
  * @package Spot
  * @link http://spot.os.ly
@@ -16,9 +17,9 @@ class Spot_Tests
 
 		// Traverse the "Test" directory and add the files as tests
 		$path = dirname(__FILE__);
-		foreach (glob($path."/Test/*.php") as $filename)
-		{
+		foreach (glob($path."/Test/*.php") as $filename) {
 			$pathParts = pathinfo($filename);
+			require $filename;
 			$suite->addTestSuite('Test_'.$pathParts['filename']);
 		}
         return $suite;
