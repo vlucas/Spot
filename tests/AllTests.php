@@ -16,11 +16,19 @@ class Spot_Tests
         $suite = new PHPUnit_Framework_TestSuite('Spot Tests');
 
 		// Traverse the "Test" directory and add the files as tests
-		$path = dirname(__FILE__);
-		foreach (glob($path."/Test/*.php") as $filename) {
-			$pathParts = pathinfo($filename);
+		$path = dirname(__FILE__) . '/Test/';
+		$dirIterator = new RecursiveDirectoryIterator($path);
+		$Iterator = new RecursiveIteratorIterator($dirIterator);
+		$tests = new RegexIterator($Iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+		
+		foreach($tests as $file) {
+			$filename = current($file);
 			require $filename;
-			$suite->addTestSuite('Test_'.$pathParts['filename']);
+			
+			// Class file name by naming standards
+			$fileClassName = substr(str_replace(DIRECTORY_SEPARATOR, '_', substr($filename, strlen($path))), 0, -4);
+			var_dump($fileClassName);
+			$suite->addTestSuite('Test_'.$fileClassName);
 		}
         return $suite;
     }

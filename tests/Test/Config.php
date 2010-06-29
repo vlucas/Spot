@@ -7,10 +7,10 @@ class Test_Config extends PHPUnit_Framework_TestCase
 {
 	protected $backupGlobals = false;
 
-	public function testAddConnection()
+	public function testAddConnectionWithDSNString()
 	{
 		$cfg = new Spot_Config();
-		$adapter = $cfg->addConnection('test_mysql', $GLOBALS['test_adapters']['mysql']['dsn']);
+		$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
 		$this->assertTrue($adapter instanceof Spot_Adapter_Mysql);
 	}
 }

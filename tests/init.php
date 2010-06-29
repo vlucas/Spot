@@ -13,25 +13,30 @@ require_once dirname(dirname(__FILE__)) . '/Config.php';
 // Date setup
 date_default_timezone_set('America/Chicago');
 
-// Available adapters for testing
-$test_adapters = array(
-	'mysql' => array(
-		'adapter' => 'Spot_Adapter_Mysql',
-		'dsn' => 'mysql://test:password@localhost/test'
+// Setup available adapters for testing
+
+$cfg = new Spot_Config();
+// MySQL
+$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
+// MongoDB with adapter options
+$adapter = $cfg->addConnection('test_mongodb', 'mongodb://localhost:28017', array(
+	'cursor' => array(
+		'timeout' => 10
 	),
-	'mongodb' => array(
-		'adapter' => 'Spot_Adapter_Mongodb',
-		'dsn' => 'localhost:28017',
-		'options' => array(
-            'cursor' => array(
-                'timeout' => 10
-            ),
-            'mapper' => array(
-                'translate_id' => true
-            )
-        )
+	'mapper' => array(
+		'translate_id' => true
 	)
-);
+));
+
+
+/**
+ * Return Spot mapper for use
+ */
+$mapper = new Spot_Mapper($cfg);
+function spot_mapper() {
+	global $mapper;
+	return $mapper;
+}
 
 
 /**
