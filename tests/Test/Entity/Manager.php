@@ -13,78 +13,13 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		$post = new Fixture_Post();
 		
 		$fields = $mapper->fields('Fixture_Post');
+		$sortedFields = array_keys($fields);
+		sort($sortedFields);
 		
 		// Assert $fields are correct
-		$this->assertEquals(array_keys($fields), array('id', 'title', 'body', 'status', 'date_created'));
-		/*
-		$this->assertEquals($fields, array(
-			"id" => array(
-				"type" =>"int",
-				"default" => null,
-				"length" =>null,
-				"required" => false,
-				"null" => true, 
-				"unsigned" => false,
-				"primary" => true,
-				"index" => false,
-				"unique" => false,
-				"serial" => true,
-				"relation" => false
-			),
-			"title" => array(
-				"type" =>"string",
-				"default" => null,
-				"length" =>null,
-				"required" => true,
-				"null" => true, 
-				"unsigned" => false,
-				"primary" => true,
-				"index" => false,
-				"unique" => false,
-				"serial" => false,
-				"relation" => false
-			),
-			"body" => array(
-				"type" =>"text",
-				"default" => null,
-				"length" =>null,
-				"required" => true,
-				"null" => true, 
-				"unsigned" => false,
-				"primary" => true,
-				"index" => false,
-				"unique" => false,
-				"serial" => false,
-				"relation" => false
-			),
-			"status" => array(
-				"type" =>"int",
-				"default" => null,
-				"length" =>null,
-				"required" => true,
-				"null" => true, 
-				"unsigned" => false,
-				"primary" => true,
-				"index" => false,
-				"unique" => false,
-				"serial" => false,
-				"relation" => false
-			),
-			"date_created" => array(
-				"type" =>"datetime",
-				"default" => null,
-				"length" =>null,
-				"required" => true,
-				"null" => true, 
-				"unsigned" => false,
-				"primary" => true,
-				"index" => false,
-				"unique" => false,
-				"serial" => false,
-				"relation" => false
-			)
-		));
-		*/
+		$testFields = array('id', 'title', 'body', 'status', 'date_created');
+		sort($testFields);
+		$this->assertEquals($sortedFields, $testFields);
 	}
 	
 	public function testEntityRelations()
@@ -93,8 +28,12 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		$post = new Fixture_Post();
 		
 		$relations = $mapper->relations('Fixture_Post');
+		$sortedRelations = array_keys($relations);
+		sort($sortedRelations);
 		
 		// Assert $relations are correct
-		$this->assertEquals(array_keys($relations), array('comments'));
+		$testRelations = array('comments');
+		sort($testRelations);
+		$this->assertEquals($sortedRelations, $testRelations);
 	}
 }

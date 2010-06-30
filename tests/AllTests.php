@@ -27,7 +27,6 @@ class Spot_Tests
 			
 			// Class file name by naming standards
 			$fileClassName = substr(str_replace(DIRECTORY_SEPARATOR, '_', substr($filename, strlen($path))), 0, -4);
-			var_dump($fileClassName);
 			$suite->addTestSuite('Test_'.$fileClassName);
 		}
         return $suite;
