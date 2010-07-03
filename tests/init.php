@@ -33,7 +33,7 @@ $adapter = $cfg->addConnection('test_mongodb', 'mongodb://localhost:28017', arra
  * Return Spot mapper for use
  */
 $mapper = new Spot_Mapper($cfg);
-function spot_mapper() {
+function test_spot_mapper() {
 	global $mapper;
 	return $mapper;
 }

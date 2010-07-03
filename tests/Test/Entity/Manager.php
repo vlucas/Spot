@@ -9,7 +9,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 
 	public function testEntityFields()
 	{
-		$mapper = spot_mapper();
+		$mapper = test_spot_mapper();
 		$post = new Fixture_Post();
 		
 		$fields = $mapper->fields('Fixture_Post');
@@ -24,7 +24,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 	
 	public function testEntityRelations()
 	{
-		$mapper = spot_mapper();
+		$mapper = test_spot_mapper();
 		$post = new Fixture_Post();
 		
 		$relations = $mapper->relations('Fixture_Post');

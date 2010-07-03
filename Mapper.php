@@ -296,16 +296,14 @@ class Spot_Mapper
 	 */
 	public function insert($entity, array $options = array())
 	{
-		if(is_array($entity)) {
-			$entity = $this->get()->data($entity);
-		}
+		$entityClass = get_class($entity);
 
-		$this->checkEntity($entity);
+		//$this->checkEntity($entity);
 
 		$data = array();
 		$entityData = $entity->toArray();
 		foreach($entityData as $field => $value) {
-			if($this->fieldExists($field)) {
+			if($this->fieldExists($entityClass, $field)) {
 				// Empty values will be NULL (easier to be handled by databases)
 				$data[$field] = $this->isEmpty($value) ? null : $value;
 			}
@@ -313,26 +311,13 @@ class Spot_Mapper
 
 		// Ensure there is actually data to update
 		if(count($data) > 0) {
-			$result = $this->adapter()->create($this->datasource(), $data);
+			$result = $this->adapter($entityClass)->create($this->datasource($entityClass), $data);
 
 			// Update primary key on row
-			$pkField = $this->primaryKeyField();
+			$pkField = $this->primaryKeyField($entityClass);
 			$entity->$pkField = $result;
-
-			// Load relations for this row so they can be used immediately
-			$relations = $this->getRelationsFor($entity);
-			if($relations && is_array($relations) && count($relations) > 0) {
-				foreach($relations as $relationCol => $relationObj) {
-					$entity->$relationCol = $relationObj;
-				}
-			}
 		} else {
 			$result = false;
-		}
-
-		// Save related rows
-		if($result) {
-			$this->saveRelatedRowsFor($entity);
 		}
 
 		return $result;

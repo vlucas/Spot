@@ -6,7 +6,7 @@
  * @package Spot
  * @link http://spot.os.ly
  */
-class Fixture_Post_Comment
+class Fixture_Post_Comment extends Spot_Entity_Abstract
 {
 	protected $_datasource = 'test_post_comments';
 
