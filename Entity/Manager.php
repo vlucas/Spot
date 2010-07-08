@@ -8,7 +8,8 @@
 class Spot_Entity_Manager
 {
 	protected static $_fields = array();
-	protected static $_fieldDefaults = array();
+	protected static $_fieldsDefined = array();
+	protected static $_fieldDefaultValues = array();
 	protected static $_relations = array();
 	protected static $_primaryKeyField = array();
 
@@ -67,6 +68,11 @@ class Spot_Entity_Manager
 				$fieldName = $field->getName();
 				$fieldOpts = $field->getValue($entityObject);
 				
+				// Store field definition exactly how it is defined before modifying it below
+				if($fieldOpts['type'] != 'relation') {
+					self::$_fieldsDefined[$entityName][$fieldName] = $fieldOpts;
+				}
+				
 				// Format field will full set of default options
 				if(isset($fieldInfo['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
 					// Include type defaults
@@ -82,7 +88,7 @@ class Spot_Entity_Manager
 				}
 				// Store default value
 				if(null !== $fieldOpts['default']) {
-					self::$_fieldDefaults[$entityName][$fieldName] = $fieldOpts['default'];
+					self::$_fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
 				}
 				// Store relations (and remove them from the mix of regular fields)
 				if($fieldOpts['type'] == 'relation') {
@@ -95,6 +101,21 @@ class Spot_Entity_Manager
 			self::$_fields[$entityName] = $returnFields;
 		}
 		return $returnFields;
+	}
+	
+	
+	/**
+	 * Get field information exactly how it is defined in the class
+	 *
+	 * @param string $entityName Name of the entity class
+	 * @return array Array of field key => value pairs
+	 */
+	public function fieldsDefined($entityName)
+	{
+		if(!isset(self::$_fieldsDefined[$entityName])) {
+			$this->fields($entityName);
+		}
+		return self::$_fieldsDefined[$entityName];
 	}
 
 

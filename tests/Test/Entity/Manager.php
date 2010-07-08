@@ -14,11 +14,11 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		
 		$fields = $mapper->fields('Fixture_Post');
 		$sortedFields = array_keys($fields);
-		sort($sortedFields);
+		//ksort($sortedFields);
 		
 		// Assert $fields are correct
 		$testFields = array('id', 'title', 'body', 'status', 'date_created');
-		sort($testFields);
+		//ksort($testFields);
 		$this->assertEquals($sortedFields, $testFields);
 	}
 	

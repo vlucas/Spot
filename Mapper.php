@@ -89,6 +89,18 @@ class Spot_Mapper
 	{
 		return $this->entityManager()->fields($entityName);
 	}
+	
+	
+	/**
+	 * Get field information exactly how it is defined in the class
+	 *
+	 * @param string $entityName Name of the entity class
+	 * @return array Defined fields plus all defaults for full array of all possible options
+	 */
+	public function fieldsDefined($entityName)
+	{
+		return $this->entityManager()->fieldsDefined($entityName);
+	}
 
 
 	/**
@@ -151,7 +163,35 @@ class Spot_Mapper
 		$fields = $this->fields($entityName);
 		return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
 	}
-
+	
+	
+	/**
+	 * Get array of entity data
+	 */
+	public function data($entity)
+	{
+		if(!is_object($entity)) {
+			throw new $this->_exceptionClass("Entity must be an object, type '" . gettype($entity) . "' given");
+		}
+		
+		$entityName = get_class($entity);
+		$entityFieldsDefined = $this->fieldsDefined($entityName);
+		
+		$data = array();
+		foreach($entityFieldsDefined as $field => $fieldInfo) {
+			$value = $entity->$field;
+			
+			if($value == $entityFieldsDefined[$field]) {
+				$value = null;
+			}
+			
+			// Empty values will be NULL (easier to be handled by databases)
+			$data[$field] = $this->isEmpty($value) ? null : $value;
+		}
+		
+		return $data;
+	}
+	
 
 	/**
 	 * Get a new entity object, or an existing
@@ -300,14 +340,7 @@ class Spot_Mapper
 
 		//$this->checkEntity($entity);
 
-		$data = array();
-		$entityData = $entity->toArray();
-		foreach($entityData as $field => $value) {
-			if($this->fieldExists($entityClass, $field)) {
-				// Empty values will be NULL (easier to be handled by databases)
-				$data[$field] = $this->isEmpty($value) ? null : $value;
-			}
-		}
+		$data = $mapper->data($entity);
 
 		// Ensure there is actually data to update
 		if(count($data) > 0) {
