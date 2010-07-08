@@ -117,7 +117,7 @@ class Spot_Mapper
 	/**
 	 * Get value of primary key for given row result
 	 *
-	 * @param string $entityName Name of the entity class
+	 * @param string $entity Instance of an entity to find the primary key of
 	 */
 	public function primaryKey($entity)
 	{
@@ -197,6 +197,7 @@ class Spot_Mapper
 	 * Get a new entity object, or an existing
 	 * entity from identifiers
 	 *
+	 * @param string $entityClass Name of the entity class
 	 * @param mixed $identifier Primary key or array of key/values
 	 * @return mixed Depends on input
 	 * 			false If $identifier is scalar and no entity exists
@@ -224,10 +225,10 @@ class Spot_Mapper
 	/**
 	* Checks that the entity is an instance of $this->_entityClass
 	*
-	* @param Spot_Entity $entity the entity to check
+	* @param mixed $entity the entity to check
 	* @throws Exception if the entity is not an instance of $this->_entityClass
 	*/
-	public function checkEntity(Spot_Entity $entity)
+	public function checkEntity($entity)
 	{
 		if (!($entity instanceof $this->_entityClass)) {
 				throw new $this->_exceptionClass("Mapper expects entity of ".$this->_entityClass.", '".get_class($entity)."' given.");
