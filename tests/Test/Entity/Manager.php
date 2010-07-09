@@ -10,9 +10,9 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 	public function testEntityFields()
 	{
 		$mapper = test_spot_mapper();
-		$post = new Fixture_Post();
+		$post = new Entity_Post();
 		
-		$fields = $mapper->fields('Fixture_Post');
+		$fields = $mapper->fields('Entity_Post');
 		$sortedFields = array_keys($fields);
 		//ksort($sortedFields);
 		
@@ -25,9 +25,9 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 	public function testEntityRelations()
 	{
 		$mapper = test_spot_mapper();
-		$post = new Fixture_Post();
+		$post = new Entity_Post();
 		
-		$relations = $mapper->relations('Fixture_Post');
+		$relations = $mapper->relations('Entity_Post');
 		$sortedRelations = array_keys($relations);
 		sort($sortedRelations);
 		

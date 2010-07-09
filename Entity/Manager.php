@@ -160,6 +160,21 @@ class Spot_Entity_Manager
 		}
 		return self::$_fieldsDefined[$entityName];
 	}
+	
+	
+	/**
+	 * Get field default values as defined in class field definitons
+	 *
+	 * @param string $entityName Name of the entity class
+	 * @return array Array of field key => value pairs
+	 */
+	public function fieldDefaultValues($entityName)
+	{
+		if(!isset(self::$_fieldDefaultValues[$entityName])) {
+			$this->fields($entityName);
+		}
+		return self::$_fieldDefaultValues[$entityName];
+	}
 
 
 	/**

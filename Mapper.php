@@ -208,7 +208,7 @@ class Spot_Mapper
 	/**
 	 * Get array of entity data
 	 */
-	public function data($entity)
+	public function data($entity, array $data = array())
 	{
 		if(!is_object($entity)) {
 			throw new $this->_exceptionClass("Entity must be an object, type '" . gettype($entity) . "' given");
@@ -217,6 +217,15 @@ class Spot_Mapper
 		$entityName = get_class($entity);
 		$entityFieldsDefined = $this->fieldsDefined($entityName);
 		
+		// SET data
+		if(count($data) > 0) {
+			foreach($data as $key => $value) {
+				$entity->$key = $value;
+			}
+			return $entity;
+		}
+		
+		// GET data
 		$data = array();
 		foreach($entityFieldsDefined as $field => $fieldInfo) {
 			$value = $entity->$field;
@@ -259,7 +268,7 @@ class Spot_Mapper
 		}
 
 		// Set default values and return entity object
-		return $entity->data($this->_fieldDefaults);
+		return $this->data($entity, $this->entityManager()->fieldDefaultValues($entityClass));
 	}
 
 	/**
@@ -377,8 +386,16 @@ class Spot_Mapper
 	 */
 	public function insert($entity, array $options = array())
 	{
-		$entityName = get_class($entity);
-		$data = $this->data($entity);
+		if(is_object($entity)) {
+			$entityName = get_class($entity);
+			$data = $this->data($entity);
+		} elseif(is_string($entity)) {
+			$entityName = $entity;
+			$entity = $this->get($entityName);
+			$data = $options;
+		} else {
+			throw new $this->_exceptionClass(__CLASS__ . "::insert Accepts either an entity object or entity name + data array");
+		}
 
 		// Ensure there is actually data to update
 		if(count($data) > 0) {
@@ -461,7 +478,7 @@ class Spot_Mapper
 	 * @param string $entityName Name of the entity class
 	 */
 	public function truncateDatasource($entityName) {
-		return $this->adapter()->truncateDatasource($this->datasource($entityName));
+		return $this->connection($entityName)->truncateDatasource($this->datasource($entityName));
 	}
 
 
@@ -472,7 +489,7 @@ class Spot_Mapper
 	 * @param string $entityName Name of the entity class
 	 */
 	public function dropDatasource($entityName) {
-		return $this->adapter()->dropDatasource($this->datasource($entityName));
+		return $this->connection($entityName)->dropDatasource($this->datasource($entityName));
 	}
 
 

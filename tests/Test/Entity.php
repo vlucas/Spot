@@ -11,7 +11,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
 	public function testEntitySetPropertiesData()
 	{
 		$mapper = test_spot_mapper();
-		$post = new Fixture_Post();
+		$post = new Entity_Post();
 		
 		// Set data
 		$post->title = "My Awesome Post";
