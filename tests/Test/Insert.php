@@ -6,7 +6,13 @@
 class Test_Insert extends PHPUnit_Framework_TestCase
 {
 	protected $backupGlobals = false;
-
+	
+	public static function setupBeforeClass()
+	{
+		$mapper = test_spot_mapper();
+		$mapper->migrate('Fixture_Post');
+	}
+	
 	public function testInsertBlogPost()
 	{
 		$post = new Fixture_Post();

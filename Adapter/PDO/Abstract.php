@@ -9,6 +9,9 @@ require_once(dirname(dirname(__FILE__)) . '/Interface.php');
  */
 abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implements Spot_Adapter_Interface
 {
+	protected $_database;
+	
+	
 	/**
 	 * Get database connection
 	 * 
@@ -21,10 +24,12 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				$this->_connection = $this->_dsn;
 			} else {
 				$dsnp = $this->parseDSN($this->_dsn);
+				$this->_database = $dsnp['database'];
 				
 				// Establish connection
 				try {
-					$this->_connection = new PDO($this->_dsn, $dsnp['username'], $dsnp['password'], $this->_options);
+					$dsn = $dsnp['adapter'].':host='.$dsnp['hostspec'].';dbname='.$dsnp['database'];
+					$this->_connection = new PDO($dsn, $dsnp['username'], $dsnp['password'], $this->_options);
 					// Throw exceptions by default
 					$this->_connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 				} catch(Exception $e) {
@@ -56,7 +61,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	{
 		// Get current fields for table
 		$tableExists = false;
-		$tableColumns = $this->getColumnsForTable($table, $this->database);
+		$tableColumns = $this->getColumnsForTable($table, $this->_database);
 		
 		if($tableColumns) {
 			$tableExists = true;
@@ -113,7 +118,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		*/
 		
 		// Prepare fields and get syntax for each
-		$tableColumns = $this->getColumnsForTable($table, $this->database);
+		$tableColumns = $this->getColumnsForTable($table, $this->_database);
 		$updateFormattedFields = array();
 		foreach($tableColumns as $fieldName => $columnInfo) {
 			if(isset($formattedFields[$fieldName])) {

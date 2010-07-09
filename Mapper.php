@@ -511,7 +511,7 @@ class Spot_Mapper
 	 */
 	public function migrate($entityName)
 	{
-		return $this->adapter()->migrate($this->datasource($entityName), $this->fields($entityName));
+		return $this->connection($entityName)->migrate($this->datasource($entityName), $this->fields($entityName));
 	}
 
 
