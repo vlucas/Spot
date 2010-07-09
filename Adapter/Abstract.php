@@ -23,7 +23,7 @@ abstract class Spot_Adapter_Abstract
     * @param mixed $dsn DSN string or pre-existing Mongo object
     * @param array $options
     */
-    public function __construct($dsn = null, array $options = array())
+    public function __construct($dsn, array $options = array())
     {
 		$this->_dsn = $dsn;
 		if(is_string($dsn)) {
