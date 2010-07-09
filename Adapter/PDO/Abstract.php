@@ -93,7 +93,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = $this->migrateSyntaxTableCreate($table, $formattedFields, $columnsSyntax);
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql);
+		Spot_Log::addQuery($this, $sql);
 		
 		$this->connection()->exec($sql);
 		return true;
@@ -144,7 +144,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			$sql = $this->migrateSyntaxTableUpdate($table, $formattedFields, $columnsSyntax);
 			
 			// Add query to log
-			Spot_Mapper_Abstract::logQuery($sql);
+			Spot_Log::addQuery($this, $sql);
 			
 			// Run SQL
 			$this->connection()->exec($sql);
@@ -173,7 +173,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			" VALUES(:" . implode(', :', array_keys($binds)) . ")";
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql, $binds);
+		Spot_Log::addQuery($this, $sql, $binds);
 		
 		// Prepare update query
 		$stmt = $this->connection()->prepare($sql);
@@ -229,7 +229,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		}
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql, $binds);
+		Spot_Log::addQuery($this, $sql, $binds);
 		
 		// Prepare update query
 		$stmt = $this->connection()->prepare($sql);
@@ -278,7 +278,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				" WHERE " . implode(' AND ', $sqlWheres);
 			
 			// Add query to log
-			Spot_Mapper_Abstract::logQuery($sql, $binds);
+			Spot_Log::addQuery($this, $sql, $binds);
 			
 			// Prepare update query
 			$stmt = $this->connection()->prepare($sql);
@@ -316,7 +316,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql .= ($conditions ? ' WHERE ' . $conditions : '');
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql, $binds);
+		Spot_Log::addQuery($this, $sql, $binds);
 		
 		$stmt = $this->connection()->prepare($sql);
 		if($stmt) {
@@ -341,7 +341,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "TRUNCATE TABLE " . $source;
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql);
+		Spot_Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}
@@ -355,7 +355,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "DROP TABLE " . $source;
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql);
+		Spot_Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}
@@ -369,7 +369,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "CREATE DATABASE " . $database;
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql);
+		Spot_Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}
@@ -384,7 +384,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "DROP DATABASE " . $database;
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery($sql);
+		Spot_Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}

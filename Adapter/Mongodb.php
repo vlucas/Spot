@@ -200,7 +200,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 		}
 		
 		// Add query to log
-		Spot_Mapper_Abstract::logQuery("MongoDB Query", $criteria);
+		Spot_Log::addQuery($this, $criteria);
 
 		// Return collection
 		return $this->toCollection($query, $cursor);

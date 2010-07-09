@@ -7,6 +7,11 @@
  */
 class Spot_Mapper
 {
+	protected $_cfg;
+	
+	// Entity manager
+	protected static $_entityManager;
+	
 	// Class Names for required classes - Here so they can be easily overridden
 	protected $_collectionClass = 'Spot_Entity_Collection';
 	protected $_queryClass = 'Spot_Query';
@@ -14,16 +19,15 @@ class Spot_Mapper
 
 	// Array of error messages and types
 	protected $_errors = array();
-	
-	// Entity manager
-	protected static $_entityManager;
 
 
 	/**
 	 *	Constructor Method
 	 */
-	public function __construct($entityClass)
+	public function __construct(Spot_Config $config)
 	{
+		$this->_config = $config;
+		
 		// Ensure required classes for minimum activity are loaded
 		//spot_load_class($this->_queryClass);
 		//spot_load_class($this->_collectionClass);
@@ -35,6 +39,17 @@ class Spot_Mapper
 	}
 
 
+	/**
+	 * Get config class mapper was instantiated with
+	 *
+	 * @return Spot_Config
+	 */
+	public function config()
+	{
+		return $this->_config;
+	}
+	
+	
 	/**
 	 * Get query class name to use
 	 *
@@ -55,15 +70,6 @@ class Spot_Mapper
 	{
 		return $this->_collectionClass;
 	}
-
-
-	/**
-	 * Get name of the data source
-	 */
-	public function datasource()
-	{
-		return $this->_datasource;
-	}
 	
 	
 	/**
@@ -77,7 +83,19 @@ class Spot_Mapper
 		return self::$_entityManager;
 	}
 
-
+	
+	/**
+	 * Get datasource name
+	 *
+	 * @param string $entityName Name of the entity class
+	 * @return string Name of datasource defined on entity class
+	 */
+	public function datasource($entityName)
+	{
+		return $this->entityManager()->datasource($entityName);
+	}
+	
+	
 	/**
 	 * Get formatted fields with all neccesary array keys and values.
 	 * Merges defaults with defined field values to ensure all options exist for each field.
@@ -162,6 +180,28 @@ class Spot_Mapper
 	{
 		$fields = $this->fields($entityName);
 		return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
+	}
+	
+	
+	/**
+	 * Get connection to use
+	 *
+	 * @param string $connectionName Named connection or entity class name
+	 * @return Spot_Adapter
+	 * @throws Spot_Exception
+	 */
+	public function connection($connectionName)
+	{
+		// Try getting connection based on given name
+		if($connection = $this->config()->connection($connectionName)) {
+			return $connection;
+		} elseif($connection = $this->entityManager()->connection($connectionName)) {
+			return $connection;
+		} elseif($connection = $this->config()->defaultConnection()) {
+			return $connection;
+		}
+		
+		throw new Spot_Exception("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot_Config::addConnection().");
 	}
 	
 	
@@ -337,18 +377,15 @@ class Spot_Mapper
 	 */
 	public function insert($entity, array $options = array())
 	{
-		$entityClass = get_class($entity);
-
-		//$this->checkEntity($entity);
-
-		$data = $mapper->data($entity);
+		$entityName = get_class($entity);
+		$data = $this->data($entity);
 
 		// Ensure there is actually data to update
 		if(count($data) > 0) {
-			$result = $this->adapter($entityClass)->create($this->datasource($entityClass), $data);
+			$result = $this->connection($entityName)->create($this->datasource($entityName), $data);
 
 			// Update primary key on row
-			$pkField = $this->primaryKeyField($entityClass);
+			$pkField = $this->primaryKeyField($entityName);
 			$entity->$pkField = $result;
 		} else {
 			$result = false;

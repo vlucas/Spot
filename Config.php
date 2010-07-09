@@ -35,6 +35,8 @@ class Spot_Config
 			$this->_defaultConnection = $name;
 		}
 		
+		// Store connection and return adapter instance
+		$this->_connections[$name] = $adapter;
 		return $adapter;
 	}
 	
@@ -46,14 +48,30 @@ class Spot_Config
 	 * @return Spot_Adapter_Interface Spot adapter instance
 	 * @throws Spot_Exception
 	 */
-	public function getConnection($name)
+	public function connection($name = null)
 	{
+		if(null === $name) {
+			return $this->defaultConnection();
+		}
+		
 		// Connection name must be unique
 		if(!isset($this->_connections[$name])) {
-			throw new Spot_Exception("Connection '" . $name . "' does not exist. Please setup connection using " . __CLASS__ . "::addConnection().");
+			return false;
 		}
 		
 		return $this->_connections[$name];
+	}
+	
+	
+	/**
+	 * Get default connection
+	 *
+	 * @return Spot_Adapter_Interface Spot adapter instance
+	 * @throws Spot_Exception
+	 */
+	public function defaultConnection()
+	{
+		return $this->_connections[$this->_defaultConnection];
 	}
 	
 	
