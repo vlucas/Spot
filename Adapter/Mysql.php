@@ -5,7 +5,7 @@
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract
+class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapter_Interface
 {
 	// Format for date columns, formatted for PHP's date() function
 	protected $_format_date = "Y-m-d";
