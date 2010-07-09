@@ -90,8 +90,8 @@ class Spot_Config
 		} else {
 			// Require Spot_* files by assumed folder structure (naming convention)
 			if(false !== strpos($className, "Spot")) {
-				$classFile = str_replace("_", "/", $className);
-				$loaded = require_once(dirname(dirname(__FILE__)) . "/" . $classFile . ".php");
+				$classFile = str_replace("_", "/", str_replace('Spot_', '', $className));
+				$loaded = require_once(dirname(__FILE__) . "/" . $classFile . ".php");
 			}
 		}
 	
