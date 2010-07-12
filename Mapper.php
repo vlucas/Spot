@@ -139,8 +139,6 @@ class Spot_Mapper
 	 */
 	public function primaryKey($entity)
 	{
-		$this->checkEntity($entity);
-
 		$pkField = $this->entityManager()->primaryKeyField(get_class($entity));
 		return $entity->$pkField;
 	}
@@ -271,19 +269,6 @@ class Spot_Mapper
 		return $this->data($entity, $this->entityManager()->fieldDefaultValues($entityClass));
 	}
 
-	/**
-	* Checks that the entity is an instance of $this->_entityClass
-	*
-	* @param mixed $entity the entity to check
-	* @throws Exception if the entity is not an instance of $this->_entityClass
-	*/
-	public function checkEntity($entity)
-	{
-		if (!($entity instanceof $this->_entityClass)) {
-				throw new $this->_exceptionClass("Mapper expects entity of ".$this->_entityClass.", '".get_class($entity)."' given.");
-		}
-	}
-
 
 	/**
 	 * Find records with given conditions
@@ -325,8 +310,8 @@ class Spot_Mapper
 	 */
 	public function select($entityName, $fields = "*")
 	{
-		$query = new $this->_queryClass($this);
-		$query->select($entityName, $fields, $this->datasource($entityName));
+		$query = new $this->_queryClass($this, $entityName);
+		$query->select($fields, $this->datasource($entityName));
 		return $query;
 	}
 
@@ -344,8 +329,6 @@ class Spot_Mapper
 		if(is_array($entity)) {
 			$entity = $this->get()->data($entity);
 		}
-
-		$this->checkEntity($entity);
 
 		// Run beforeSave to know whether or not we can continue
 		$resultBefore = null;
@@ -420,8 +403,6 @@ class Spot_Mapper
 	 */
 	public function update($entity, array $options = array())
 	{
-		$this->checkEntity($entity);
-
 		// Ensure fields exist to prevent errors
 		$binds = array();
 		foreach($entity->dataModified() as $field => $value) {

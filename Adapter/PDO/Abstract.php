@@ -582,23 +582,16 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	public function toCollection(Spot_Query $query, $stmt)
 	{
 		$mapper = $query->mapper();
+		$entityClass = $query->entityName();
 		if($stmt instanceof PDOStatement) {
 			$results = array();
 			$resultsIdentities = array();
 			
 			// Set object to fetch results into
-			$stmt->setFetchMode(PDO::FETCH_CLASS, $mapper->entityClass());
+			$stmt->setFetchMode(PDO::FETCH_CLASS, $entityClass);
 			
 			// Fetch all results into new DataMapper_Result class
 			while($row = $stmt->fetch(PDO::FETCH_CLASS)) {
-				
-				// Load relations for this row
-				$relations = $mapper->getRelationsFor($row);
-				if($relations && is_array($relations) && count($relations) > 0) {
-					foreach($relations as $relationCol => $relationObj) {
-						$row->$relationCol = $relationObj;
-					}
-				}
 				
 				// Store in array for ResultSet
 				$results[] = $row;
@@ -608,9 +601,6 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
 					$resultsIdentities[] = $pk;
 				}
-				
-				// Mark row as loaded
-				$row->loaded(true);
 			}
 			// Ensure set is closed
 			$stmt->closeCursor();

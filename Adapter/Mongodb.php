@@ -390,7 +390,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	public function toCollection(Spot_Query $query, MongoCursor $cursor)
 	{
 		$mapper = $query->mapper();
-		$entityClass = $mapper->entityClass();
+		$entityClass = $query->entityName();
 		if($cursor instanceof MongoCursor) {
 			$results = array();
 			$resultsIdentities = array();
@@ -404,15 +404,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 			// @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
 			foreach($cursor as $document) {
 				$entity = new $entityClass();
-				$entity->data($document);
-
-				// Load relations for this row
-				$relations = $mapper->getRelationsFor($entity);
-				if($relations && is_array($relations) && count($relations) > 0) {
-					foreach($relations as $relationCol => $relationObj) {
-						$entity->$relationCol = $relationObj;
-					}
-				}
+				$mapper->data($entity, $document);
 				
 				// Store in array for Collection
 				$results[] = $entity;
@@ -422,9 +414,6 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 				if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
 					$resultsIdentities[] = $pk;
 				}
-				
-				// Mark row as loaded
-				$entity->loaded(true);
 			}
 			
 			$collectionClass = $mapper->collectionClass();

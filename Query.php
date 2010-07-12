@@ -9,6 +9,7 @@
 class Spot_Query implements Countable, IteratorAggregate
 {
 	protected $_mapper;
+	protected $_entityName;
 	
 	// Storage for query properties
 	public $fields = array();
@@ -22,10 +23,14 @@ class Spot_Query implements Countable, IteratorAggregate
 	
 	/**
 	 *	Constructor Method
+	 *
+	 *	@param Spot_Mapper
+	 *	@param string $entityName Name of the entity to query on/for
 	 */
-	public function __construct(Spot_Mapper $mapper)
+	public function __construct(Spot_Mapper $mapper, $entityName)
 	{
 		$this->_mapper = $mapper;
+		$this->_entityName = $entityName;
 	}
 	
 	
@@ -35,6 +40,15 @@ class Spot_Query implements Countable, IteratorAggregate
 	public function mapper()
 	{
 		return $this->_mapper;
+	}
+	
+	
+	/**
+	 * Get current entity name query is to be performed on
+	 */
+	public function entityName()
+	{
+		return $this->_entityName;
 	}
 	
 	
@@ -261,6 +275,6 @@ class Spot_Query implements Countable, IteratorAggregate
 	 */
 	public function execute()
 	{
-		return $this->mapper()->adapterRead()->read($this);
+		return $this->mapper()->connection($this->entityName())->read($this);
 	}
 }

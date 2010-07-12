@@ -31,11 +31,18 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		}
 	}
 	
-	public function testQuery()
+	public function testQueryInstance()
 	{
 		$mapper = test_spot_mapper();
-        //$post = $mapper->first(array('title' => 'Test Post'));
-
-        //$this->assertTrue($post instanceof Spot_Entity);
+        $posts = $mapper->all('Entity_Post', array('title' => 'even_title'));
+        $this->assertTrue($posts instanceof Spot_Query);
+	}
+	
+	public function testQueryCollectionInstance()
+	{
+		$mapper = test_spot_mapper();
+        $posts = $mapper->all('Entity_Post', array('title' => 'even_title'));
+        $this->assertTrue($posts instanceof Spot_Query);
+		$this->assertTrue($posts->execute() instanceof Spot_Entity_Collection);
 	}
 }
