@@ -114,6 +114,7 @@ class Spot_Entity_Manager
 				);
 
 			$returnFields = array();
+            self::$_fieldDefaultValues[$entityName] = array();
 			foreach($entityProperties['public'] as $fieldName => $fieldOpts) {
 				// Store field definition exactly how it is defined before modifying it below
 				if($fieldOpts['type'] != 'relation') {
@@ -136,7 +137,7 @@ class Spot_Entity_Manager
 				// Store default value
 				if(null !== $fieldOpts['default']) {
 					self::$_fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
-				}
+                }
 				// Store relations (and remove them from the mix of regular fields)
 				if($fieldOpts['type'] == 'relation') {
 					self::$_relations[$entityName][$fieldName] = $fieldOpts;

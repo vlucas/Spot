@@ -19,7 +19,7 @@ class Entity_Post
 	public $comments = array(
 		'type' => 'relation',
 		'relation' => 'HasMany',
-		'entity' => 'Fixture_Post_Comment',
+		'entity' => 'Entity_Post_Comment',
 		'where' => array('post_id' => ':entity.id'),
 		'order' => array('date_created' => 'ASC')
 		);

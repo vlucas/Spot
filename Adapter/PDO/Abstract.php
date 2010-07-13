@@ -258,33 +258,29 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	 */
 	public function update($datasource, array $data, array $where = array(), array $options = array())
 	{
-		// Get "col = :col" pairs for the update query
-		$placeholders = array();
-		$binds = array();
-		foreach($data as $field => $value) {
-			$placeholders[] = $field . " = :" . $field . "";
-			$binds[$field] = $value;
+		$dataBinds = $this->statementBinds($data);
+        $whereBinds = $this->statementBinds($where, count($dataBinds));
+        $binds = array_merge($dataBinds, $whereBinds);
+        
+        $placeholders = array();
+        $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
+        // Placeholders and passed data
+		foreach($dataFields as $field => $bindField) {
+            $placeholders[] = $field . " = :" . $bindField . "";
 		}
-		
-		// Where clauses
-		$sqlWheres = array();
-		if(count($where) > 0) {
-			foreach($where as $wField => $wValue) {
-				$sqlWheres[] = $wField . " = :w_" . $wField;
-				$binds['w_' . $wField] = $wValue;
-			}
-		}
+        
+        $conditions = $this->statementConditions($where);
 		
 		// Ensure there are actually updated values on THIS table
 		if(count($binds) > 0) {
 			// Build the query
 			$sql = "UPDATE " . $datasource .
 				" SET " . implode(', ', $placeholders) .
-				" WHERE " . implode(' AND ', $sqlWheres);
+				" WHERE " . $conditions;
 			
 			// Add query to log
 			Spot_Log::addQuery($this, $sql, $binds);
-			
+            
 			// Prepare update query
 			$stmt = $this->connection()->prepare($sql);
 			
@@ -508,8 +504,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			if ( $sqlStatement != "" ) {
 				$sqlStatement .= " " . (isset($condition['setType']) ? $condition['setType'] : 'AND') . " ";
 			}
-			//var_dump($condition);
-			$sqlStatement .= join(" " . (isset($condition['type']) ? $condition['type'] : 'AND') . " ", $sqlWhere );
+			$sqlStatement .= implode(" " . (isset($condition['type']) ? $condition['type'] : 'AND') . " ", $sqlWhere );
 			
 			if($loopOnce) { break; }
 		}
@@ -521,12 +516,11 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	/**
 	 * Returns array of binds to pass to query function
 	 */
-	public function statementBinds(array $conditions = array())
+	public function statementBinds(array $conditions = array(), $ci = 0)
 	{
 		if(count($conditions) == 0) { return; }
 		
 		$binds = array();
-		$ci = 0;
 		$loopOnce = false;
 		foreach($conditions as $condition) {
 			if(is_array($condition) && isset($condition['conditions'])) {
@@ -556,9 +550,9 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 					// Column name with comparison operator
 					$colData = explode(' ', $column);
 					$operator = '=';
-					if ( count( $colData ) > 2 ) {
-						$operator = array_pop( $colData );
-						$colData = array( implode(' ', $colData), $operator );
+					if (count($colData) > 2) {
+						$operator = array_pop($colData);
+						$colData = array(implode(' ', $colData), $operator);
 					}
 					$col = $colData[0];
 					$colParam = preg_replace('/\W+/', '_', $col) . $ci;
@@ -590,17 +584,20 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			// Set object to fetch results into
 			$stmt->setFetchMode(PDO::FETCH_CLASS, $entityClass);
 			
-			// Fetch all results into new DataMapper_Result class
-			while($row = $stmt->fetch(PDO::FETCH_CLASS)) {
+			// Fetch all results into new collection class
+			while($entity = $stmt->fetch(PDO::FETCH_CLASS)) {
 				
 				// Store in array for ResultSet
-				$results[] = $row;
+				$results[] = $entity;
 				
 				// Store primary key of each unique record in set
-				$pk = $mapper->primaryKey($row);
+				$pk = $mapper->primaryKey($entity);
 				if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
 					$resultsIdentities[] = $pk;
 				}
+                
+                // Load relations
+                $mapper->loadRelations($entity);
 			}
 			// Ensure set is closed
 			$stmt->closeCursor();
