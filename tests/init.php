@@ -43,8 +43,8 @@ function test_spot_mapper() {
  * Autoload test fixtures
  */
 function test_spot_autoloader($className) {
-	// Don't attempt to autoload PHPUnit classes
-	if(strpos($className, 'PHPUnit') !== false) {
+	// Don't attempt to autoload 'PHPUnit_' or 'Spot_' classes
+	if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot_')) {
 		return false;
 	}
 	$classFile = str_replace('_', '/', $className) . '.php';

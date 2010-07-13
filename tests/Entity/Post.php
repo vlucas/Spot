@@ -23,4 +23,12 @@ class Entity_Post
 		'where' => array('post_id' => ':entity.id'),
 		'order' => array('date_created' => 'ASC')
 		);
+    
+    
+    public function __construct(array $data = array())
+    {
+        foreach($data as $field => $value) {
+            $this->$field = $value;
+        }
+    }
 }

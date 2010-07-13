@@ -606,7 +606,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			$stmt->closeCursor();
 			
 			$collectionClass = $mapper->collectionClass();
-			return new $collectionClass($entityClass, $results, $resultsIdentities);
+			return new $collectionClass($results, $resultsIdentities);
 			
 		} else {
 			$mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->adapterRead()->errorInfo()));

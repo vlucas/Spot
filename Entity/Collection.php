@@ -7,7 +7,6 @@
  */
 class Spot_Entity_Collection implements Iterator, Countable, ArrayAccess
 {
-	protected $_entityClass;
 	protected $_results = array();
 	protected $_resultsIdentities = array();
 
@@ -15,13 +14,11 @@ class Spot_Entity_Collection implements Iterator, Countable, ArrayAccess
 	/**
 	 * Constructor function
 	 *
-	 * @param $entityClass Class name of entities in collection
 	 * @param array $results Array of pre-loaded Spot_Entity objects or Iterator that will fetch them lazily
 	 * @param array $resultsIdentities Array of key values for given result set primary key
 	 */
-	public function __construct($entityClass, array $results = array(), array $resultsIdentities = array())
+	public function __construct(array $results = array(), array $resultsIdentities = array())
 	{
-		$this->_entityClass = $entityClass;
 		$this->_results = $results;
 		$this->_resultsIdentities = $resultsIdentities;
 	}

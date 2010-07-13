@@ -417,7 +417,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 			}
 			
 			$collectionClass = $mapper->collectionClass();
-			return new $collectionClass($entityClass, $results, $resultsIdentities);
+			return new $collectionClass($results, $resultsIdentities);
 			
 		} else {
 			$mapper->addError(__METHOD__ . " - Unable to execute query - not a valid MongoCursor");
