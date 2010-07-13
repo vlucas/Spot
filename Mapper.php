@@ -377,7 +377,7 @@ class Spot_Mapper
 			$entity = $this->get($entityName);
 			$data = $options;
 		} else {
-			throw new $this->_exceptionClass(__CLASS__ . "::insert Accepts either an entity object or entity name + data array");
+			throw new $this->_exceptionClass(__CLASS__ . "::" . __FUNCTION__ . " Accepts either an entity object or entity name + data array");
 		}
 
 		// Ensure there is actually data to update
@@ -396,32 +396,25 @@ class Spot_Mapper
 
 
 	/**
-	 * Update given row object
+	 * Update given entity object
      *
-     * @param mixed $entity Entity object or array of field => value pairs
+     * @param object $entity Entity object
      * @params array $options Array of adapter-specific options
 	 */
 	public function update($entity, array $options = array())
 	{
-		// Ensure fields exist to prevent errors
-		$binds = array();
-		foreach($entity->dataModified() as $field => $value) {
-			if($this->fieldExists($field)) {
-				// Empty values will be NULL (easier to be handled by databases)
-				$binds[$field] = $this->isEmpty($value) ? null : $value;
-			}
+        if(is_object($entity)) {
+			$entityName = get_class($entity);
+			$data = $this->data($entity);
+		} else {
+			throw new $this->_exceptionClass(__CLASS__ . "::" . __FUNCTION__ . " Requires an entity object as the first parameter");
 		}
 
 		// Handle with adapter
-		if(count($binds) > 0) {
-			$result = $this->adapter()->update($this->datasource(), $binds, array($this->primaryKeyField() => $this->primaryKey($entity)));
+		if(count($data) > 0) {
+			$result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
 		} else {
 			$result = true;
-		}
-
-		// Save related rows
-		if($result) {
-			$this->saveRelatedRowsFor($entity);
 		}
 
 		return $result;
@@ -431,23 +424,25 @@ class Spot_Mapper
 	/**
 	 * Delete items matching given conditions
 	 *
-	 * @param mixed $conditions Array of conditions in column => value pairs or Entity object
-     * @params array $options Array of adapter-specific options
-     *
-     * @param string $entityName Name of the entity class
+     * @param mixed $entityName Name of the entity class or entity object
+	 * @param array $conditions Optional array of conditions in column => value pairs
+     * @params array $options Optional array of adapter-specific options
 	 */
-	public function delete($entityName, $conditions, array $options = array())
+	public function delete($entityName, array $conditions = array(), array $options = array())
 	{
-		if($entityName instanceof Spot_Entity) {
+		if(is_object($entityName)) {
+            $entity = $entityName;
+            $entityName = get_class($entityName);
 			$conditions = array(
-				0 => array('conditions' => array($this->primaryKeyField($entityName) => $this->primaryKey($entityName)))
+				0 => array('conditions' => array($this->primaryKeyField($entityName) => $this->primaryKey($entity)))
 				);
+            // @todo Clear entity from identity map on delete, when implemented
 		}
 
 		if(is_array($conditions)) {
-			return $this->adapter()->delete($this->datasource($entityName), $conditions);
+			return $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
 		} else {
-			throw new $this->_exceptionClass(__METHOD__ . " conditions must be entity object or array, given " . gettype($conditions) . "");
+			throw new $this->_exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
 		}
 	}
 

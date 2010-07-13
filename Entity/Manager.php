@@ -29,6 +29,10 @@ class Spot_Entity_Manager
 	 */
 	public function fields($entityName)
 	{
+        if(!is_string($entityName)) {
+            throw new Spot_Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+        }
+        
 		if(isset(self::$_fields[$entityName])) {
 			$returnFields = self::$_fields[$entityName];
 		} else {
