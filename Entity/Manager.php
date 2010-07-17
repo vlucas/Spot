@@ -189,8 +189,9 @@ class Spot_Entity_Manager
 	 */
 	public function relations($entityName)
 	{
+		$this->fields($entityName);
 		if(!isset(self::$_relations[$entityName])) {
-			$this->fields($entityName);
+			return array();
 		}
 		return self::$_relations[$entityName];
 	}

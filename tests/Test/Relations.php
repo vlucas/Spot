@@ -94,8 +94,6 @@ class Test_Relations extends PHPUnit_Framework_TestCase
         $post->body = "<p>Comments relation test</p>";
 		$mapper->save($post);
         
-        //var_dump($post->id, count($post->comments));
-        
 		$this->assertSame(0, count($post->comments));
 	}
 

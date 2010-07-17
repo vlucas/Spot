@@ -394,6 +394,9 @@ class Spot_Mapper
 			// Update primary key on row
 			$pkField = $this->primaryKeyField($entityName);
 			$entity->$pkField = $result;
+			
+			// Load relations on new entity
+			$this->loadRelations($entity);
 		} else {
 			$result = false;
 		}
