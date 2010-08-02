@@ -27,4 +27,15 @@ class Spot_Log
 			);
 		self::$_queryCount++;
 	}
+	
+	
+	/**
+	 * Get a count of how many queries have been run
+	 *
+	 * @return int Total number of queries that have been run
+	 */
+	public static function queryCount()
+	{
+		return self::$_queryCount;
+	}
 }
