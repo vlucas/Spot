@@ -18,7 +18,7 @@ class Spot_Log
 	 * @param mixed $query Query run
 	 * @param array $data Data used in query
 	 */
-	public static function addQuery($adapter, $query, array $data = array())
+	public static function addQuery($adapter, $query, $data)
 	{
 		self::$_queries[] = array(
 			'adapter' => get_class($adapter),
