@@ -28,11 +28,8 @@ class Spot_Mapper
 	{
 		$this->_config = $config;
 		
-		// Ensure required classes for minimum activity are loaded
-		//spot_load_class($this->_queryClass);
-		//spot_load_class($this->_collectionClass);
+		// Ensure at least the exception class is loaded
 		spot_load_class($this->_exceptionClass);
-
 		if (!class_exists($this->_exceptionClass)) {
 			throw new Spot_Exception("The exception class of '".$this->_exceptionClass."' defined in '".get_class($this)."' does not exist.");
 		}
@@ -204,6 +201,54 @@ class Spot_Mapper
 	
 	
 	/**
+	 * Create collection
+	 */
+	public function collection($entityName, $cursor)
+	{
+		$results = array();
+		$resultsIdentities = array();
+		
+		// Entity callbacks
+		$entityBeforeLoad = method_exists($entityName, 'beforeLoad');
+		$entityAfterLoad = method_exists($entityName, 'afterLoad');
+		
+		// Fetch all results into new entity class
+		// @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
+		foreach($cursor as $data) {
+			$entity = new $entityName();
+			
+			// Before callback
+			if($entityBeforeLoad) {
+				$entity->beforeLoad($data);
+			}
+			
+			// Set data
+			$this->data($entity, $data);
+			
+			// After callback
+			if($entityAfterLoad) {
+				$entity->afterLoad();
+			}
+			
+			// Load relation objects
+			$this->loadRelations($entity);
+			
+			// Store in array for Collection
+			$results[] = $entity;
+			
+			// Store primary key of each unique record in set
+			$pk = $this->primaryKey($entity);
+			if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
+				$resultsIdentities[] = $pk;
+			}
+		}
+		
+		$collectionClass = $this->collectionClass();
+		return new $collectionClass($results, $resultsIdentities);
+	}
+	
+	
+	/**
 	 * Get array of entity data
 	 */
 	public function data($entity, array $data = array())
@@ -340,7 +385,7 @@ class Spot_Mapper
 		// Run beforeSave to know whether or not we can continue
 		$resultBefore = null;
 		if(is_callable(array($entity, 'beforeSave'))) {
-			if(false === $entity->beforeSave()) {
+			if(false === $entity->beforeSave($this)) {
 				return false;
 			}
 		}
@@ -362,7 +407,7 @@ class Spot_Mapper
 		// Use return value from 'afterSave' method if not null
 		$resultAfter = null;
 		if(is_callable(array($entity, 'afterSave'))) {
-			$resultAfter = $entity->afterSave($result);
+			$resultAfter = $entity->afterSave($this, $result);
 		}
 		return (null !== $resultAfter) ? $resultAfter : $result;
 	}
