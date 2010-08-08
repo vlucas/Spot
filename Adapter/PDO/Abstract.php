@@ -269,7 +269,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
             $placeholders[] = $field . " = :" . $bindField . "";
 		}
         
-        $conditions = $this->statementConditions($where);
+        $conditions = $this->statementConditions($where, count($dataBinds));
 		
 		// Ensure there are actually updated values on THIS table
 		if(count($binds) > 0) {
@@ -403,13 +403,12 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	/**
 	 * Builds an SQL string given conditions
 	 */
-	public function statementConditions(array $conditions = array())
+	public function statementConditions(array $conditions = array(), $ci = 0)
 	{
 		if(count($conditions) == 0) { return; }
 		
 		$sqlStatement = "";
 		$defaultColOperators = array(0 => '', 1 => '=');
-		$ci = 0;
 		$loopOnce = false;
 		foreach($conditions as $condition) {
 			if(is_array($condition) && isset($condition['conditions'])) {
@@ -577,36 +576,20 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	{
 		$mapper = $query->mapper();
 		$entityClass = $query->entityName();
+		
 		if($stmt instanceof PDOStatement) {
-			$results = array();
-			$resultsIdentities = array();
+			// Set PDO fetch mode
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
 			
-			// Set object to fetch results into
-			$stmt->setFetchMode(PDO::FETCH_CLASS, $entityClass);
+			$collection = $mapper->collection($entityClass, $stmt);
 			
-			// Fetch all results into new collection class
-			while($entity = $stmt->fetch(PDO::FETCH_CLASS)) {
-				
-				// Store in array for ResultSet
-				$results[] = $entity;
-				
-				// Store primary key of each unique record in set
-				$pk = $mapper->primaryKey($entity);
-				if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
-					$resultsIdentities[] = $pk;
-				}
-                
-                // Load relations
-                $mapper->loadRelations($entity);
-			}
-			// Ensure set is closed
+			// Ensure statement is closed
 			$stmt->closeCursor();
-			
-			$collectionClass = $mapper->collectionClass();
-			return new $collectionClass($results, $resultsIdentities);
+
+			return $collection;
 			
 		} else {
-			$mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->adapterRead()->errorInfo()));
+			$mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
 			return array();
 		}
 	}

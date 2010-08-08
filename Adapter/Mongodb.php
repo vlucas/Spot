@@ -392,32 +392,12 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 		$mapper = $query->mapper();
 		$entityClass = $query->entityName();
 		if($cursor instanceof MongoCursor) {
-			$results = array();
-			$resultsIdentities = array();
-			
 			// Set timeout
 			if(isset($this->options['cursor']['timeout']) && is_int($this->options['cursor']['timeout'])) {
 				$cursor->timeout($this->options['cursor']['timeout']);
 			}
 			
-			// Fetch all results into new entity class
-			// @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
-			foreach($cursor as $document) {
-				$entity = new $entityClass();
-				$mapper->data($entity, $document);
-				
-				// Store in array for Collection
-				$results[] = $entity;
-				
-				// Store primary key of each unique record in set
-				$pk = $mapper->primaryKey($entity);
-				if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
-					$resultsIdentities[] = $pk;
-				}
-			}
-			
-			$collectionClass = $mapper->collectionClass();
-			return new $collectionClass($results, $resultsIdentities);
+			return $mapper->collection($entityClass, $cursor);
 			
 		} else {
 			$mapper->addError(__METHOD__ . " - Unable to execute query - not a valid MongoCursor");
