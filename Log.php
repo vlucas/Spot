@@ -30,6 +30,17 @@ class Spot_Log
 	
 	
 	/**
+	 * Get full query log
+	 *
+	 * @return array Queries that have been executed and all data that has been passed with them
+	 */
+	public static function queries()
+	{
+		return self::$_queries;
+	}
+	
+	
+	/**
 	 * Get a count of how many queries have been run
 	 *
 	 * @return int Total number of queries that have been run
