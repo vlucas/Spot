@@ -137,7 +137,9 @@ class Spot_Entity_Manager
 				// Store default value
 				if(null !== $fieldOpts['default']) {
 					self::$_fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
-                }
+                } else {
+					self::$_fieldDefaultValues[$entityName][$fieldName] = null;
+				}
 				// Store relations (and remove them from the mix of regular fields)
 				if($fieldOpts['type'] == 'relation') {
 					self::$_relations[$entityName][$fieldName] = $fieldOpts;
