@@ -344,8 +344,10 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	
 	
 	/**
-	 * Truncate a database table
+	 * Truncate a collection
 	 * Should delete all rows and reset serial/auto_increment keys to 0
+	 *
+	 * @param string $datasource Collection name
 	 */
 	public function truncateDatasource($datasource)
 	{
@@ -354,8 +356,10 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	
 	
 	/**
-	 * Drop a database table
+	 * Drop a collection
 	 * Destructive and dangerous - drops entire table and all data
+	 *
+	 * @param string $datasource Collection name
 	 */
 	public function dropDatasource($datasource)
 	{
@@ -366,6 +370,8 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	/**
 	 * Create a database
  	 * Will throw errors if user does not have proper permissions
+ 	 *
+ 	 * @param string $database Database name
 	 */
 	public function createDatabase($database)
 	{
@@ -374,9 +380,11 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	
 	
 	/**
-	 * Drop a database table
-	 * Destructive and dangerous - drops entire table and all data
+	 * Drop a database
+	 * Destructive and dangerous - drops entire database and all data
 	 * Will throw errors if user does not have proper permissions
+	 *
+	 * @param string $database Database name
 	 */
 	public function dropDatabase($database)
 	{
