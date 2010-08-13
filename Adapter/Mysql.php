@@ -161,6 +161,11 @@ class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapt
 
 		// Keys...
 		$ki = 0;
+		$tableKeys = array(
+			'primary' => array(),
+			'unique' => array(),
+			'index' => array()
+		);
 		$usedKeyNames = array();
 		foreach($formattedFields as $fieldName => $fieldInfo) {
 			// Determine key field name (can't use same key name twice, so we have to append a number)
@@ -170,16 +175,37 @@ class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapt
 			}
 			// Key type
 			if($fieldInfo['primary']) {
-				$syntax .= "\n, PRIMARY KEY(`" . $fieldName . "`)";
+				$tableKeys['primary'][] = $fieldName;
 			}
 			if($fieldInfo['unique']) {
-				$syntax .= "\n, UNIQUE KEY `" . $fieldKeyName . "` (`" . $fieldName . "`)";
+				if(is_string($fieldInfo['unique'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['unique'];
+				}
+				$tableKeys['unique'][$fieldKeyName][] = $fieldName;
 				$usedKeyNames[] = $fieldKeyName;
 			}
 			if($fieldInfo['index']) {
-				$syntax .= "\n, KEY `" . $fieldKeyName . "` (`" . $fieldName . "`)";
+				if(is_string($fieldInfo['index'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['index'];
+				}
+				$tableKeys['index'][$fieldKeyName][] = $fieldName;
 				$usedKeyNames[] = $fieldKeyName;
 			}
+		}
+		
+		// PRIMARY
+		if($tableKeys['primary']) {
+			$syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";
+		}
+		// UNIQUE
+		foreach($tableKeys['unique'] as $keyName => $keyFields) {
+			$syntax .= "\n, UNIQUE KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+		// INDEX
+		foreach($tableKeys['index'] as $keyName => $keyFields) {
+			$syntax .= "\n, KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
 		}
 
 		// Extra
@@ -220,30 +246,54 @@ class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapt
 		$syntax = "ALTER TABLE `" . $table . "` \n";
 		// Columns
 		$syntax .= implode(",\n", $columnsSyntax);
-
-
+		
 		// Keys...
 		$ki = 0;
+		$tableKeys = array(
+			'primary' => array(),
+			'unique' => array(),
+			'index' => array()
+		);
 		$usedKeyNames = array();
 		foreach($formattedFields as $fieldName => $fieldInfo) {
-			// Determine key field name (can't use same key name twice, so we  have to append a number)
+			// Determine key field name (can't use same key name twice, so we have to append a number)
 			$fieldKeyName = $fieldName;
 			while(in_array($fieldKeyName, $usedKeyNames)) {
 				$fieldKeyName = $fieldName . '_' . $ki;
 			}
 			// Key type
 			if($fieldInfo['primary']) {
-				$syntax .= ",\n PRIMARY KEY(`" . $fieldName . "`)";
+				$tableKeys['primary'][] = $fieldName;
 			}
 			if($fieldInfo['unique']) {
-				$syntax .= ",\n UNIQUE KEY `" . $fieldKeyName . "` (`" . $fieldName . "`)";
+				if(is_string($fieldInfo['unique'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['unique'];
+				}
+				$tableKeys['unique'][$fieldKeyName][] = $fieldName;
 				$usedKeyNames[] = $fieldKeyName;
-				 // Example: ALTER TABLE `posts` ADD UNIQUE (`url`)
 			}
 			if($fieldInfo['index']) {
-				$syntax .= ",\n KEY `" . $fieldKeyName . "` (`" . $fieldName . "`)";
+				if(is_string($fieldInfo['index'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['index'];
+				}
+				$tableKeys['index'][$fieldKeyName][] = $fieldName;
 				$usedKeyNames[] = $fieldKeyName;
 			}
+		}
+		
+		// PRIMARY
+		if($tableKeys['primary']) {
+			$syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";
+		}
+		// UNIQUE
+		foreach($tableKeys['unique'] as $keyName => $keyFields) {
+			$syntax .= "\n, UNIQUE KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+		// INDEX
+		foreach($tableKeys['index'] as $keyName => $keyFields) {
+			$syntax .= "\n, KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
 		}
 
 		// Extra
