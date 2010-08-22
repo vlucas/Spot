@@ -200,10 +200,12 @@ class Spot_Query implements Countable, IteratorAggregate
 	public function params()
 	{
 		$params = array();
+		$ci = 0;
 		foreach($this->conditions as $i => $data) {
 			if(isset($data['conditions']) && is_array($data['conditions'])) {
 				foreach($data['conditions'] as $field => $value) {
-					$params[$field] = $value;
+					$params[$field . $ci] = $value;
+					$ci++;
 				}
 			}
 		}

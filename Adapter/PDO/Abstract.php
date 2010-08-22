@@ -282,7 +282,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	 */
 	public function update($datasource, array $data, array $where = array(), array $options = array())
 	{
-		$dataBinds = $this->statementBinds($data);
+		$dataBinds = $this->statementBinds($data, 0);
         $whereBinds = $this->statementBinds($where, count($dataBinds));
         $binds = array_merge($dataBinds, $whereBinds);
         
@@ -342,7 +342,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	 */
 	public function delete($datasource, array $data, array $options = array())
 	{
-		$binds = $this->statementBinds($data);
+		$binds = $this->statementBinds($data, 0);
 		$conditions = $this->statementConditions($data);
 		
 		$sql = "DELETE FROM " . $datasource . "";
@@ -462,7 +462,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	{
 		if(count($conditions) == 0) { return; }
 		
-		$sqlStatement = "";
+		$sqlStatement = "(";
 		$defaultColOperators = array(0 => '', 1 => '=');
 		$loopOnce = false;
 		foreach($conditions as $condition) {
@@ -555,11 +555,11 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				// Increment ensures column name distinction
 				$ci++;
 			}
-			if ( $sqlStatement != "" ) {
-				$sqlStatement .= " " . (isset($condition['setType']) ? $condition['setType'] : 'AND') . " ";
+			if ( $sqlStatement != "(" ) {
+				$sqlStatement .= " " . (isset($condition['setType']) ? $condition['setType'] : 'AND') . " (";
 			}
 			$sqlStatement .= implode(" " . (isset($condition['type']) ? $condition['type'] : 'AND') . " ", $sqlWhere );
-			
+			$sqlStatement .= ")";
 			if($loopOnce) { break; }
 		}
 		
@@ -570,7 +570,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	/**
 	 * Returns array of binds to pass to query function
 	 */
-	public function statementBinds(array $conditions = array(), $ci = 0)
+	public function statementBinds(array $conditions = array(), $ci = false)
 	{
 		if(count($conditions) == 0) { return; }
 		
@@ -609,14 +609,18 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 						$colData = array(implode(' ', $colData), $operator);
 					}
 					$col = $colData[0];
-					$colParam = preg_replace('/\W+/', '_', $col) . $ci;
+					
+					// Increment ensures column name distinction
+					if(false !== $ci) {
+						$col = $col . $ci;
+						$ci++;
+					}
+					
+					$colParam = preg_replace('/\W+/', '_', $col);
 					
 					// Add to binds array and add to WHERE clause
 					$binds[$colParam] = $bindValue;
 				}
-				
-				// Increment ensures column name distinction
-				$ci++;
 			}
 			if($loopOnce) { break; }
 		}
