@@ -204,6 +204,14 @@ class Spot_Query implements Countable, IteratorAggregate
 		foreach($this->conditions as $i => $data) {
 			if(isset($data['conditions']) && is_array($data['conditions'])) {
 				foreach($data['conditions'] as $field => $value) {
+					// Column name with comparison operator
+					$colData = explode(' ', $field);
+					$operator = '=';
+					if (count($colData) > 2) {
+						$operator = array_pop($colData);
+						$colData = array(implode(' ', $colData), $operator);
+					}
+					$field = $colData[0];
 					$params[$field . $ci] = $value;
 					$ci++;
 				}

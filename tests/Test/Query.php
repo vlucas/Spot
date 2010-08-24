@@ -83,11 +83,18 @@ class Test_Query extends PHPUnit_Framework_TestCase
 	public function testOperatorGte()
 	{
 		$mapper = test_spot_mapper();
-
 		$this->assertEquals(6, $mapper->all('Entity_Post', array('status >=' => 5))->count());
 		$this->assertEquals(6, $mapper->all('Entity_Post', array('status :gte' => 5))->count());
 	}
-
+	
+	// Use same column name more than once
+	public function testFieldMultipleUsage()
+	{
+		$mapper = test_spot_mapper();
+		$countResult = $mapper->all('Entity_Post', array('status' => 1))->orWhere(array('status' => 2))->count();
+		$this->assertEquals(2, $countResult);
+	}
+	
 	public function testArrayDefaultIn()
 	{
 		$mapper = test_spot_mapper();
