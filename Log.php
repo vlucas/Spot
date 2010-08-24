@@ -41,6 +41,17 @@ class Spot_Log
 	
 	
 	/**
+	 * Get last query run from log
+	 *
+	 * @return array Queries that have been executed and all data that has been passed with them
+	 */
+	public static function lastQuery()
+	{
+		return end(self::$_queries);
+	}
+	
+	
+	/**
 	 * Get a count of how many queries have been run
 	 *
 	 * @return int Total number of queries that have been run
