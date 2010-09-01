@@ -563,6 +563,11 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			if($loopOnce) { break; }
 		}
 		
+		// Ensure we actually had conditions
+		if(0 == $ci) {
+            $sqlStatement = '';
+		}
+		
 		return $sqlStatement;
 	}
 	
