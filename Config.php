@@ -1,9 +1,11 @@
 <?php
+namespace Spot;
+
 /**
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Config
+class Config
 {
 	protected $_defaultConnection;
 	protected $_connections = array();
@@ -23,11 +25,11 @@ class Spot_Config
 	{
 		// Connection name must be unique
 		if(isset($this->_connections[$name])) {
-			throw new Spot_Exception("Connection for '" . $name . "' already exists. Connection name must be unique.");
+			throw new Exception("Connection for '" . $name . "' already exists. Connection name must be unique.");
 		}
 		
-		$dsnp = Spot_Adapter_Abstract::parseDSN($dsn);
-		$adapterClass = "Spot_Adapter_" . ucfirst($dsnp['adapter']);
+		$dsnp = \Spot\Adapter\AdapterAbstract::parseDSN($dsn);
+		$adapterClass = "\\Spot\\Adapter\\" . ucfirst($dsnp['adapter']);
 		$adapter = new $adapterClass($dsn, $options);
 		
 		// Set as default connection?
@@ -83,16 +85,11 @@ class Spot_Config
 	public static function loadClass($className)
 	{
 		$loaded = false;
-	
-		// If class has already been defined, skip loading
-		if(class_exists($className, false)) {
-			$loaded = true;
-		} else {
-			// Require Spot_* files by assumed folder structure (naming convention)
-			if(false !== strpos($className, "Spot")) {
-				$classFile = str_replace("_", "/", str_replace('Spot_', '', $className));
-				$loaded = require_once(dirname(__FILE__) . "/" . $classFile . ".php");
-			}
+		
+		// Require Spot namespaced files by assumed folder structure (naming convention)
+		if(false !== strpos($className, "Spot\\")) {
+			$classFile = trim(str_replace("\\", "/", str_replace("_", "/", str_replace('Spot\\', '', $className))), '\\');
+			$loaded = require(__DIR__ . "/" . $classFile . ".php");
 		}
 	
 		return $loaded;
@@ -103,4 +100,4 @@ class Spot_Config
 /**
  * Register 'spot_load_class' function as an autoloader for files prefixed with 'Spot_'
  */
-spl_autoload_register(array('Spot_Config', 'loadClass'));
+spl_autoload_register(array('\Spot\Config', 'loadClass'));

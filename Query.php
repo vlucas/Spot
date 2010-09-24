@@ -1,4 +1,6 @@
 <?php
+namespace Spot;
+
 /**
  * Query Object - Used to build adapter-independent queries PHP-style
  * 
@@ -6,7 +8,7 @@
  * @author Vance Lucas <vance@vancelucas.com>
  * @link http://spot.os.ly
  */
-class Spot_Query implements Countable, IteratorAggregate
+class Query implements \Countable, \IteratorAggregate
 {
 	protected $_mapper;
 	protected $_entityName;
@@ -27,7 +29,7 @@ class Spot_Query implements Countable, IteratorAggregate
 	 *	@param Spot_Mapper
 	 *	@param string $entityName Name of the entity to query on/for
 	 */
-	public function __construct(Spot_Mapper $mapper, $entityName)
+	public function __construct(\Spot\Mapper $mapper, $entityName)
 	{
 		$this->_mapper = $mapper;
 		$this->_entityName = $entityName;

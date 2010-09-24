@@ -1,13 +1,13 @@
 <?php
-require_once(dirname(__FILE__) . '/Abstract.php');
-require_once(dirname(__FILE__) . '/Interface.php');
+namespace Spot\Adapter;
+
 /**
  * MongoDB Adapter
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter_Interface
+class Mongodb extends AdapterAbstract implements AdapterInterface
 {
 	// Format for date columns, formatted for PHP's date() function
 	protected $_format_date = 'Y-m-d';
@@ -26,14 +26,14 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	public function connection()
 	{
 		if(!$this->_connection) {
-	    	if($this->_dsn instanceof Mongo) {
+	    	if($this->_dsn instanceof \Mongo) {
 				$this->_connection = $this->_dsn;
 			} else {
 				// Establish connection
 				try {
-					$this->_connection = new Mongo($this->_dsn, $this->_options);
+					$this->_connection = new \Mongo($this->_dsn, $this->_options);
 				} catch(Exception $e) {
-					throw new Spot_Exception($e->getMessage());
+					throw new \Spot\Exception($e->getMessage());
 				}
 			}
 		}
@@ -83,7 +83,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	{
 		// MongoDB only supports timestamps for now, not direct DateTime objects
 		$format = parent::date($format)->format('U');
-		return new MongoDate($format);
+		return new \MongoDate($format);
 	}
 	
 	
@@ -96,7 +96,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	{
 		// MongoDB only supports timestamps for now, not direct DateTime objects
 		$format = parent::time($format)->format('U');
-		return new MongoDate($format);
+		return new \MongoDate($format);
 	}
 	
 	
@@ -109,7 +109,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	{
 		// MongoDB only supports timestamps for now, not direct DateTime objects
 		$format = parent::dateTime($format)->format('U');
-		return new MongoDate($format);
+		return new \MongoDate($format);
 	}
 	
 	
@@ -169,7 +169,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	 * Cursor: @link http://us.php.net/manual/en/class.mongocursor.php
 	 * Sorting: @link http://us.php.net/manual/en/mongocursor.sort.php
 	 */
-	public function read(Spot_Query $query, array $options = array())
+	public function read(\Spot\Query $query, array $options = array())
 	{
 		// Get MongoCursor first - it's required for other options
 		$criteria = $this->queryConditions($query);
@@ -188,7 +188,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 		// @todo GROUP BY - Not supported YET (!)
 		// @link http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group
 		if($query->group) {
-			throw new Spot_Exception("Grouping for the Mongo adapter has not currently been implemented. Would you like to contribute? :)");
+			throw new \Spot\Exception("Grouping for the Mongo adapter has not currently been implemented. Would you like to contribute? :)");
 		}
 		
 		// LIMIT & OFFSET (Skip)
@@ -245,7 +245,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	public function queryConditions($query)
 	{
 		$conditions = $query;
-		if(is_object($query) && $query instanceof Spot_Query) {
+		if(is_object($query) && $query instanceof \Spot\Query) {
 			$conditions = $query->conditions;
 		}
 		
@@ -263,7 +263,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 			foreach($subConditions as $field => $value) {
 				// Handle binding depending on type
 				if(is_object($value)) {
-					if($value instanceof DateTime) {
+					if($value instanceof \DateTime) {
 						// @todo Need to take into account column type for date formatting
 						$fieldType = $query->mapper()->fieldType($field);
 						$dateTimeFormat = ($fieldType == 'date' ? $this->dateFormat() : ($fieldType == 'time' ? $this->timeFormat() : $this->dateTimeFormat()));
@@ -395,7 +395,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	/**
 	 * Return result set for current query
 	 */
-	public function toCollection(Spot_Query $query, MongoCursor $cursor)
+	public function toCollection(\Spot\Query $query, \MongoCursor $cursor)
 	{
 		$mapper = $query->mapper();
 		$entityClass = $query->entityName();
@@ -421,7 +421,7 @@ class Spot_Adapter_MongoDB extends Spot_Adapter_Abstract implements Spot_Adapter
 	{
 		if(!$this->_mongoDatabase) {
 			if(empty($this->_dsnParts['database'])) {
-				throw new Spot_Exception("Mongo must have a database to connect to. No database name was specified.");
+				throw new \Spot\Exception("Mongo must have a database to connect to. No database name was specified.");
 			}
 			$this->_mongoDatabase = $this->connection()->selectDB($this->_dsnParts['database']);
 		}

@@ -5,7 +5,7 @@
  * @package Spot
  * @link http://spot.os.ly
  */
-class Entity_Post
+class Entity_Post extends \Spot\Entity\EntityAbstract
 {
 	protected $_datasource = 'test_posts';
 
@@ -19,7 +19,7 @@ class Entity_Post
 	public $comments = array(
 		'type' => 'relation',
 		'relation' => 'HasMany',
-		'entity' => 'Entity_Post_Comment',
+		'entity' => '\Spot\Entity\EntityAbstract',
 		'where' => array('post_id' => ':entity.id'),
 		'order' => array('date_created' => 'ASC')
 		);

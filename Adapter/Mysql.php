@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Adapter;
+
 /**
  * Mysql Database Adapter
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapter_Interface
+class Mysql extends PDO_Abstract implements AdapterInterface
 {
 	// Format for date columns, formatted for PHP's date() function
 	protected $_format_date = "Y-m-d";
@@ -89,7 +91,7 @@ class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapt
 		$tblCols = $this->connection()->query("SELECT * FROM information_schema.columns WHERE table_schema = '" . $source . "' AND table_name = '" . $table . "'");
 
 		if($tblCols) {
-			while($columnData = $tblCols->fetch(PDO::FETCH_ASSOC)) {
+			while($columnData = $tblCols->fetch(\PDO::FETCH_ASSOC)) {
 				$tableColumns[$columnData['COLUMN_NAME']] = $columnData;
 			}
 			return $tableColumns;
@@ -110,7 +112,7 @@ class Spot_Adapter_Mysql extends Spot_Adapter_PDO_Abstract implements Spot_Adapt
 	{
 		// Ensure field type exists
 		if(!isset($this->_fieldTypeMap[$fieldInfo['type']])) {
-			throw new Spot_Exception("Field type '" . $fieldInfo['type'] . "' not supported");
+			throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
 		}
 
 		$fieldInfo = array_merge($fieldInfo, $this->_fieldTypeMap[$fieldInfo['type']]);

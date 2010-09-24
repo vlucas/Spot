@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Relation;
+
 /**
  * Abstract class for relations
  * 
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class Spot_Relation_Abstract
+abstract class RelationAbstract
 {
 	protected $_mapper;
     protected $_entityName;
@@ -22,7 +24,7 @@ abstract class Spot_Relation_Abstract
 	 * @param object $mapper Spot_Mapper_Abstract object to query on for relationship data
 	 * @param array $resultsIdentities Array of key values for given result set primary key
 	 */
-	public function __construct(Spot_Mapper $mapper, $entityName, array $relationData)
+	public function __construct(\Spot\Mapper $mapper, $entityName, array $relationData)
 	{
         $this->_mapper = $mapper;
         $this->_entityName = $entityName;

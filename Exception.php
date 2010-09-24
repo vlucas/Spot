@@ -1,8 +1,10 @@
 <?php
+namespace Spot;
+
 /**
  * Handles generic Spot errors
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Exception extends Exception {}
+class Exception extends \Exception {}

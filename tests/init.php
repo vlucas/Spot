@@ -1,4 +1,4 @@
-<?php
+-<?php
 /**
  * @package Spot
  * @link http://spot.os.ly
@@ -8,14 +8,14 @@
 require_once 'PHPUnit/Framework.php';
 
 // Require Spot_Config
-require_once dirname(dirname(__FILE__)) . '/Config.php';
+require_once dirname(__DIR__) . '/Config.php';
 
 // Date setup
 date_default_timezone_set('America/Chicago');
 
 // Setup available adapters for testing
 
-$cfg = new Spot_Config();
+$cfg = new \Spot\Config();
 // MySQL
 $adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
 // MongoDB with adapter options
@@ -32,7 +32,7 @@ $adapter = $cfg->addConnection('test_mongodb', 'mongodb://localhost:28017', arra
 /**
  * Return Spot mapper for use
  */
-$mapper = new Spot_Mapper($cfg);
+$mapper = new \Spot\Mapper($cfg);
 function test_spot_mapper() {
 	global $mapper;
 	return $mapper;
@@ -43,8 +43,8 @@ function test_spot_mapper() {
  * Autoload test fixtures
  */
 function test_spot_autoloader($className) {
-	// Don't attempt to autoload 'PHPUnit_' or 'Spot_' classes
-	if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot_')) {
+	// Don't attempt to autoload 'PHPUnit_' or 'Spot' namespaced classes
+	if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot\\')) {
 		return false;
 	}
 	$classFile = str_replace('_', '/', $className) . '.php';

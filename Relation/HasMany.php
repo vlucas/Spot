@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Relation;
+
 /**
  * DataMapper class for 'has many' relations
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Relation_HasMany extends Spot_Relation_Abstract implements Countable, IteratorAggregate, ArrayAccess
+class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate, \ArrayAccess
 {
 	/**
 	 * Load query object with current relation data

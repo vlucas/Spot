@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Entity;
+
 /**
  * Entity Manager for storing information about entities
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Entity_Manager
+class Manager
 {
 	// Field and relation info
 	protected static $_properties = array();
@@ -30,7 +32,7 @@ class Spot_Entity_Manager
 	public function fields($entityName)
 	{
         if(!is_string($entityName)) {
-            throw new Spot_Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+            throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
         }
         
 		if(isset(self::$_fields[$entityName])) {

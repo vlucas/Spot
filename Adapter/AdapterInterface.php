@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Adapter;
+
 /**
  * Adapter Interface
  * 
  * @package Spot
  * @link http://spot.os.ly
  */
-interface Spot_Adapter_Interface
+interface AdapterInterface
 {
     /**
     * @param mixed $dsn DSN string or pre-existing raw connection object to be used instead of instantiating a new one (like PDO or Mongo, etc)
@@ -74,7 +76,7 @@ interface Spot_Adapter_Interface
 	/**
 	 * Read from data source using given query object
 	 */
-	public function read(Spot_Query $query, array $options = array());
+	public function read(\Spot\Query $query, array $options = array());
 	
 	
 	/**

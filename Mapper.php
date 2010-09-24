@@ -1,11 +1,13 @@
 <?php
+namespace Spot;
+
 /**
  * Base DataMapper
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Mapper
+class Mapper
 {
 	protected $_config;
 	
@@ -13,9 +15,9 @@ class Spot_Mapper
 	protected static $_entityManager;
 	
 	// Class Names for required classes - Here so they can be easily overridden
-	protected $_collectionClass = 'Spot_Entity_Collection';
-	protected $_queryClass = 'Spot_Query';
-	protected $_exceptionClass = 'Spot_Exception';
+	protected $_collectionClass = '\\Spot\\Entity\\Collection';
+	protected $_queryClass = '\\Spot\\Query';
+	protected $_exceptionClass = '\\Spot\\Exception';
 
 	// Array of error messages and types
 	protected $_errors = array();
@@ -24,14 +26,14 @@ class Spot_Mapper
 	/**
 	 *	Constructor Method
 	 */
-	public function __construct(Spot_Config $config)
+	public function __construct(Config $config)
 	{
 		$this->_config = $config;
 		
 		// Ensure at least the exception class is loaded
-		spot_load_class($this->_exceptionClass);
+		$config::loadClass($this->_exceptionClass);
 		if (!class_exists($this->_exceptionClass)) {
-			throw new Spot_Exception("The exception class of '".$this->_exceptionClass."' defined in '".get_class($this)."' does not exist.");
+			throw new Exception("The exception class of '".$this->_exceptionClass."' defined in '".get_class($this)."' does not exist.");
 		}
 	}
 
@@ -75,7 +77,7 @@ class Spot_Mapper
 	public function entityManager()
 	{
 		if(null === self::$_entityManager) {
-			self::$_entityManager = new Spot_Entity_Manager();
+			self::$_entityManager = new Entity\Manager();
 		}
 		return self::$_entityManager;
 	}
@@ -196,7 +198,7 @@ class Spot_Mapper
 			return $connection;
 		}
 		
-		throw new Spot_Exception("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot_Config::addConnection().");
+		throw new Exception("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot_Config::addConnection().");
 	}
 	
 	
@@ -381,7 +383,7 @@ class Spot_Mapper
 	public function save($entity, array $options = array())
 	{
 		if(!is_object($entity)) {
-			throw new $this->_exceptionClass(__CLASS__ . "::" . __FUNCTION__ . " Requires an entity object as the first parameter");
+			throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
 		}
 
 		// Run beforeSave to know whether or not we can continue
@@ -431,7 +433,7 @@ class Spot_Mapper
 			$entity = $this->get($entityName);
 			$data = $options;
 		} else {
-			throw new $this->_exceptionClass(__CLASS__ . "::" . __FUNCTION__ . " Accepts either an entity object or entity name + data array");
+			throw new $this->_exceptionClass(__METHOD__ . " Accepts either an entity object or entity name + data array");
 		}
 
 		// Ensure there is actually data to update
@@ -464,7 +466,7 @@ class Spot_Mapper
 			$entityName = get_class($entity);
 			$data = $this->data($entity);
 		} else {
-			throw new $this->_exceptionClass(__CLASS__ . "::" . __FUNCTION__ . " Requires an entity object as the first parameter");
+			throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
 		}
 
 		// Handle with adapter
@@ -558,14 +560,12 @@ class Spot_Mapper
                 }
 
                 // Load relation class to lazy-loading relations on demand
-                $relationClass = 'Spot_Relation_' . $relation['relation'];
-                if($loadedRel = spot_load_class($relationClass)) {
-                    // Set field equal to relation class instance
-                    $relationObj = new $relationClass($this, $relationEntity, $relation);
-                    $relations[$field] = $relationObj;
-                    $entity->$field = $relationObj;
-                }
-
+                $relationClass = '\\Spot\\Relation\\' . $relation['relation'];
+                
+                // Set field equal to relation class instance
+                $relationObj = new $relationClass($this, $relationEntity, $relation);
+                $relations[$field] = $relationObj;
+                $entity->$field = $relationObj;
             }
         }
         return $relations;
@@ -693,30 +693,3 @@ class Spot_Mapper
 		}
 	}
 }
-
-
-
-/**
- * Attempt to load class file based on Spot naming conventions
- */
-function spot_load_class($className)
-{
-	$loaded = false;
-
-	// If class has already been defined, skip loading
-	if(class_exists($className, false)) {
-		$loaded = true;
-	} else {
-		// Require Spot_* files by assumed folder structure (naming convention)
-		if(strpos($className, "Spot") !== false) {
-			$classFile = str_replace("_", "/", $className);
-			$loaded = require_once dirname(dirname(__FILE__)) . "/" . $classFile . ".php";
-		}
-	}
-
-	return $loaded;
-}
-/**
- * Register 'spot_load_class' function as an autoloader for files prefixed with 'Spot_'
- */
-spl_autoload_register('spot_load_class');

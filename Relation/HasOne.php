@@ -1,11 +1,12 @@
 <?php
+namespace Spot\Relation;
 /**
  * DataMapper class for 'has one' relations
  * 
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Relation_HasOne extends Spot_Relation_Abstract
+class HasOne extends RelationAbstract
 {
 	/**
 	 * Load query object with current relation data

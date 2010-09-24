@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Entity;
+
 /**
  * Collection of Spot_Entity objects
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Entity_Collection implements Iterator, Countable, ArrayAccess
+class Collection implements \Iterator, \Countable, \ArrayAccess
 {
 	protected $_results = array();
 	protected $_resultsIdentities = array();
@@ -52,7 +54,7 @@ class Spot_Entity_Collection implements Iterator, Countable, ArrayAccess
 	* @param Spot_Entity_Collection $collection
 	* @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
 	*/
-	public function merge(Spot_Entity_Collection $collection, $onlyUnique = true)
+	public function merge(\Spot\Entity\Collection $collection, $onlyUnique = true)
 	{
 		foreach($collection as $entity) {
 			if($onlyUnique && in_array($entity, $this->_results)) {

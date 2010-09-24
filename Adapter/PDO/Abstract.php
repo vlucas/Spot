@@ -1,13 +1,13 @@
 <?php
-require_once(dirname(dirname(__FILE__)) . '/Abstract.php');
-require_once(dirname(dirname(__FILE__)) . '/Interface.php');
+namespace Spot\Adapter;
+
 /**
  * Base PDO adapter
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implements Spot_Adapter_Interface
+abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 {
 	protected $_database;
 	
@@ -20,7 +20,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	public function connection()
 	{
 		if(!$this->_connection) {
-			if($this->_dsn instanceof PDO) {
+			if($this->_dsn instanceof \PDO) {
 				$this->_connection = $this->_dsn;
 			} else {
 				$dsnp = $this->parseDSN($this->_dsn);
@@ -29,11 +29,11 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				// Establish connection
 				try {
 					$dsn = $dsnp['adapter'].':host='.$dsnp['hostspec'].';dbname='.$dsnp['database'];
-					$this->_connection = new PDO($dsn, $dsnp['username'], $dsnp['password'], $this->_options);
+					$this->_connection = new \PDO($dsn, $dsnp['username'], $dsnp['password'], $this->_options);
 					// Throw exceptions by default
-					$this->_connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+					$this->_connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 				} catch(Exception $e) {
-					throw new Spot_Exception($e->getMessage());
+					throw new \Spot\Exception($e->getMessage());
 				}
 			}
 		}
@@ -98,7 +98,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = $this->migrateSyntaxTableCreate($table, $formattedFields, $columnsSyntax);
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql);
+		\Spot\Log::addQuery($this, $sql);
 		
 		$this->connection()->exec($sql);
 		return true;
@@ -149,15 +149,15 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			$sql = $this->migrateSyntaxTableUpdate($table, $formattedFields, $columnsSyntax);
 			
 			// Add query to log
-			Spot_Log::addQuery($this, $sql);
+			\Spot\Log::addQuery($this, $sql);
 			
 			try {
 				// Run SQL
 				$this->connection()->exec($sql);
-			} catch(PDOException $e) {
+			} catch(\PDOException $e) {
 				// Table does not exist
 				if($e->getCode() == "42S02") {
-					throw new Spot_Exception_Datasource_Missing("Table '" . $table . "' does not exist");
+					throw new \Spot\Exception_Datasource_Missing("Table '" . $table . "' does not exist");
 				}
 				return false;
 			}
@@ -186,7 +186,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			" VALUES(:" . implode(', :', array_keys($binds)) . ")";
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql, $binds);
+		\Spot\Log::addQuery($this, $sql, $binds);
 		
 		try {
 			// Prepare update query
@@ -202,10 +202,10 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 			} else {
 				$result = false;
 			}
-		} catch(PDOException $e) {
+		} catch(\PDOException $e) {
 			// Table does not exist
 			if($e->getCode() == "42S02") {
-				throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+				throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 			return false;
 		}
@@ -220,7 +220,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	 *
 	 * @todo Add support for JOINs
 	 */
-	public function read(Spot_Query $query, array $options = array())
+	public function read(\Spot\Query $query, array $options = array())
 	{
 		$conditions = $this->statementConditions($query->conditions);
 		$binds = $this->statementBinds($query->params());
@@ -250,7 +250,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		}
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql, $binds);
+		\Spot\Log::addQuery($this, $sql, $binds);
 		
 		try {
 			// Prepare update query
@@ -269,7 +269,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		} catch(PDOException $e) {
 			// Table does not exist
 			if($e->getCode() == "42S02") {
-				throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
+				throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
 			}
 			return false;
 		}
@@ -303,7 +303,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				" WHERE " . $conditions;
 			
 			// Add query to log
-			Spot_Log::addQuery($this, $sql, $binds);
+			\Spot\Log::addQuery($this, $sql, $binds);
             
 			try {
 				// Prepare update query
@@ -319,10 +319,10 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				} else {
 					$result = false;
 				}
-			} catch(PDOException $e) {
+			} catch(\PDOException $e) {
 				// Table does not exist
 				if($e->getCode() == "42S02") {
-					throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+					throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
 				}
 				return false;
 			}
@@ -349,7 +349,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql .= ($conditions ? ' WHERE ' . $conditions : '');
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql, $binds);
+		\Spot\Log::addQuery($this, $sql, $binds);
 		try {
 			$stmt = $this->connection()->prepare($sql);
 			if($stmt) {
@@ -363,10 +363,10 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				$result = false;
 			}
 			return $result;
-		} catch(PDOException $e) {
+		} catch(\PDOException $e) {
 			// Table does not exist
 			if($e->getCode() == "42S02") {
-				throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+				throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 			return false;
 		}
@@ -381,14 +381,14 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "TRUNCATE TABLE " . $datasource;
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql);
+		\Spot\Log::addQuery($this, $sql);
 		
 		try {
 			return $this->connection()->exec($sql);
-		} catch(PDOException $e) {
+		} catch(\PDOException $e) {
 			// Table does not exist
 			if($e->getCode() == "42S02") {
-				throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+				throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 			return false;
 		}
@@ -403,14 +403,14 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "DROP TABLE " . $datasource;
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql);
+		\Spot\Log::addQuery($this, $sql);
 		
 		try {
 			return $this->connection()->exec($sql);
-		} catch(PDOException $e) {
+		} catch(\PDOException $e) {
 			// Table does not exist
 			if($e->getCode() == "42S02") {
-				throw new Spot_Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+				throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 			return false;
 		}
@@ -425,7 +425,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "CREATE DATABASE " . $database;
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql);
+		\Spot\Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}
@@ -440,7 +440,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 		$sql = "DROP DATABASE " . $database;
 		
 		// Add query to log
-		Spot_Log::addQuery($this, $sql);
+		\Spot\Log::addQuery($this, $sql);
 		
 		return $this->connection()->exec($sql);
 	}
@@ -505,7 +505,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 					break;
 					// ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
 					case ':all':
-						throw new phpDataMapper_Exception("SQL adapters do not currently support the ':all' operator");
+						throw new \Spot\Exception("SQL adapters do not currently support the ':all' operator");
 					break;
 					// Not equal
 					case '<>':
@@ -594,7 +594,7 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 				
 				// Handle binding depending on type
 				if(is_object($value)) {
-					if($value instanceof DateTime) {
+					if($value instanceof \DateTime) {
 						// @todo Need to take into account column type for date formatting
 						$bindValue = (string) $value->format($this->dateTimeFormat());
 					} else {
@@ -636,14 +636,14 @@ abstract class Spot_Adapter_PDO_Abstract extends Spot_Adapter_Abstract implement
 	/**
 	 * Return result set for current query
 	 */
-	public function toCollection(Spot_Query $query, $stmt)
+	public function toCollection(\Spot\Query $query, $stmt)
 	{
 		$mapper = $query->mapper();
 		$entityClass = $query->entityName();
 		
-		if($stmt instanceof PDOStatement) {
+		if($stmt instanceof \PDOStatement) {
 			// Set PDO fetch mode
-			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+			$stmt->setFetchMode(\PDO::FETCH_ASSOC);
 			
 			$collection = $mapper->collection($entityClass, $stmt);
 			

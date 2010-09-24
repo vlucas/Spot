@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Adapter;
+
 /**
  * Abstract Adapter
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class Spot_Adapter_Abstract
+abstract class AdapterAbstract
 {
 	// Format for date columns, formatted for PHP's date() function
 	protected $_format_date;
@@ -121,15 +123,15 @@ abstract class Spot_Adapter_Abstract
 	 * Turn formstted date into timestamp
 	 * Also handles input timestamps
 	 *
-	 * @return int Unix timestamp
+	 * @return DateTime object
 	 */
 	protected function dateTimeObject($format)
 	{
-		// Alreaady a timestamp?
+		// Already a timestamp?
 		if(is_int($format) || is_float($format)) { // @link http://www.php.net/manual/en/function.is-int.php#97006
-			return new DateTime('@' . $format); // Timestamps must be prefixed with '@' symbol
+			return new \DateTime('@' . $format); // Timestamps must be prefixed with '@' symbol
 		}
-		return new DateTime(strtotime($format)); // @todo Change so that it does not depend on a timestamp (in PHP5.3 we can use DateTime::createFromFormat(), but we need 5.2 support for now...)
+		return \DateTime::createFromFormat($format);
 	}
 	
 	

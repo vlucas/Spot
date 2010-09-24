@@ -1,11 +1,13 @@
 <?php
+namespace Spot;
+
 /**
  * Logging class for all query activity
  * 
  * @package Spot
  * @link http://spot.os.ly
  */
-class Spot_Log
+class Log
 {
 	protected static $_queries = array();
 	protected static $_queryCount = 0;

@@ -1,11 +1,13 @@
 <?php
+namespace Spot\Entity;
+
 /**
  * Entity object
  *
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class Spot_Entity_Abstract
+abstract class EntityAbstract
 {
 	/**
 	 * Constructor function
@@ -31,7 +33,7 @@ abstract class Spot_Entity_Abstract
 				}
 				return $this;
 			} else {
-				throw new InvalidArgumentException(__METHOD__ . " Expected array or object input - " . gettype($data) . " given");
+				throw new \InvalidArgumentException(__METHOD__ . " Expected array or object input - " . gettype($data) . " given");
 			}
 		}
 	}
