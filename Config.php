@@ -89,7 +89,7 @@ class Config
 		// Require Spot namespaced files by assumed folder structure (naming convention)
 		if(false !== strpos($className, "Spot\\")) {
 			$classFile = trim(str_replace("\\", "/", str_replace("_", "/", str_replace('Spot\\', '', $className))), '\\');
-			$loaded = require(__DIR__ . "/" . $classFile . ".php");
+			$loaded = require_once(__DIR__ . "/" . $classFile . ".php");
 		}
 	
 		return $loaded;

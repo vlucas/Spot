@@ -173,6 +173,34 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 	{
 		return $this->connection()->prepare($sql);
 	}
+    
+    
+    /**
+	 * Find records with custom SQL query
+	 *
+	 * @param string $sql SQL query to execute
+	 * @param array $binds Array of bound parameters to use as values for query
+	 * @throws \Spot\Exception
+	 */
+	public function query($sql, array $binds = array())
+	{
+		// Add query to log
+		\Spot\Log::addQuery($this, $sql, $binds);
+		
+		// Prepare and execute query
+		if($stmt = $this->connection()->prepare($sql)) {
+			$results = $stmt->execute($binds);
+			if($results) {
+				$r = $stmt;
+			} else {
+				$r = false;
+			}
+			return $r;
+		} else {
+			throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
+		}
+	}
+    
 	
 	/**
 	 * Create new row object with set properties

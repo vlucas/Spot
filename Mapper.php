@@ -326,6 +326,27 @@ class Mapper
 	}
 
 
+    /**
+	 * Find records with custom query
+	 *
+	 * @throws \Spot\Exception
+	 */
+	public function query()
+	{
+        $args = func_get_args();
+        
+        // Remove entityName (first element)
+        $entityName = array_shift($args);
+        
+		$result = $this->connection($entityName)->query($args);
+        if($result) {
+            return $this->collection($result);
+        } else {
+            return false;
+        }
+	}
+    
+    
 	/**
 	 * Find records with given conditions
 	 * If all parameters are empty, find all records
