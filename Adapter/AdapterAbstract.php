@@ -129,9 +129,13 @@ abstract class AdapterAbstract
 	{
 		// Already a timestamp?
 		if(is_int($format) || is_float($format)) { // @link http://www.php.net/manual/en/function.is-int.php#97006
-			return new \DateTime('@' . $format); // Timestamps must be prefixed with '@' symbol
-		}
-		return \DateTime::createFromFormat($format);
+			$dt = new \DateTime();
+            $dt->setTimestamp($format); // Timestamps must be prefixed with '@' symbol
+		} else {
+            $dt = new \DateTime();
+            $dt->format($format);
+        }
+		return $dt;
 	}
 	
 	

@@ -44,10 +44,10 @@ function test_spot_mapper() {
  */
 function test_spot_autoloader($className) {
 	// Don't attempt to autoload 'PHPUnit_' or 'Spot' namespaced classes
-	if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot\\')) {
+	if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot')) {
 		return false;
 	}
 	$classFile = str_replace('_', '/', $className) . '.php';
-	require dirname(__FILE__) . '/' . $classFile;
+	require __DIR__ . '/' . $classFile;
 }
 spl_autoload_register('test_spot_autoloader');

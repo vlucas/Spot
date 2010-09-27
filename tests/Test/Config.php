@@ -9,8 +9,8 @@ class Test_Config extends PHPUnit_Framework_TestCase
 
 	public function testAddConnectionWithDSNString()
 	{
-		$cfg = new Spot_Config();
+		$cfg = new \Spot\Config();
 		$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
-		$this->assertTrue($adapter instanceof Spot_Adapter_Mysql);
+		$this->assertTrue($adapter instanceof \Spot\Adapter\Mysql);
 	}
 }

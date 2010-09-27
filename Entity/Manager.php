@@ -38,51 +38,25 @@ class Manager
 		if(isset(self::$_fields[$entityName])) {
 			$returnFields = self::$_fields[$entityName];
 		} else {
-			// New entity instance for default property reflection
-			$entityObject = new $entityName();
-			
-			// Neat little trick to get all object properties AND their values without using reflection
-			$rawEntityProperties = (array) $entityObject;
-			
-			// Property storage
-			$entityProperties = array(
-				'private' => array(),
-				'protected' => array(),
-				'public' => array()
-				);
-			
-			// Assemble object properties into a neat array for convenient access
-			foreach($rawEntityProperties as $propName => $propValue) {
-				// Private
-				if(strpos($propName, $entityName) === 1) { // Class name in front of property name
-					$propName = trim(str_replace($entityName, '', $propName));
-					$entityProperties['private'][$propName] = $propValue;
-				}
-				// Protected
-				elseif(strpos($propName, '*') === 1) { // Asterisk "*" in front of property name
-					$propName = trim(str_replace('*', '', $propName));
-					$entityProperties['protected'][$propName] = $propValue;
-				}
-				// Public
-				else {
-					$entityProperties['public'][$propName] = $propValue;
-				}
-			}
-			
 			// Datasource info
-			if(isset($entityProperties['protected']['_datasource'])) {
-				self::$_datasource[$entityName] = $entityProperties['protected']['_datasource'];
-			} else {
-				throw new Spot_Exception("Entity must have a datasource defined. Please define a protected property named '_datasource' on your '" . $entityName . "' entity class.");
-			}
+            $entityDatasource = null;
+            if(is_callable($entityName . '::datasource')) {
+                $entityDatasource = $entityName::datasource();
+            }
+            if(null === $entityDatasource || !is_string($entityDatasource)) {
+                echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
+                throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named '_datasource' on your '" . $entityName . "' entity class.");
+            }
+            self::$_datasource[$entityName] = $entityDatasource;
+            
 			
 			// Connection info
-			if(isset($entityProperties['protected']['_connection'])) {
-				self::$_connection[$entityName] = $entityProperties['protected']['_connection'];
-			} else {
-				// No adapter specified will use default one from config object (or first one set if default is not explicitly set)
-				self::$_connection[$entityName] = false;
-			}
+            $entityConnection = false;
+            if(is_callable($entityName . '::connection')) {
+                $entityConnection = $entityName::connection();
+            }
+            // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
+            self::$_connection[$entityName] = $entityConnection;
 			
 			// Default settings for all fields
 			$fieldDefaults = array(
@@ -115,9 +89,18 @@ class Manager
 					)
 				);
 
+            // Get entity fields from entity class
+            $entityFields = false;
+            if(is_callable($entityName . '::fields')) {
+                $entityFields = $entityName::fields();
+            }
+            if(!is_array($entityFields) || count($entityFields) < 1) {
+                throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
+            }
+                
 			$returnFields = array();
             self::$_fieldDefaultValues[$entityName] = array();
-			foreach($entityProperties['public'] as $fieldName => $fieldOpts) {
+			foreach($entityFields as $fieldName => $fieldOpts) {
 				// Store field definition exactly how it is defined before modifying it below
 				if($fieldOpts['type'] != 'relation') {
 					self::$_fieldsDefined[$entityName][$fieldName] = $fieldOpts;
@@ -142,15 +125,22 @@ class Manager
                 } else {
 					self::$_fieldDefaultValues[$entityName][$fieldName] = null;
 				}
-				// Store relations (and remove them from the mix of regular fields)
-				if($fieldOpts['type'] == 'relation') {
-					self::$_relations[$entityName][$fieldName] = $fieldOpts;
-					continue; // skip, not a field
-				}
 
 				$returnFields[$fieldName] = $fieldOpts;
 			}
 			self::$_fields[$entityName] = $returnFields;
+            
+            // Relations
+            $entityRelations = array();
+            if(is_callable($entityName . '::relations')) {
+                $entityRelations = $entityName::relations();
+                if(!is_array($entityRelations)) {
+                    throw new \InvalidArgumentException($entityName . " Relation definitons must be formatted as an array.");
+                }
+            }
+            foreach($entityRelations as $relationAlias => $relationOpts) {
+                self::$_relations[$entityName][$relationAlias] = $relationOpts;
+            }
 		}
 		return $returnFields;
 	}

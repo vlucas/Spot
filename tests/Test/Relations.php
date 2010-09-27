@@ -128,7 +128,7 @@ class Test_Relations extends PHPUnit_Framework_TestCase
 	{
         $mapper = test_spot_mapper();
 		$post = $mapper->get('Entity_Post', $postId);
-		$this->assertTrue($post->comments instanceof Spot_Relation_Abstract);
+		$this->assertTrue($post->comments instanceof \Spot\Relation\RelationAbstract);
 	}
 
 	/**
@@ -138,8 +138,8 @@ class Test_Relations extends PHPUnit_Framework_TestCase
 	{
         $mapper = test_spot_mapper();
 		$post = $mapper->get('Entity_Post', $postId);
-        $this->assertTrue($post->comments instanceof Spot_Relation_HasMany);
+        $this->assertTrue($post->comments instanceof \Spot\Relation\HasMany);
 		$sortedComments = $post->comments->order(array('date_created' => 'DESC'));
-		$this->assertTrue($sortedComments instanceof Spot_Query);
+		$this->assertTrue($sortedComments instanceof \Spot\Query);
 	}
 }

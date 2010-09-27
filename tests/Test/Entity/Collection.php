@@ -1,4 +1,5 @@
 <?php
+use \Spot;
 /**
  * @package Spot
  * @link http://spot.os.ly
@@ -14,7 +15,7 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		// New mapper instance
-		$this->collection = new Spot_Entity_Collection();
+		$this->collection = new \Spot\Entity\Collection();
 
 	}
 	public function tearDown() {}
@@ -57,7 +58,7 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 	public function testMergedCollectionHasCorrectSize()
 	{
-		$collection2 = new Spot_Entity_Collection();
+		$collection2 = new \Spot\Entity\Collection();
 		$collection2->add(new Entity_Post(array('key'=>'value')));
 		$collection2->add(new Entity_Post(array('key'=>'value1')));
 
@@ -72,14 +73,14 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 	public function testMergeCollectionReturnsCollection()
 	{
-		$collection2 = new Spot_Entity_Collection();
+		$collection2 = new \Spot\Entity\Collection();
 		$collection2->add(new Entity_Post(array('key'=>'value')));
-		$this->assertTrue($this->collection->merge($collection2) instanceOf Spot_Entity_Collection);
+		$this->assertTrue($this->collection->merge($collection2) instanceOf \Spot\Entity\Collection);
 	}
 
 	public function testMergeIsUnique()
 	{
-		$collection2 = new Spot_Entity_Collection();
+		$collection2 = new \Spot\Entity\Collection();
 		$this->collection->add(new Entity_Post(array('foo' => 'bar')));
 
 		$collection2->add(new Entity_Post(array('foo' => 'bar')));
@@ -91,7 +92,7 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 	public function testMergeIsNotUnique()
 	{
-		$collection2 = new Spot_Entity_Collection();
+		$collection2 = new \Spot\Entity\Collection();
 		$this->collection->add(new Entity_Post(array('foo' => 'bar')));
 
 		$collection2->add(new Entity_Post(array('foo' => 'bar')));
@@ -103,7 +104,7 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 	public function testFromArraySize0()
 	{
-		$this->collection = new Spot_Entity_Collection(array());
+		$this->collection = new \Spot\Entity\Collection(array());
 		$this->assertEquals(0, count($this->collection));
 	}
 	public function testFromArraySize2()
@@ -112,7 +113,7 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 			new Entity_Post(),
 			new Entity_Post()
 		);
-		$this->collection = new Spot_Entity_Collection($arr);
+		$this->collection = new \Spot\Entity\Collection($arr);
 		$this->assertEquals(2, count($this->collection));
 	}
 
@@ -126,9 +127,9 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 	public function testToString()
 	{
-		$this->assertEquals("Spot_Entity_Collection[0]", (string) $this->collection);
+		$this->assertEquals("Spot\\Entity\\Collection[0]", (string) $this->collection);
 		$this->collection->add(new Entity_Post());
 
-		$this->assertEquals("Spot_Entity_Collection[1]", (string) $this->collection);
+		$this->assertEquals("Spot\\Entity\\Collection[1]", (string) $this->collection);
 	}
 }

@@ -9,8 +9,12 @@ namespace Spot\Entity;
  */
 abstract class EntityAbstract
 {
+    protected static $_datasource;
+    protected static $_connection;
+    
+    
 	/**
-	 * Constructor function
+	 * Constructor - allows setting of object properties with array on construct
 	 */
 	public function __construct($data = null)
 	{
@@ -19,6 +23,34 @@ abstract class EntityAbstract
 			$this->data($data);
 		}
 	}
+    
+    
+    /**
+     * Datasource getter/setter
+     */
+    public static function datasource($ds = null)
+    {
+        $class = get_called_class();
+        if(null !== $ds) {
+            $class::$_datasource = $ds;
+            return $this;
+        }
+        return $class::$_datasource;
+    }
+    
+    
+    /**
+     * Named connection getter/setter
+     */
+    public static function connection($connection = null)
+    {
+        $class = get_called_class();
+        if(null !== $connection) {
+            $class::$_connection = $connection;
+            return $this;
+        }
+        return $class::$_connection;
+    }
 	
 	
 	/**

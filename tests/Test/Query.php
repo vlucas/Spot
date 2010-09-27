@@ -35,15 +35,15 @@ class Test_Query extends PHPUnit_Framework_TestCase
 	{
 		$mapper = test_spot_mapper();
         $posts = $mapper->all('Entity_Post', array('title' => 'even_title'));
-        $this->assertTrue($posts instanceof Spot_Query);
+        $this->assertTrue($posts instanceof \Spot\Query);
 	}
 	
 	public function testQueryCollectionInstance()
 	{
 		$mapper = test_spot_mapper();
         $posts = $mapper->all('Entity_Post', array('title' => 'even_title'));
-        $this->assertTrue($posts instanceof Spot_Query);
-		$this->assertTrue($posts->execute() instanceof Spot_Entity_Collection);
+        $this->assertTrue($posts instanceof \Spot\Query);
+		$this->assertTrue($posts->execute() instanceof \Spot\Entity\Collection);
 	}
 	
 	public function testOperatorNone()

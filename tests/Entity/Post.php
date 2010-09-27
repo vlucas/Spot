@@ -7,28 +7,40 @@
  */
 class Entity_Post extends \Spot\Entity\EntityAbstract
 {
-	protected $_datasource = 'test_posts';
+	protected static $_datasource = 'test_posts';
 
-	public $id = array('type' => 'int', 'primary' => true, 'serial' => true);
-	public $title = array('type' => 'string', 'required' => true);
-	public $body = array('type' => 'text', 'required' => true);
-	public $status = array('type' => 'int', 'default' => 0, 'index' => true);
-	public $date_created = array('type' => 'datetime');
-
-	// Each post entity 'hasMany' comment entites
-	public $comments = array(
-		'type' => 'relation',
-		'relation' => 'HasMany',
-		'entity' => '\Spot\Entity\EntityAbstract',
-		'where' => array('post_id' => ':entity.id'),
-		'order' => array('date_created' => 'ASC')
-		);
-    
-    
-    public function __construct(array $data = array())
+    /**
+     * Describe fields
+     *
+     * @return array
+     */
+    public static function fields()
     {
-        foreach($data as $field => $value) {
-            $this->$field = $value;
-        }
+        return array(
+            'id' => array('type' => 'int', 'primary' => true, 'serial' => true),
+            'title' => array('type' => 'string', 'required' => true),
+            'body' => array('type' => 'text', 'required' => true),
+            'status' => array('type' => 'int', 'default' => 0, 'index' => true),
+            'date_created' => array('type' => 'datetime')
+        );
+    }
+    
+    /**
+     * Describe relations
+     *
+     * @return array
+     */
+    public static function relations()
+    {
+        // Each post entity 'hasMany' comment entites
+        return array(
+            'comments' => array(
+                'type' => 'relation',
+                'relation' => 'HasMany',
+                'entity' => 'Entity_Post_Comment',
+                'where' => array('post_id' => ':entity.id'),
+                'order' => array('date_created' => 'ASC')
+            )
+        );
     }
 }
