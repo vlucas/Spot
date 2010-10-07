@@ -30,7 +30,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $this->assertTrue($result !== false);
     }
 
-    public function testSampleNewsInsertWithEmpyNonRequiredFields()
+    public function testSampleNewsInsertWithEmptyNonRequiredFields()
     {
         $mapper = test_spot_mapper();
         $post = $mapper->get('Entity_Post');
@@ -62,8 +62,13 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
 
         $post->title = "Test Post Modified";
         $result = $mapper->update($post); // returns boolean
-
-        $this->assertTrue($result);
+        
+        // TESTING
+        //var_dump(\Spot\Log::lastQuery());
+        //exit();
+        
+        $postu = $mapper->first('Entity_Post', array('title' => "Test Post Modified"));
+        $this->assertTrue($postu instanceof Entity_Post);
     }
 
     public function testSampleNewsDelete()
