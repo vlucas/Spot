@@ -24,7 +24,7 @@ abstract class Entity
     {
         // Set given data
         if($data) {
-            $this->data($data);
+            $this->data($data, false);
         }
     }
     
@@ -96,7 +96,7 @@ abstract class Entity
         $relations = array();
         $props = get_class_vars(get_called_class());
         foreach($props as $field => $value) {
-            // Property seems like a field?
+            // Property seems like a relation?
             if(is_array($value) && isset($value['type']) && $value['type'] == 'relation') {
                 $relations[$field] = $value;
             }
@@ -108,7 +108,7 @@ abstract class Entity
     /**
      * Gets and sets data on the current entity
      */
-    public function data($data = null)
+    public function data($data = null, $modified = true)
     {
         // GET
         if(null === $data || !$data) {
@@ -119,7 +119,11 @@ abstract class Entity
         // SET
         if(is_object($data) || is_array($data)) {
             foreach($data as $k => $v) {
-                $this->_data[$k] = $v;
+                if(true === $modified) {
+                    $this->_dataModified[$k] = $v;
+                } else {
+                    $this->_data[$k] = $v;
+                }
             }
             return $this;
         } else {

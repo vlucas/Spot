@@ -210,27 +210,11 @@ class Mapper
         $results = array();
         $resultsIdentities = array();
         
-        // Entity callbacks
-        $entityBeforeLoad = method_exists($entityName, 'beforeLoad');
-        $entityAfterLoad = method_exists($entityName, 'afterLoad');
-        
         // Fetch all results into new entity class
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
         foreach($cursor as $data) {
-            $entity = new $entityName();
-            
-            // Before callback
-            if($entityBeforeLoad) {
-                $entity->beforeLoad($data);
-            }
-            
-            // Set data
-            $entity->data($data);
-            
-            // After callback
-            if($entityAfterLoad) {
-                $entity->afterLoad();
-            }
+            // Entity with data set
+            $entity = new $entityName($data);
             
             // Load relation objects
             $this->loadRelations($entity);
@@ -442,9 +426,14 @@ class Mapper
         
         // Ensure there is actually data to update
         if(count($data) > 0) {
+            // Save only known, defined fields
+            $entityFields = $this->fields($entityName);
+            $data = array_intersect_key($data, $entityFields);
+            
+            // Send to adapter via named connection
             $result = $this->connection($entityName)->create($this->datasource($entityName), $data);
     
-            // Update primary key on row
+            // Update primary key on entity object
             $pkField = $this->primaryKeyField($entityName);
             $entity->$pkField = $result;
             
@@ -469,13 +458,9 @@ class Mapper
         if(is_object($entity)) {
             $entityName = get_class($entity);
             $data = $entity->dataModified();
-            // @todo Removing relations from data for now - we will save them separately later
-            $data = array_filter($data, function($val) {
-                if($val instanceof \Spot\Relation\RelationAbstract) {
-                    return false;
-                }
-                return true;
-            });
+            // Save only known, defined fields
+            $entityFields = $this->fields($entityName);
+            $data = array_intersect_key($data, $entityFields);
         } else {
             throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
