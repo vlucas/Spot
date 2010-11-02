@@ -556,7 +556,7 @@ class Mapper
                 }
     
                 // Load relation class to lazy-loading relations on demand
-                $relationClass = '\\Spot\\Relation\\' . $relation['relation'];
+                $relationClass = '\\Spot\\Relation\\' . $relation['type'];
                 
                 // Set field equal to relation class instance
                 $relationObj = new $relationClass($this, $relationEntity, $relation);

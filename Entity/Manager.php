@@ -32,7 +32,11 @@ class Manager
     public function fields($entityName)
     {
         if(!is_string($entityName)) {
-            throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+            throw new namespace\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+        }
+        
+        if(!is_subclass_of($entityName, 'Spot\Entity')) {
+            throw new namespace\Exception($entityName . " must be subclass of 'Spot\Entity'.");
         }
         
         if(isset(self::$_fields[$entityName])) {
@@ -40,9 +44,7 @@ class Manager
         } else {
             // Datasource info
             $entityDatasource = null;
-            if(is_callable($entityName . '::datasource')) {
-                $entityDatasource = $entityName::datasource();
-            }
+            $entityDatasource = $entityName::datasource();
             if(null === $entityDatasource || !is_string($entityDatasource)) {
                 echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
                 throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named '_datasource' on your '" . $entityName . "' entity class.");
@@ -51,12 +53,9 @@ class Manager
             
             
             // Connection info
-            $entityConnection = false;
-            if(is_callable($entityName . '::connection')) {
-                $entityConnection = $entityName::connection();
-            }
+            $entityConnection = $entityName::connection();
             // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
-            self::$_connection[$entityName] = $entityConnection;
+            self::$_connection[$entityName] = ($entityConnection) ? $entityConnection : false;
             
             // Default settings for all fields
             $fieldDefaults = array(
@@ -91,9 +90,7 @@ class Manager
     
             // Get entity fields from entity class
             $entityFields = false;
-            if(is_callable($entityName . '::fields')) {
-                $entityFields = $entityName::fields();
-            }
+            $entityFields = $entityName::fields();
             if(!is_array($entityFields) || count($entityFields) < 1) {
                 throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
             }
@@ -132,11 +129,9 @@ class Manager
             
             // Relations
             $entityRelations = array();
-            if(is_callable($entityName . '::relations')) {
-                $entityRelations = $entityName::relations();
-                if(!is_array($entityRelations)) {
-                    throw new \InvalidArgumentException($entityName . " Relation definitons must be formatted as an array.");
-                }
+            $entityRelations = $entityName::relations();
+            if(!is_array($entityRelations)) {
+                throw new \InvalidArgumentException($entityName . " Relation definitons must be formatted as an array.");
             }
             foreach($entityRelations as $relationAlias => $relationOpts) {
                 self::$_relations[$entityName][$relationAlias] = $relationOpts;
