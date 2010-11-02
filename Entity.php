@@ -22,6 +22,8 @@ abstract class Entity
      */
     public function __construct(array $data = array())
     {
+        $this->initFields();
+        
         // Set given data
         if($data) {
             $this->data($data, false);
@@ -96,7 +98,6 @@ abstract class Entity
     {
         // GET
         if(null === $data || !$data) {
-            $this->initFields();
             return array_merge($this->_data, $this->_dataModified);
         }
         
