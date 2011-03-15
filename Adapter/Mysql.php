@@ -53,7 +53,8 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		'datetime' => array('adapter_type' => 'datetime'),
 		'year' => array('adapter_type' => 'year', 'length' => 4),
 		'month' => array('adapter_type' => 'month', 'length' => 2),
-		'time' => array('adapter_type' => 'time')
+		'time' => array('adapter_type' => 'time'),
+		'timestamp' => array('adapter_type' => 'int', 'length' => 11)
 		);
 
 
@@ -139,7 +140,10 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 			if ( is_bool($default) && $fieldInfo['type'] == "boolean" ) {
 				$default = $default ? 1 : 0;
 			}
-			$syntax .= " DEFAULT '" . $default . "'";
+
+			if(is_scalar($default)) {
+				$syntax .= " DEFAULT '" . $default . "'";
+			}
 		}
 		// Extra
 		$syntax .= ($fieldInfo['primary'] && $fieldInfo['serial']) ? ' AUTO_INCREMENT' : '';
