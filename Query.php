@@ -280,9 +280,19 @@ class Query implements \Countable, \IteratorAggregate
      */
     public function count()
     {
-        // Execute query and return count
-        $result = $this->execute();
-        return ($result !== false) ? count($result) : 0;
+	//if same object used again, fields will need to be restored
+	$tmpfields = $this->fields;
+		
+	//temporarily set fields to only count
+	$this->fields = array('COUNT(*)');
+		
+        // Execute query and return array with count
+        $result = $this->execute()->first()->toArray();
+        
+        //restore fields
+        $this->fields = $tmpfields;
+        
+        return ($result !== false) ? (int) $result['COUNT(*)'] : 0;
     }
     
     
