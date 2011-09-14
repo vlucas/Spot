@@ -128,12 +128,14 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		if(!isset($this->_fieldTypeMap[$fieldInfo['type']])) {
 			throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
 		}
-
-		$fieldInfo = array_merge($fieldInfo, $this->_fieldTypeMap[$fieldInfo['type']]);
+		//Ensure this class will choose adapter type
+		unset($fieldInfo['adapter_type']);
+		
+		$fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
 
 		$syntax = "`" . $fieldName . "` " . $fieldInfo['adapter_type'];
 		// Column type and length
-		$syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
+		$syntax .= is_int($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
 		// Unsigned
 		$syntax .= ($fieldInfo['unsigned']) ? ' unsigned' : '';
 		// Collate
