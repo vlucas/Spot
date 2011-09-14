@@ -280,19 +280,11 @@ class Query implements \Countable, \IteratorAggregate
      */
     public function count()
     {
-	//if same object used again, fields will need to be restored
-	$tmpfields = $this->fields;
+		// Execute query
+		$result = $this->mapper()->connection($this->entityName())->count($this);
 		
-	//temporarily set fields to only count
-	$this->fields = array('COUNT(*)');
-		
-        // Execute query and return array with count
-        $result = $this->execute()->first()->toArray();
-        
-        //restore fields
-        $this->fields = $tmpfields;
-        
-        return ($result !== false) ? (int) $result['COUNT(*)'] : 0;
+		//return count
+        return is_numeric($result) ? $result : 0;
     }
     
     

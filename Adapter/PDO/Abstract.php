@@ -331,6 +331,45 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         return $result;
     }
     
+    /*
+	 * Count number of rows in source based on conditions
+	 */
+    public function count(\Spot\Query $query, array $options = array())
+    {
+		$conditions = $this->statementConditions($query->conditions);
+		
+		$sql = "
+            SELECT COUNT(*) as count
+            FROM " . $query->datasource . "
+            " . ($conditions ? 'WHERE ' . $conditions : '') . "
+            " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
+        
+        // Add query to log
+        \Spot\Log::addQuery($this, $sql);
+        
+        $result = false;
+        try {
+            // Prepare count query
+            $stmt = $this->connection()->prepare($sql);
+            
+            //if prepared, execute
+            if($stmt && $stmt->execute()) {
+                //the count is returned in the first column
+				$result = (int) $stmt->fetchColumn();
+            } else {
+                $result = false;
+            }
+        } catch(PDOException $e) {
+            // Table does not exist
+            if($e->getCode() == "42S02") {
+                throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
+            }
+            throw $e;
+        }
+        
+        return $result;
+	}
+	
     /**
      * Update entity
      */
