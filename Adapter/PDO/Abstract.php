@@ -332,20 +332,29 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     }
     
     /*
-	 * Count number of rows in source based on conditions
-	 */
+     * Count number of rows in source based on conditions
+     */
     public function count(\Spot\Query $query, array $options = array())
     {
-		$conditions = $this->statementConditions($query->conditions);
-		
-		$sql = "
+	$conditions = $this->statementConditions($query->conditions);
+	$binds = $this->statementBinds($query->params());
+	$sql = "
             SELECT COUNT(*) as count
             FROM " . $query->datasource . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
             " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
         
+         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+        if($binds && count($binds) > 0) {
+            foreach($binds as $field => $value) {
+                if(null === $value) {
+                    unset($binds[$field]);
+                }
+            }
+        }
+        
         // Add query to log
-        \Spot\Log::addQuery($this, $sql);
+        \Spot\Log::addQuery($this, $sql,$binds);
         
         $result = false;
         try {
@@ -353,9 +362,9 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             $stmt = $this->connection()->prepare($sql);
             
             //if prepared, execute
-            if($stmt && $stmt->execute()) {
+            if($stmt && $stmt->execute($binds)) {
                 //the count is returned in the first column
-				$result = (int) $stmt->fetchColumn();
+		$result = (int) $stmt->fetchColumn();
             } else {
                 $result = false;
             }
@@ -368,7 +377,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         }
         
         return $result;
-	}
+    }
 	
     /**
      * Update entity
