@@ -28,7 +28,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 
                 // Establish connection
                 try {
-                    $dsn = $dsnp['adapter'].':host='.$dsnp['hostspec'].';dbname='.$dsnp['database'];
+                    $dsn = $dsnp['adapter'].':host='.$dsnp['host'].';dbname='.$dsnp['database'];
                     $this->_connection = new \PDO($dsn, $dsnp['username'], $dsnp['password'], $this->_options);
                     // Throw exceptions by default
                     $this->_connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
