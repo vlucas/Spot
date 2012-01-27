@@ -250,7 +250,9 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($stmt) {
                 // Execute
                 if($stmt->execute($binds)) {
-                    $result = $this->connection()->lastInsertId();
+                    // Use 'id' if PK exists, otherwise returns true
+                    $id = $this->connection()->lastInsertId();
+                    $result = $id ? $id : true;
                 } else {
                     $result = false;
                 }
