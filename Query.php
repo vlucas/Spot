@@ -8,7 +8,7 @@ namespace Spot;
  * @author Vance Lucas <vance@vancelucas.com>
  * @link http://spot.os.ly
  */
-class Query implements \Countable, \IteratorAggregate
+class Query implements \Countable, \IteratorAggregate, QueryInterface
 {
     protected $_mapper;
     protected $_entityName;

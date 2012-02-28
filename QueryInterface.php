@@ -16,7 +16,7 @@ interface QueryInterface
 	 * @param object $adapter
 	 * @return string
 	 */
-	public function __construct(\Spot\Adapter\AdapterInterface $adapter);
+	public function __construct(\Spot\Mapper $mapper, $entityName);
 	
 	/**
 	 * Called from mapper's select() function
@@ -60,19 +60,4 @@ interface QueryInterface
 	 * LIMIT query or result set
 	 */
 	public function limit($limit = 20, $offset = null);
-	
-	/**
-	 * Get array of parameters/binds to execute in a prepared statement
-	 */
-	public function getParameters();
-	
-	/**
-	 * Get raw SQL code generated from other query builder functions
-	 */
-	public function sql();
-	
-	/**
-	 * Return Sql code with $this->sql() function
-	 */
-	public function __toString();
 }
