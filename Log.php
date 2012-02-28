@@ -9,6 +9,7 @@ namespace Spot;
  */
 class Log
 {
+    protected static $_queryLimit = 200;
     protected static $_queries = array();
     
     
@@ -21,11 +22,16 @@ class Log
      */
     public static function addQuery($adapter, $query, $data = null)
     {
+        // Shift element off beginning of array if we're at the query limit
+        if(self::queryCount() >= self::queryLimit()) {
+            array_shift(self::$_queries);
+        }
+
         self::$_queries[] = array(
             'adapter' => get_class($adapter),
             'query' => $query,
             'data' => $data
-            );
+        );
     }
     
     
@@ -59,5 +65,20 @@ class Log
     public static function queryCount()
     {
         return count(self::$_queries);
+    }
+
+
+    /**
+     * Get/set query limit
+     * A limit should be set by default to prevent query log from consuming and exhausing available memory
+     *
+     * @return int Query limit
+     */
+    public static function queryLimit($limit = null)
+    {
+        if(null !== $limit) {
+            self::$_queryLimit = $limit;
+        }
+        return self::$_queryLimit;
     }
 }
