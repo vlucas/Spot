@@ -141,4 +141,37 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$posts = $mapper->all('Entity_Post', array('status :not' => array(3,4,5)));
 		$this->assertEquals(7, $posts->count());
 	}
+
+	public function testQueryCountIsCachedForSameQueryResult()
+	{
+		$mapper = test_spot_mapper();
+		$posts = $mapper->all('Entity_Post');
+		$this->assertEquals(10, $posts->count());
+
+		// Count # of queries
+		$count1 = \Spot\Log::queryCount();
+
+		$this->assertEquals(10, $posts->count());
+
+		// Count again to ensure it is cached with no query changes
+		$count2 = \Spot\Log::queryCount();
+		$this->assertEquals($count1, $count2);
+	}
+
+	public function testQueryCountIsNotCachedForDifferentQueryResult()
+	{
+		$mapper = test_spot_mapper();
+		$posts = $mapper->all('Entity_Post');
+		$this->assertEquals(10, $posts->count());
+
+		// Count # of queries
+		$count1 = \Spot\Log::queryCount();
+
+		// Change query so count will NOT be cached
+		$this->assertEquals(3, $posts->where(array('status' => array(3,4,5)))->count());
+
+		// Count again to ensure it is NOT cached since there are query changes
+		$count2 = \Spot\Log::queryCount();
+		$this->assertNotEquals($count1, $count2);
+	}
 }
