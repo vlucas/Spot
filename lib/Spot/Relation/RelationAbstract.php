@@ -150,6 +150,11 @@ abstract class RelationAbstract
      */
     public function __call($func, $args)
     {
-        return call_user_func_array(array($this->execute(), $func), $args);
+        $obj = $this->execute();
+        if(is_object($obj)) {
+            return call_user_func_array(array($obj, $func), $args);
+        } else {
+            return $obj;
+        }
     }
 }
