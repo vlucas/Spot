@@ -50,6 +50,16 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         return $this->connection()->quote($string);
     }
+    
+    /**
+     * Escape/quote direct user input
+     *
+     * @param string $string
+     */
+    public function escapeField($field)
+    {
+        return $field;
+    }
 
 
     /**
@@ -237,7 +247,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $binds = $this->statementBinds($data);
         // build the statement
         $sql = "INSERT INTO " . $datasource .
-            " (" . implode(', ', array_keys($data)) . ")" .
+            " (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
             " VALUES(:" . implode(', :', array_keys($binds)) . ")";
         
         // Add query to log
@@ -286,7 +296,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $order = array();
         if($query->order) {
             foreach($query->order as $oField => $oSort) {
-                $order[] = $oField . " " . $oSort;
+                $order[] = $this->escapeField($oField) . " " . $oSort;
             }
         }
         
@@ -331,7 +341,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
@@ -402,7 +412,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
         // Placeholders and passed data
         foreach($dataFields as $field => $bindField) {
-            $placeholders[] = $field . " = :" . $bindField . "";
+            $placeholders[] = $this->escapeField($field) . " = :" . $bindField . "";
         }
         
         $conditions = $this->statementConditions($where, count($dataBinds));
@@ -571,7 +581,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
      */
     public function statementFields(array $fields = array())
     {
-        return count($fields) > 0 ? implode(', ', $fields) : "*";
+        return count($fields) > 0 ? implode(', ', array_map(array($this, 'escapeField'), $fields)) : "*";
     }
     
     
@@ -637,7 +647,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                     // MATCH(col) AGAINST(search)
                     case ':fulltext':
                         $colParam = preg_replace('/\W+/', '_', $col) . $ci;
-                        $whereClause = "MATCH(" . $col . ") AGAINST(:" . $colParam . ")";
+                        $whereClause = "MATCH(" . $this->escapeField($col) . ") AGAINST(:" . $colParam . ")";
                     break;
                     // ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
                     case ':all':
@@ -675,9 +685,9 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                         $valueIn .= $this->escape($val) . ",";
                     }
                     $value = "(" . trim($valueIn, ',') . ")";
-                    $whereClause = $col . " " . $operator . " " . $value;
+                    $whereClause = $this->escapeField($col) . " " . $operator . " " . $value;
                 } elseif(is_null($value)) {
-                    $whereClause = $col . " " . $operator;
+                    $whereClause = $this->escapeField($col) . " " . $operator;
                 }
                 
                 if(empty($whereClause)) {

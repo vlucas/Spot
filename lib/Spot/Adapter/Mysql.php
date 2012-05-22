@@ -68,6 +68,16 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		}
 		return $this->_engine;
 	}
+	
+	/**
+	 * Escape/quote direct user input
+	 *
+	 * @param string $string
+	 */
+	public function escapeField($field)
+	{
+		return $field == '*' ? $field : '`' . $field . '`';
+	}
 
 
 	/**
