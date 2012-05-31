@@ -1,9 +1,8 @@
 <?php
 /**
- * Post 
+ * Post
  *
  * @package Spot
- * @link http://spot.os.ly
  */
 class Entity_Post extends \Spot\Entity
 {
@@ -19,7 +18,7 @@ class Entity_Post extends \Spot\Entity
             'date_created' => array('type' => 'datetime')
         );
     }
-    
+
     public static function relations()
     {
         return array(

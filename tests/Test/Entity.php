@@ -7,19 +7,19 @@ require_once dirname(dirname(__FILE__)) . '/init.php';
 class Test_Entity extends PHPUnit_Framework_TestCase
 {
     protected $backupGlobals = false;
-    
+
     public function testEntitySetDataProperties()
     {
         $mapper = test_spot_mapper();
         $post = new Entity_Post();
-        
+
         // Set data
         $post->title = "My Awesome Post";
         $post->body = "<p>Body</p>";
-        
+
         $data = $post->data();
         ksort($data);
-        
+
         $testData = array(
             'id' => null,
             'title' => 'My Awesome Post',
@@ -28,10 +28,10 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'date_created' => null
             );
         ksort($testData);
-        
+
         $this->assertEquals($testData, $data);
     }
-    
+
     public function testEntitySetDataConstruct()
     {
         $mapper = test_spot_mapper();
@@ -39,10 +39,10 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'title' => 'My Awesome Post',
             'body' => '<p>Body</p>'
         ));
-        
+
         $data = $post->data();
         ksort($data);
-        
+
         $testData = array(
             'id' => null,
             'title' => 'My Awesome Post',
@@ -51,7 +51,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'date_created' => null
             );
         ksort($testData);
-        
+
         $this->assertEquals($testData, $data);
     }
 

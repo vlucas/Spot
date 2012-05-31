@@ -24,7 +24,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $post = $mapper->get('Entity_Post');
         $post->title = "Test Post";
         $post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
-        $post->date_created = $mapper->connection('Entity_Post')->date();
+        $post->date_created = new \DateTime();
         $result = $mapper->insert($post); // returns an id
 
         $this->assertTrue($result !== false);
@@ -54,6 +54,26 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $this->assertTrue($post instanceof Entity_Post);
     }
 
+    public function testInsertThenSelectReturnsProperTypes()
+    {
+        // Insert Post into database
+        $mapper = test_spot_mapper();
+        $post = $mapper->get('Entity_Post');
+        $post->title = "Types Test";
+        $post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
+        $post->status = 1;
+        $post->date_created = new \DateTime();
+        $result = $mapper->insert($post); // returns an id
+
+        // Read Post from database
+        $post = $mapper->get('Entity_Post', $result);
+
+        // Strict equality
+        $this->assertSame(1, $post->status);
+        $postData = $post->data();
+        $this->assertSame(1, $postData['status']);
+    }
+
     public function testSampleNewsUpdate()
     {
         $mapper = test_spot_mapper();
@@ -62,11 +82,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
 
         $post->title = "Test Post Modified";
         $result = $mapper->update($post); // returns boolean
-        
-        // TESTING
-        //var_dump(\Spot\Log::lastQuery());
-        //exit();
-        
+
         $postu = $mapper->first('Entity_Post', array('title' => "Test Post Modified"));
         $this->assertTrue($postu instanceof Entity_Post);
     }

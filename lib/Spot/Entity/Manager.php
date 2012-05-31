@@ -6,7 +6,6 @@ use Spot;
  * Entity Manager for storing information about entities
  *
  * @package Spot
- * @link http://spot.os.ly
  */
 class Manager
 {
@@ -17,13 +16,13 @@ class Manager
     protected static $_fieldDefaultValues = array();
     protected static $_relations = array();
     protected static $_primaryKeyField = array();
-    
+
     // Connection and datasource info
     protected static $_connection = array();
     protected static $_datasource = array();
     protected static $_datasourceOptions = array();
-    
-    
+
+
     /**
      * Get formatted fields with all neccesary array keys and values.
      * Merges defaults with defined field values to ensure all options exist for each field.
@@ -36,11 +35,11 @@ class Manager
         if(!is_string($entityName)) {
             throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
         }
-        
+
         if(!is_subclass_of($entityName, '\Spot\Entity')) {
             throw new \Spot\Exception($entityName . " must be subclass of '\Spot\Entity'.");
         }
-        
+
         if(isset(self::$_fields[$entityName])) {
             $returnFields = self::$_fields[$entityName];
         } else {
@@ -56,12 +55,12 @@ class Manager
             // Datasource Options
             $entityDatasourceOptions = $entityName::datasourceOptions();
             self::$_datasourceOptions[$entityName] = $entityDatasourceOptions;
-            
+
             // Connection info
             $entityConnection = $entityName::connection();
             // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
             self::$_connection[$entityName] = ($entityConnection) ? $entityConnection : false;
-            
+
             // Default settings for all fields
             $fieldDefaults = array(
                 'type' => 'string',
@@ -71,15 +70,15 @@ class Manager
                 'null' => true,
                 'unsigned' => false,
                 'fulltext' => false,
-    
+
                 'primary' => false,
                 'index' => false,
                 'unique' => false,
                 'serial' => false,
-    
+
                 'relation' => false
                 );
-    
+
             // Type default overrides for specific field types
             $fieldTypeDefaults = array(
                 'string' => array(
@@ -93,14 +92,14 @@ class Manager
                     'unsigned' => true
                     )
                 );
-    
+
             // Get entity fields from entity class
             $entityFields = false;
             $entityFields = $entityName::fields();
             if(!is_array($entityFields) || count($entityFields) < 1) {
                 throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
             }
-                
+
             $returnFields = array();
             self::$_fieldDefaultValues[$entityName] = array();
             foreach($entityFields as $fieldName => $fieldOpts) {
@@ -108,7 +107,7 @@ class Manager
                 if($fieldOpts['type'] != 'relation') {
                     self::$_fieldsDefined[$entityName][$fieldName] = $fieldOpts;
                 }
-                
+
                 // Format field will full set of default options
                 if(isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
                     // Include type defaults
@@ -117,7 +116,7 @@ class Manager
                     // Merge with defaults
                     $fieldOpts = array_merge($fieldDefaults, $fieldOpts);
                 }
-    
+
                 // Store primary key
                 if(true === $fieldOpts['primary']) {
                     self::$_primaryKeyField[$entityName] = $fieldName;
@@ -128,11 +127,11 @@ class Manager
                 } else {
                     self::$_fieldDefaultValues[$entityName][$fieldName] = null;
                 }
-    
+
                 $returnFields[$fieldName] = $fieldOpts;
             }
             self::$_fields[$entityName] = $returnFields;
-            
+
             // Relations
             $entityRelations = array();
             $entityRelations = $entityName::relations();
@@ -145,8 +144,8 @@ class Manager
         }
         return $returnFields;
     }
-    
-    
+
+
     /**
      * Get field information exactly how it is defined in the class
      *
@@ -160,8 +159,8 @@ class Manager
         }
         return self::$_fieldsDefined[$entityName];
     }
-    
-    
+
+
     /**
      * Get field default values as defined in class field definitons
      *
@@ -175,8 +174,8 @@ class Manager
         }
         return self::$_fieldDefaultValues[$entityName];
     }
-    
-    
+
+
     /**
      * Get defined relations
      *
@@ -190,8 +189,8 @@ class Manager
         }
         return self::$_relations[$entityName];
     }
-    
-    
+
+
     /**
      * Get value of primary key for given row result
      *
@@ -204,8 +203,8 @@ class Manager
         }
         return self::$_primaryKeyField[$entityName];
     }
-    
-    
+
+
     /**
      * Check if field exists in defined fields
      *
@@ -216,8 +215,8 @@ class Manager
     {
         return array_key_exists($field, $this->fields($entityName));
     }
-    
-    
+
+
     /**
      * Return field type
      *
@@ -230,8 +229,8 @@ class Manager
         $fields = $this->fields($entityName);
         return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
     }
-    
-    
+
+
     /**
      * Get defined connection to use for entity
      *
@@ -245,8 +244,8 @@ class Manager
         }
         return self::$_connection[$entityName];
     }
-    
-    
+
+
     /**
      * Get name of datasource for given entity class
      *
