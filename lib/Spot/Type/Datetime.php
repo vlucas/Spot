@@ -11,7 +11,7 @@ class Datetime implements TypeInterface
     {
         if($value && (is_string($value) || is_numeric($value))) {
             // Create new \DateTime instance from string value
-            $value = new \DateTime('@' . strtotime($value));
+            $value = new \DateTime($value);
         }
         return $value;
     }
