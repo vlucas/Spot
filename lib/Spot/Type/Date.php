@@ -9,7 +9,7 @@ class Datetime implements TypeInterface
      */
     public static function cast($value)
     {
-        if(is_string($value) || is_numeric($value)) {
+        if($value && (is_string($value) || is_numeric($value))) {
             // Create new \DateTime instance from string value
             $value = new \DateTime('@' . strtotime($value));
         }
