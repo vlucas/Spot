@@ -26,8 +26,8 @@ class Config implements \Serializable
         $this->typeHandler('bool', '\Spot\Type\Boolean');
         $this->typeHandler('boolean', '\Spot\Type\Boolean');
 
-        $this->typeHandler('datetime', '\Spot\Type\DateTime');
-        $this->typeHandler('date', '\Spot\Type\DateTime');
+        $this->typeHandler('datetime', '\Spot\Type\Datetime');
+        $this->typeHandler('date', '\Spot\Type\Datetime');
         $this->typeHandler('timestamp', '\Spot\Type\Integer');
         $this->typeHandler('year', '\Spot\Type\Integer');
         $this->typeHandler('month', '\Spot\Type\Integer');
