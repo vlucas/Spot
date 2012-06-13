@@ -175,7 +175,12 @@ abstract class Entity
     }
 
 
-    public function isModified($field = null) {
+    /**
+     * Returns true if a field has been modified.  
+     * If no field name is passed in, return whether any fields have been changed
+     */
+    public function isModified($field = null)
+    {
         if (null !== $field) {
             if (isset($this->_dataModified[$field])) {
                 return $this->_dataModified[$field] != $this->_data[$field];
@@ -185,7 +190,7 @@ abstract class Entity
                 return null;
             }
         }
-        return !!array_keys($this->_dataModified);
+        return !!count($this->_dataModified);
     }
 
 
