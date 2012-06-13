@@ -109,5 +109,13 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $this->assertTrue($post->fieldModified('title'));
 
         $this->assertFalse($post->fieldModified('id'));
+
+        $this->assertEquals($data['title'], $post->dataModified('title'));
+
+        $this->assertEquals($testData['title'], $post->dataUnmodified('title'));
+
+        $this->assertNull($post->dataModified('id'));
+
+        $this->assertNull($post->dataModified('status'));
     }
 }
