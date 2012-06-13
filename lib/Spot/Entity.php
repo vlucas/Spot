@@ -175,11 +175,17 @@ abstract class Entity
     }
 
 
-    public function fieldModified($field = null) {
-        if (null !== $field && isset($this->_dataModified[$field])) {
-            return $this->_dataModified[$field] != $this->_data[$field];
+    public function isModified($field = null) {
+        if (null !== $field) {
+            if (isset($this->_dataModified[$field])) {
+                return $this->_dataModified[$field] != $this->_data[$field];
+            } else if (isset($this->_data[$field])) {
+                return false;
+            } else {
+                return null;
+            }
         }
-        return false;
+        return !!array_keys($this->_dataModified);
     }
 
 
