@@ -80,4 +80,32 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         // Errors for one key only
         $this->assertEquals($postErrors['title'], $post->errors('title'));
     }
+    
+    public function testDataModified() {
+        $data = array(
+            'title' => 'My Awesome Post',
+            'body' => '<p>Body</p>'
+        );
+        
+        $testData = array(
+            'id' => null,
+            'title' => 'My Awesome Post',
+            'body' => '<p>Body</p>',
+            'status' => 0,
+            'date_created' => null
+            );
+        
+        // Set initial data
+        $post = new Entity_Post($data);
+
+        $this->assertEquals($testData, $post->dataUnmodified());
+
+        $this->assertEquals(array(), $post->dataModified());
+
+        $post->data($data);
+
+        $this->assertEquals($data, $post->dataModified());
+
+        $this->assertTrue($post->fieldModified('title'));
+    }
 }
