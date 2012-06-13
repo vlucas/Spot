@@ -170,7 +170,7 @@ abstract class Entity
     /**
      * Returns true if a field has been changed since object construct
      */
-    public function fieldChanged($field = null)
+    public function fieldModified($field = null)
     {
         if (null !== $field) {
             return isset($this->_dataModified[$field]);
