@@ -159,6 +159,26 @@ abstract class Entity
 
 
     /**
+     * Gets data that has not been modified since object construct
+     */
+    public function dataUnmodified()
+    {
+        return $this->_data;
+    }
+
+
+    /**
+     * Returns true if a field has been changed since object construct
+     */
+    public function fieldChanged($field = null)
+    {
+        if (null !== $field) {
+            return isset($this->_dataModified[$field]);
+        }
+    }
+
+
+    /**
      * Alias of self::data()
      */
     public function toArray()
