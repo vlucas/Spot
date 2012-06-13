@@ -83,8 +83,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
     
     public function testDataModified() {
         $data = array(
-            'title' => 'My Awesome Post',
-            'body' => '<p>Body</p>'
+            'title' => 'My Awesome Post 2',
+            'body' => '<p>Body 2</p>'
         );
         
         $testData = array(
@@ -96,7 +96,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             );
         
         // Set initial data
-        $post = new Entity_Post($data);
+        $post = new Entity_Post($testData);
 
         $this->assertEquals($testData, $post->dataUnmodified());
 
@@ -107,5 +107,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $this->assertEquals($data, $post->dataModified());
 
         $this->assertTrue($post->fieldModified('title'));
+
+        $this->assertFalse($post->fieldModified('id'));
     }
 }

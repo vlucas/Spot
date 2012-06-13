@@ -150,31 +150,36 @@ abstract class Entity
 
 
     /**
-     * Gets data that has been modified since object construct
+     * Gets data that has been modified since object construct, 
+     * optionally allowing for selecting a single field
      */
-    public function dataModified()
+    public function dataModified($field = null)
     {
+        if (null !== $field) {
+            return isset($this->_dataModified[$field]) ? $this->_dataModified[$field] : false;
+        }
         return $this->_dataModified;
     }
 
 
     /**
-     * Gets data that has not been modified since object construct
+     * Gets data that has not been modified since object construct,
+     * optionally allowing for selecting a single field
      */
-    public function dataUnmodified()
+    public function dataUnmodified($field = null)
     {
+        if (null !== $field) {
+            return isset($this->_data[$field]) ? $this->_data[$field] : false;
+        }
         return $this->_data;
     }
 
 
-    /**
-     * Returns true if a field has been changed since object construct
-     */
-    public function fieldModified($field = null)
-    {
-        if (null !== $field) {
-            return isset($this->_dataModified[$field]);
+    public function fieldModified($field = null) {
+        if (null !== $field && isset($this->_dataModified[$field])) {
+            return $this->_dataModified[$field] != $this->_data[$field];
         }
+        return false;
     }
 
 
