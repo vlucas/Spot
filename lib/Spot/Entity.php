@@ -156,7 +156,7 @@ abstract class Entity
     public function dataModified($field = null)
     {
         if (null !== $field) {
-            return isset($this->_dataModified[$field]) ? $this->_dataModified[$field] : false;
+            return isset($this->_dataModified[$field]) ? $this->_dataModified[$field] : null;
         }
         return $this->_dataModified;
     }
@@ -169,7 +169,7 @@ abstract class Entity
     public function dataUnmodified($field = null)
     {
         if (null !== $field) {
-            return isset($this->_data[$field]) ? $this->_data[$field] : false;
+            return isset($this->_data[$field]) ? $this->_data[$field] : null;
         }
         return $this->_data;
     }
