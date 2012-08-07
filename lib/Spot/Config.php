@@ -13,25 +13,25 @@ class Config implements \Serializable
     public function __construct()
     {
         // Setup default type hanlders
-        $this->typeHandler('string', '\Spot\Type\String');
-        $this->typeHandler('text', '\Spot\Type\String');
+        self::typeHandler('string', '\Spot\Type\String');
+        self::typeHandler('text', '\Spot\Type\String');
 
-        $this->typeHandler('int', '\Spot\Type\Integer');
-        $this->typeHandler('integer', '\Spot\Type\Integer');
+        self::typeHandler('int', '\Spot\Type\Integer');
+        self::typeHandler('integer', '\Spot\Type\Integer');
 
-        $this->typeHandler('float', '\Spot\Type\Float');
-        $this->typeHandler('double', '\Spot\Type\Float');
-        $this->typeHandler('decimal', '\Spot\Type\Float');
+        self::typeHandler('float', '\Spot\Type\Float');
+        self::typeHandler('double', '\Spot\Type\Float');
+        self::typeHandler('decimal', '\Spot\Type\Float');
 
-        $this->typeHandler('bool', '\Spot\Type\Boolean');
-        $this->typeHandler('boolean', '\Spot\Type\Boolean');
+        self::typeHandler('bool', '\Spot\Type\Boolean');
+        self::typeHandler('boolean', '\Spot\Type\Boolean');
 
-        $this->typeHandler('datetime', '\Spot\Type\Datetime');
-        $this->typeHandler('date', '\Spot\Type\Datetime');
-        $this->typeHandler('timestamp', '\Spot\Type\Integer');
-        $this->typeHandler('year', '\Spot\Type\Integer');
-        $this->typeHandler('month', '\Spot\Type\Integer');
-        $this->typeHandler('day', '\Spot\Type\Integer');
+        self::typeHandler('datetime', '\Spot\Type\Datetime');
+        self::typeHandler('date', '\Spot\Type\Datetime');
+        self::typeHandler('timestamp', '\Spot\Type\Integer');
+        self::typeHandler('year', '\Spot\Type\Integer');
+        self::typeHandler('month', '\Spot\Type\Integer');
+        self::typeHandler('day', '\Spot\Type\Integer');
     }
 
     /**
@@ -94,7 +94,7 @@ class Config implements \Serializable
      * @param string $type Field type (i.e. 'string' or 'int', etc.)
      * @return Spot_Adapter_Interface Spot adapter instance
      */
-    public function typeHandler($type, $class = null)
+    public static function typeHandler($type, $class = null)
     {
         if(null === $class) {
             if(!isset(self::$_typeHandlers[$type])) {
