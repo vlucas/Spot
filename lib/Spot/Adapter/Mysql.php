@@ -49,13 +49,14 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		'boolean' => array('adapter_type' => 'tinyint', 'length' => 1),
 		'float' => array('adapter_type' => 'float'),
 		'double' => array('adapter_type' => 'double'),
+		'decimal' => array('adapter_type' => 'decimal'),
 		'date' => array('adapter_type' => 'date'),
 		'datetime' => array('adapter_type' => 'datetime'),
 		'year' => array('adapter_type' => 'year', 'length' => 4),
 		'month' => array('adapter_type' => 'month', 'length' => 2),
 		'time' => array('adapter_type' => 'time'),
 		'timestamp' => array('adapter_type' => 'int', 'length' => 11)
-		);
+  );
 
 
 	/**

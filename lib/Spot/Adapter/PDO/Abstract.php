@@ -10,11 +10,11 @@ namespace Spot\Adapter;
 abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 {
     protected $_database;
-    
-    
+
+
     /**
      * Get database connection
-     * 
+     *
      * @return object PDO
      */
     public function connection()
@@ -25,7 +25,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             } else {
                 $dsnp = $this->parseDSN($this->_dsn);
                 $this->_database = $dsnp['database'];
-                
+
                 // Establish connection
                 try {
                     $dsn = $dsnp['adapter'].':host='.$dsnp['host'].';dbname='.$dsnp['database'];
@@ -39,8 +39,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         }
         return $this->_connection;
     }
-    
-    
+
+
     /**
      * Escape/quote direct user input
      *
@@ -50,7 +50,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         return $this->connection()->quote($string);
     }
-    
+
     /**
      * Escape/quote direct user input
      *
@@ -69,8 +69,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         return $options;
     }
-    
-    
+
+
     /**
      * Migrate table structure changes to database
      * @param String $table Table name
@@ -89,7 +89,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         // Get current fields for table
         $tableExists = false;
         $tableColumns = $this->getColumnsForTable($table, $this->_database);
-        
+
         if($tableColumns) {
             $tableExists = true;
         }
@@ -101,8 +101,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             $this->migrateTableCreate($table, $fields, $options);
         }
     }
-    
-    
+
+
     /**
      * Execute a CREATE TABLE command
      * 
@@ -118,27 +118,27 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             * Use column syntax array to get table syntax
             * Run SQL
         */
-        
+
         // Prepare fields and get syntax for each
         $columnsSyntax = array();
         foreach($formattedFields as $fieldName => $fieldInfo) {
             $columnsSyntax[$fieldName] = $this->migrateSyntaxFieldCreate($fieldName, $fieldInfo);
         }
-        
+
         // Get syntax for table with fields/columns
         $sql = $this->migrateSyntaxTableCreate($table, $formattedFields, $columnsSyntax, $options);
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql);
-        
+
         $this->connection()->exec($sql);
         return true;
     }
-    
-    
+
+
     /**
      * Execute an ALTER/UPDATE TABLE command
-     * 
+     *
      * @param String $table Table name
      * @param Array $fields Fields and their attributes as defined in the mapper
      * @param Array $options Options that may affect migrations or how tables are setup
@@ -151,24 +151,24 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             * Use column syntax array to get table syntax
             * Run SQL
         */
-        
+
         // Prepare fields and get syntax for each
         $tableColumns = $this->getColumnsForTable($table, $this->_database);
         $updateFormattedFields = array();
         foreach($tableColumns as $fieldName => $columnInfo) {
             if(isset($formattedFields[$fieldName])) {
                 // TODO: Need to do a more exact comparison and make this non-mysql specific
-                if ( 
+                if (
                         $this->_fieldTypeMap[$formattedFields[$fieldName]['type']] != $columnInfo['DATA_TYPE'] ||
                         $formattedFields[$fieldName]['default'] !== $columnInfo['COLUMN_DEFAULT']
                     ) {
                     $updateFormattedFields[$fieldName] = $formattedFields[$fieldName];
                 }
-                
+
                 unset($formattedFields[$fieldName]);
             }
         }
-        
+
         $columnsSyntax = array();
         // Update fields whose options have changed
         foreach($updateFormattedFields as $fieldName => $fieldInfo) {
@@ -178,14 +178,14 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         foreach($formattedFields as $fieldName => $fieldInfo) {
             $columnsSyntax[$fieldName] = $this->migrateSyntaxFieldUpdate($fieldName, $fieldInfo, true);
         }
-        
+
         // Get syntax for table with fields/columns
         if ( !empty($columnsSyntax) ) {
             $sql = $this->migrateSyntaxTableUpdate($table, $formattedFields, $columnsSyntax, $options);
-            
+
             // Add query to log
             \Spot\Log::addQuery($this, $sql);
-            
+
             try {
                 // Run SQL
                 $this->connection()->exec($sql);
@@ -201,8 +201,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         }
         return true;
     }
-    
-    
+
+
     /**
      * Prepare an SQL statement 
      */
@@ -210,8 +210,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         return $this->connection()->prepare($sql);
     }
-    
-    
+
+
     /**
      * Find records with custom SQL query
      *
@@ -223,7 +223,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
-        
+
         // Prepare and execute query
         if($stmt = $this->connection()->prepare($sql)) {
             $results = $stmt->execute($binds);
@@ -237,8 +237,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
         }
     }
-    
-    
+
+
     /**
      * Create new row object with set properties
      */
@@ -249,14 +249,14 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $sql = "INSERT INTO " . $datasource .
             " (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
             " VALUES(:" . implode(', :', array_keys($binds)) . ")";
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
-        
+
         try {
             // Prepare update query
             $stmt = $this->connection()->prepare($sql);
-            
+
             if($stmt) {
                 // Execute
                 if($stmt->execute($binds)) {
@@ -274,11 +274,11 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
-        
+
         return $result;
     }
 
@@ -299,7 +299,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 $order[] = $this->escapeField($oField) . " " . $oSort;
             }
         }
-        
+
         $sql = "
             SELECT " . $this->statementFields($query->fields) . "
             FROM " . $query->datasource . "
@@ -308,7 +308,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             " . ($order ? 'ORDER BY ' . implode(', ', $order) : '') . "
             " . ($query->limit ? 'LIMIT ' . $query->limit : '') . " " . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
             ";
-        
+
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if($binds && count($binds) > 0) {
             foreach($binds as $field => $value) {
@@ -317,15 +317,15 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 }
             }
         }
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
-        
+
         $result = false;
         try {
             // Prepare update query
             $stmt = $this->connection()->prepare($sql);
-            
+
             if($stmt) {
                 // Execute
                 if($stmt->execute($binds)) {
@@ -345,23 +345,23 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             // Re-throw exception
             throw $e;
         }
-        
+
         return $result;
     }
-    
+
     /*
      * Count number of rows in source based on conditions
      */
     public function count(\Spot\Query $query, array $options = array())
     {
-	$conditions = $this->statementConditions($query->conditions);
-	$binds = $this->statementBinds($query->params());
-	$sql = "
+        $conditions = $this->statementConditions($query->conditions);
+        $binds = $this->statementBinds($query->params());
+        $sql = "
             SELECT COUNT(*) as count
             FROM " . $query->datasource . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
             " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
-        
+
          // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if($binds && count($binds) > 0) {
             foreach($binds as $field => $value) {
@@ -370,19 +370,19 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 }
             }
         }
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql,$binds);
-        
+
         $result = false;
         try {
             // Prepare count query
             $stmt = $this->connection()->prepare($sql);
-            
+
             //if prepared, execute
             if($stmt && $stmt->execute($binds)) {
                 //the count is returned in the first column
-		$result = (int) $stmt->fetchColumn();
+                $result = (int) $stmt->fetchColumn();
             } else {
                 $result = false;
             }
@@ -391,11 +391,11 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
-        
+
         return $result;
     }
 	
@@ -407,30 +407,30 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $dataBinds = $this->statementBinds($data, 0);
         $whereBinds = $this->statementBinds($where, count($dataBinds));
         $binds = array_merge($dataBinds, $whereBinds);
-        
+
         $placeholders = array();
         $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
         // Placeholders and passed data
         foreach($dataFields as $field => $bindField) {
             $placeholders[] = $this->escapeField($field) . " = :" . $bindField . "";
         }
-        
+
         $conditions = $this->statementConditions($where, count($dataBinds));
-        
+
         // Ensure there are actually updated values on THIS table
         if(count($binds) > 0) {
             // Build the query
             $sql = "UPDATE " . $datasource .
                 " SET " . implode(', ', $placeholders) .
                 " WHERE " . $conditions;
-            
+
             // Add query to log
             \Spot\Log::addQuery($this, $sql, $binds);
-            
+
             try {
                 // Prepare update query
                 $stmt = $this->connection()->prepare($sql);
-                
+
                 if($stmt) {
                     // Execute
                     if($stmt->execute($binds)) {
@@ -446,18 +446,18 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 if($e->getCode() == "42S02") {
                     throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
                 }
-                
+
                 // Re-throw exception
                 throw $e;
             }
         } else {
             $result = false;
         }
-        
+
         return $result;
     }
-    
-    
+
+
     /**
      * Delete entities matching given conditions
      *
@@ -468,10 +468,10 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         $binds = $this->statementBinds($data, 0);
         $conditions = $this->statementConditions($data);
-        
+
         $sql = "DELETE FROM " . $datasource . "";
         $sql .= ($conditions ? ' WHERE ' . $conditions : '');
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
         try {
@@ -492,23 +492,23 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
     }
-    
-    
+
+
     /**
      * Truncate a database table
      * Should delete all rows and reset serial/auto_increment keys to 0
      */
     public function truncateDatasource($datasource) {
         $sql = "TRUNCATE TABLE " . $datasource;
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql);
-        
+
         try {
             return $this->connection()->exec($sql);
         } catch(\PDOException $e) {
@@ -516,23 +516,23 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
     }
-    
-    
+
+
     /**
      * Drop a database table
      * Destructive and dangerous - drops entire table and all data
      */
     public function dropDatasource($datasource) {
         $sql = "DROP TABLE " . $datasource;
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql);
-        
+
         try {
             return $this->connection()->exec($sql);
         } catch(\PDOException $e) {
@@ -540,27 +540,27 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             if($e->getCode() == "42S02") {
                 throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
             }
-            
+
             // Re-throw exception
             throw $e;
         }
     }
-    
-    
+
+
     /**
      * Create a database
      * Will throw errors if user does not have proper permissions
      */
     public function createDatabase($database) {
         $sql = "CREATE DATABASE " . $database;
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql);
-        
+
         return $this->connection()->exec($sql);
     }
-    
-    
+
+
     /**
      * Drop a database table
      * Destructive and dangerous - drops entire table and all data
@@ -568,14 +568,14 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
      */
     public function dropDatabase($database) {
         $sql = "DROP DATABASE " . $database;
-        
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql);
-        
+
         return $this->connection()->exec($sql);
     }
-    
-    
+
+
     /**
      * Return fields as a string for a query statement
      */
@@ -583,15 +583,15 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         return count($fields) > 0 ? implode(', ', array_map(array($this, 'escapeField'), $fields)) : "*";
     }
-    
-    
+
+
     /**
      * Builds an SQL string given conditions
      */
     public function statementConditions(array $conditions = array(), $ci = 0)
     {
         if(count($conditions) == 0) { return; }
-        
+
         $sqlStatement = "(";
         $defaultColOperators = array(0 => '', 1 => '=');
         $loopOnce = false;
@@ -605,7 +605,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             $sqlWhere = array();
             foreach($subConditions as $column => $value) {
                 $whereClause = '';
-                
+
                 // Column name with comparison operator
                 $colData = explode(' ', $column);
                 $operator = isset($colData[1]) ? $colData[1] : '=';
@@ -614,7 +614,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                     $colData = array( implode(' ', $colData), $operator);
                 }
                 $col = $colData[0];
-                
+
                 // Determine which operator to use based on custom and standard syntax
                 switch($operator) {
                     case '<':
@@ -677,7 +677,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                         }
                     break;
                 }
-                
+
                 // If WHERE clause not already set by the code above...
                 if(is_array($value)) {
                     $valueIn = "";
@@ -689,7 +689,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 } elseif(is_null($value)) {
                     $whereClause = $this->escapeField($col) . " " . $operator;
                 }
-                
+
                 if(empty($whereClause)) {
                     // Add to binds array and add to WHERE clause
                     $colParam = preg_replace('/\W+/', '_', $col) . $ci;
@@ -697,7 +697,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 } else {
                     $sqlWhere[] = $whereClause;
                 }
-                
+
                 // Increment ensures column name distinction
                 $ci++;
             }
@@ -708,23 +708,23 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             $sqlStatement .= ")";
             if($loopOnce) { break; }
         }
-        
+
         // Ensure we actually had conditions
         if(0 == $ci) {
             $sqlStatement = '';
         }
-        
+
         return $sqlStatement;
     }
-    
-    
+
+
     /**
      * Returns array of binds to pass to query function
      */
     public function statementBinds(array $conditions = array(), $ci = false)
     {
         if(count($conditions) == 0) { return; }
-        
+
         $binds = array();
         $loopOnce = false;
         foreach($conditions as $condition) {
@@ -735,9 +735,9 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 $loopOnce = true;
             }
             foreach($subConditions as $column => $value) {
-                
+
                 $bindValue = false;
-                
+
                 // Handle binding depending on type
                 if(is_object($value)) {
                     if($value instanceof \DateTime) {
@@ -751,7 +751,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 } elseif(!is_array($value)) {
                     $bindValue = $value;
                 }
-                
+
                 // Bind given value
                 if(false !== $bindValue) {
                     // Column name with comparison operator
@@ -762,15 +762,15 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                         $colData = array(implode(' ', $colData), $operator);
                     }
                     $col = $colData[0];
-                    
+
                     // Increment ensures column name distinction
                     if(false !== $ci) {
                         $col = $col . $ci;
                         $ci++;
                     }
-                    
+
                     $colParam = preg_replace('/\W+/', '_', $col);
-                    
+
                     // Add to binds array and add to WHERE clause
                     $binds[$colParam] = $bindValue;
                 }
@@ -779,8 +779,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         }
         return $binds;
     }
-    
-    
+
+
     /**
      * Return result set for current query
      */
@@ -788,25 +788,25 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
     {
         $mapper = $query->mapper();
         $entityClass = $query->entityName();
-        
+
         if($stmt instanceof \PDOStatement) {
             // Set PDO fetch mode
             $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-            
+
             $collection = $mapper->collection($entityClass, $stmt);
-            
+
             // Ensure statement is closed
             $stmt->closeCursor();
 
             return $collection;
-            
+
         } else {
             $mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
             return array();
         }
     }
-    
-    
+
+
     /**
      * Bind array of field/value data to given statement
      *
