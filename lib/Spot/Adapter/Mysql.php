@@ -146,7 +146,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 		$syntax = "`" . $fieldName . "` " . $fieldInfo['adapter_type'];
 		// Column type and length
-		$syntax .= is_int($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
+		$syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
 		// Unsigned
 		$syntax .= ($fieldInfo['unsigned']) ? ' unsigned' : '';
 		// Collate
