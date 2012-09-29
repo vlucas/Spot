@@ -57,16 +57,4 @@ class HasOne extends RelationAbstract
 			$entity->$var = $value;
 		}
 	}
-	
-	
-	/**
-	* Passthrough for missing methods on expected object result
-	*/
-	public function __call($func, $args)
-	{
-		$entity = $this->execute();
-		if($entity) {
-			return call_user_func_array(array($entity, $func), $args);
-		}
-	}
 }
