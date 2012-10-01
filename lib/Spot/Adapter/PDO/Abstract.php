@@ -693,7 +693,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 if(empty($whereClause)) {
                     // Add to binds array and add to WHERE clause
                     $colParam = preg_replace('/\W+/', '_', $col) . $ci;
-                    $sqlWhere[] = $col . " " . $operator . " :" . $colParam . "";
+                    $sqlWhere[] = $this->escapeField($col) . " " . $operator . " :" . $colParam . "";
                 } else {
                     $sqlWhere[] = $whereClause;
                 }
