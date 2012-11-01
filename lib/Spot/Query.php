@@ -3,7 +3,7 @@ namespace Spot;
 
 /**
  * Query Object - Used to build adapter-independent queries PHP-style
- * 
+ *
  * @package Spot
  * @author Vance Lucas <vance@vancelucas.com>
  * @link http://spot.os.ly
@@ -13,7 +13,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected $_mapper;
     protected $_entityName;
     protected $_cache;
-    
+
     // Storage for query properties
     public $fields = array();
     public $datasource;
@@ -23,8 +23,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public $group = array();
     public $limit;
     public $offset;
-    
-    
+
+    // Custom methods added by extensions or plugins
+    protected static $_customMethods = array();
+
+
     /**
      *	Constructor Method
      *
@@ -36,8 +39,46 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $this->_mapper = $mapper;
         $this->_entityName = $entityName;
     }
-    
-    
+
+
+    /**
+     * Add a custom user method via closure or PHP callback
+     *
+     * @param string $method Method name to add
+     * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
+     * @throws InvalidArgumentException
+     */
+    public static function addMethod($method, $callback)
+    {
+        if(!is_callable($callback)) {
+            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");  
+        }
+        if(method_exists(__CLASS__, $method)) {
+            throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__); 
+        }
+        self::$_customMethods[$method] = $callback;
+    }
+
+    /**
+     * Run user-added callback
+     *
+     * @param string $method Method name called
+     * @param array $args Array of arguments used in missing method call
+     * @throws BadMethodCallException
+     */
+    public function __call($method, $args)
+    {
+        if(isset(self::$_customMethods[$method]) && is_callable(self::$_customMethods[$method])) {
+            $callback = self::$_customMethods[$method];
+            // Pass the current query object as the first parameter
+            array_unshift($args, $this);
+            return call_user_func_array($callback, $args);
+        } else {
+            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found"); 
+        }
+    }
+
+
     /**
      * Get current adapter object
      */
@@ -45,8 +86,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->_mapper;
     }
-    
-    
+
+
     /**
      * Get current entity name query is to be performed on
      */
@@ -54,11 +95,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->_entityName;
     }
-    
-    
+
+
     /**
      * Called from mapper's select() function
-     * 
+     *
      * @param mixed $fields (optional)
      * @param string $source Data source name
      * @return string
@@ -71,8 +112,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
         return $this;
     }
-    
-    
+
+
     /**
      * From
      *
@@ -84,8 +125,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $this->datasource = $datasource;
         return $this;
     }
-    
-    
+
+
     /**
      * Find records with given conditions
      * If all parameters are empty, find all records
@@ -96,11 +137,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->where($conditions);
     }
-    
-    
+
+
     /**
      * WHERE conditions
-     * 
+     *
      * @param array $conditions Array of conditions for this clause
      * @param string $type Keyword that will separate each condition - "AND", "OR"
      * @param string $setType Keyword that will separate the whole set of conditions - "AND", "OR"
@@ -113,7 +154,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
             $where['conditions'] = $conditions;
             $where['type'] = $type;
             $where['setType'] = $setType;
-            
+
             $this->conditions[] = $where;
         }
         return $this;
@@ -167,8 +208,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         // Resolve search criteria
         return $this->where(array($fieldString . ' ' . $whereType => $query));
     }
-    
-    
+
+
     /**
      * ORDER BY columns
      *
@@ -186,7 +227,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
                     $field = $sort;
                     $sort = $defaultSort;
                 }
-                
+
                 $this->order[$field] = strtoupper($sort);
             }
         } else {
@@ -194,8 +235,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
         return $this;
     }
-    
-    
+
+
     /**
      * GROUP BY clause
      *
@@ -209,12 +250,12 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
         return $this;
     }
-    
-    
+
+
     /**
      * Limit executed query to specified amount of records
      * Implemented at adapter-level for databases that support it
-     * 
+     *
      * @param int $limit Number of records to return
      * @param int $offset Record to start at for limited result set
      */
@@ -224,8 +265,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $this->offset = $offset;
         return $this;
     }
-    
-    
+
+
     /**
      * Offset executed query to skip specified amount of records
      * Implemented at adapter-level for databases that support it
@@ -237,8 +278,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $this->offset = $offset;
         return $this;
     }
-    
-    
+
+
     /**
      * Return array of parameters in key => value format
      *
@@ -266,13 +307,13 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
         return $params;
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     // ===================================================================
-    
+
     /**
      * SPL Countable function
      * Called automatically when attribute is used in a 'count()' function call
@@ -299,8 +340,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 		
         return is_numeric($result) ? $result : 0;
     }
-    
-    
+
+
     /**
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
@@ -313,8 +354,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $result = $this->execute();
         return ($result !== false) ? $result : array();
     }
-    
-    
+
+
     /**
      * Convenience function passthrough for Collection
      *
@@ -325,8 +366,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $result = $this->execute();
         return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : array();
     }
-    
-    
+
+
     /**
      * Return the first entity matched by the query
      *
@@ -337,8 +378,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         $result = $this->limit(1)->execute();
         return ($result !== false) ? $result->first() : false;
     }
-    
-    
+
+
     /**
      * Execute and return query as a collection
      * 

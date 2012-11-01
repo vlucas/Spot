@@ -174,4 +174,16 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$count2 = \Spot\Log::queryCount();
 		$this->assertNotEquals($count1, $count2);
 	}
+
+	public function testQueryPagerExtension()
+	{
+		$mapper = test_spot_mapper();
+    \Spot\Query::addMethod('page', function(\Spot\Query $query, $limit, $perPage = 20) {
+        return $query->limit($limit, $perPage);
+    });
+		$posts = $mapper->all('Entity_Post')->page(1, 1);
+    // Do this instead of $posts->count() because it drops LIMIT clause to count the full dataset
+    $postCount = count($posts->toArray());
+		$this->assertEquals(1, $postCount);
+	}
 }
