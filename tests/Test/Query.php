@@ -142,6 +142,15 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$this->assertEquals(7, $posts->count());
 	}
 
+	public function testQueryHavingClause()
+	{
+		$mapper = test_spot_mapper();
+    $posts = $mapper->all('Entity_Post')
+        ->select('id, MAX(status) as maximus')
+        ->having(array('maximus' => 10));
+		$this->assertEquals(1, count($posts->toArray()));
+	}
+
 	public function testQueryCountIsCachedForSameQueryResult()
 	{
 		$mapper = test_spot_mapper();

@@ -299,12 +299,16 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 $order[] = $this->escapeField($oField) . " " . $oSort;
             }
         }
+        if($query->having) {
+            $havingConditions = $this->statementConditions($query->having);
+        }
 
         $sql = "
             SELECT " . $this->statementFields($query->fields) . "
             FROM " . $query->datasource . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
             " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
+            " . ($query->having ? 'HAVING' . $havingConditions : '') . "
             " . ($order ? 'ORDER BY ' . implode(', ', $order) : '') . "
             " . ($query->limit ? 'LIMIT ' . $query->limit : '') . " " . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
             ";
@@ -620,7 +624,17 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
      */
     public function statementFields(array $fields = array())
     {
-        return count($fields) > 0 ? implode(', ', array_map(array($this, 'escapeField'), $fields)) : "*";
+        $preparedFields = array();
+        foreach($fields as $field) {
+            if(stripos($field, ' as ') !== false) {
+                // Leave calculated fields and SQL fragements alone
+                $preparedFields[] = $field;
+            } else {
+                // Escape field names
+                $preparedFields[] = $this->escapeField($field);
+            }
+        }
+        return count($fields) > 0 ? implode(', ', $preparedFields) : "*";
     }
 
 

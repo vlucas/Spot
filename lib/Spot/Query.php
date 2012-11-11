@@ -21,6 +21,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public $search = array();
     public $order = array();
     public $group = array();
+    public $having = array();
     public $limit;
     public $offset;
 
@@ -253,6 +254,18 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
 
     /**
+     * Having clause to filter results by a calculated value
+     *
+     * @param array $having Array (like where) for HAVING statement for filter records by
+     */
+    public function having(array $having = array())
+    {
+        $this->having[] = array('conditions' => $having);
+        return $this;
+    }
+
+
+    /**
      * Limit executed query to specified amount of records
      * Implemented at adapter-level for databases that support it
      *
@@ -270,7 +283,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * Offset executed query to skip specified amount of records
      * Implemented at adapter-level for databases that support it
-     * 
+     *
      * @param int $offset Record to start at for limited result set
      */
     public function offset($offset = 0)
@@ -289,7 +302,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         $params = array();
         $ci = 0;
-        foreach($this->conditions as $i => $data) {
+
+        // WHERE + HAVING
+        $conditions = array_merge($this->conditions, $this->having);
+
+        foreach($conditions as $i => $data) {
             if(isset($data['conditions']) && is_array($data['conditions'])) {
                 foreach($data['conditions'] as $field => $value) {
                     // Column name with comparison operator
