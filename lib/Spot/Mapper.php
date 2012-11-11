@@ -10,34 +10,34 @@ namespace Spot;
 class Mapper
 {
     protected $_config;
-    
+
     // Entity manager
     protected static $_entityManager;
-    
+
     // Class Names for required classes - Here so they can be easily overridden
     protected $_collectionClass = '\\Spot\\Entity\\Collection';
     protected $_queryClass = '\\Spot\\Query';
     protected $_exceptionClass = '\\Spot\\Exception';
-    
+
     // Array of error messages and types
     protected $_errors = array();
-    
-    
+
+
     /**
      *	Constructor Method
      */
     public function __construct(Config $config)
     {
         $this->_config = $config;
-        
+
         // Ensure at least the exception class is loaded
         $config::loadClass($this->_exceptionClass);
         if (!class_exists($this->_exceptionClass)) {
             throw new Exception("The exception class of '".$this->_exceptionClass."' defined in '".get_class($this)."' does not exist.");
         }
     }
-    
-    
+
+
     /**
      * Get config class mapper was instantiated with
      *
@@ -47,8 +47,8 @@ class Mapper
     {
         return $this->_config;
     }
-    
-    
+
+
     /**
      * Get query class name to use
      *
@@ -58,8 +58,8 @@ class Mapper
     {
         return $this->_queryClass;
     }
-    
-    
+
+
     /**
      * Get collection class name to use
      *
@@ -69,8 +69,8 @@ class Mapper
     {
         return $this->_collectionClass;
     }
-    
-    
+
+
     /**
      * Entity manager class for storing information and meta-data about entities
      */
@@ -81,8 +81,8 @@ class Mapper
         }
         return self::$_entityManager;
     }
-    
-    
+
+
     /**
      * Get datasource name
      *
@@ -93,8 +93,8 @@ class Mapper
     {
         return $this->entityManager()->datasource($entityName);
     }
-    
-    
+
+
     /**
      * Get formatted fields with all neccesary array keys and values.
      * Merges defaults with defined field values to ensure all options exist for each field.
@@ -106,8 +106,8 @@ class Mapper
     {
         return $this->entityManager()->fields($entityName);
     }
-    
-    
+
+
     /**
      * Get field information exactly how it is defined in the class
      *
@@ -118,8 +118,8 @@ class Mapper
     {
         return $this->entityManager()->fieldsDefined($entityName);
     }
-    
-    
+
+
     /**
      * Get defined relations
      *
@@ -129,8 +129,8 @@ class Mapper
     {
         return $this->entityManager()->relations($entityName);
     }
-    
-    
+
+
     /**
      * Get value of primary key for given row result
      *
@@ -141,8 +141,8 @@ class Mapper
         $pkField = $this->entityManager()->primaryKeyField(get_class($entity));
         return $entity->$pkField;
     }
-    
-    
+
+
     /**
      * Get value of primary key for given row result
      *
@@ -152,8 +152,8 @@ class Mapper
     {
         return $this->entityManager()->primaryKeyField($entityName);
     }
-    
-    
+
+
     /**
      * Check if field exists in defined fields
      *
@@ -164,8 +164,8 @@ class Mapper
     {
         return array_key_exists($field, $this->fields($entityName));
     }
-    
-    
+
+
     /**
      * Return field type
      *
@@ -178,8 +178,8 @@ class Mapper
         $fields = $this->fields($entityName);
         return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
     }
-    
-    
+
+
     /**
      * Get connection to use
      *
@@ -197,11 +197,11 @@ class Mapper
         } elseif($connection = $this->config()->defaultConnection()) {
             return $connection;
         }
-        
+
         throw new Exception("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot_Config::addConnection().");
     }
-    
-    
+
+
     /**
      * Create collection
      */
@@ -209,7 +209,7 @@ class Mapper
     {
         $results = array();
         $resultsIdentities = array();
-        
+
         // Ensure PDO only gives key => value pairs, not index-based fields as well
         // Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
         if($cursor instanceof \PDOStatement) {
@@ -221,25 +221,25 @@ class Mapper
         foreach($cursor as $data) {
             // Entity with data set
             $entity = new $entityName($data);
-            
+
             // Load relation objects
             $this->loadRelations($entity);
-            
+
             // Store in array for Collection
             $results[] = $entity;
-            
+
             // Store primary key of each unique record in set
             $pk = $this->primaryKey($entity);
             if(!in_array($pk, $resultsIdentities) && !empty($pk)) {
                 $resultsIdentities[] = $pk;
             }
         }
-        
+
         $collectionClass = $this->collectionClass();
         return new $collectionClass($results, $resultsIdentities);
     }
-    
-    
+
+
     /**
      * Get array of entity data
      */
@@ -248,17 +248,17 @@ class Mapper
         if(!is_object($entity)) {
             throw new $this->_exceptionClass("Entity must be an object, type '" . gettype($entity) . "' given");
         }
-        
+
         // SET data
         if(count($data) > 0) {
             return $entity->data($data);
         }
-        
+
         // GET data
         return $entity->data();
     }
-    
-    
+
+
     /**
      * Get a new entity object, or an existing
      * entity from identifiers
@@ -286,7 +286,7 @@ class Mapper
             }
             $this->loadRelations($entity);
         }
-    
+
         // Set default values if entity not loaded
         if(!$this->primaryKey($entity)) {
             $entityDefaultValues = $this->entityManager()->fieldDefaultValues($entityClass);
@@ -294,7 +294,7 @@ class Mapper
                 $entity->data($entityDefaultValues);
             }
         }
-        
+
         return $entity;
     }
 
@@ -311,8 +311,8 @@ class Mapper
         return $this->get($entityClass)
             ->data($data);
     }
-    
-    
+
+
     /**
      * Find records with custom query
      *
@@ -321,15 +321,15 @@ class Mapper
      * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
      */
     public function query($entityName, $sql, array $params = array())
-    {   
+    {
         $result = $this->connection($entityName)->query($sql, $params);
         if($result) {
             return $this->collection($entityName, $result);
         }
         return false;
     }
-    
-    
+
+
     /**
      * Find records with given conditions
      * If all parameters are empty, find all records
@@ -341,8 +341,8 @@ class Mapper
     {
         return $this->select($entityName)->where($conditions);
     }
-    
-    
+
+
     /**
      * Find first record matching given conditions
      *
@@ -359,8 +359,8 @@ class Mapper
             return false;
         }
     }
-    
-    
+
+
     /**
      * Begin a new database query - get query builder
      * Acts as a kind of factory to get the current adapter's query builder object
@@ -374,8 +374,8 @@ class Mapper
         $query->select($fields, $this->datasource($entityName));
         return $query;
     }
-    
-    
+
+
     /**
      * Save record
      * Will update if primary key found, insert if not
@@ -389,15 +389,14 @@ class Mapper
         if(!is_object($entity)) {
             throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
-    
+
         // Run beforeSave to know whether or not we can continue
-        $resultBefore = null;
         if(is_callable(array($entity, 'beforeSave'))) {
             if(false === $entity->beforeSave($this)) {
                 return false;
             }
         }
-    
+
         // Run validation
         if($this->validate($entity)) {
             $pk = $this->primaryKey($entity);
@@ -411,7 +410,7 @@ class Mapper
         } else {
             $result = false;
         }
-    
+
         // Use return value from 'afterSave' method if not null
         $resultAfter = null;
         if(is_callable(array($entity, 'afterSave'))) {
@@ -419,8 +418,8 @@ class Mapper
         }
         return (null !== $resultAfter) ? $resultAfter : $result;
     }
-    
-    
+
+
     /**
      * Insert record
      *
@@ -439,30 +438,43 @@ class Mapper
         } else {
             throw new $this->_exceptionClass(__METHOD__ . " Accepts either an entity object or entity name + data array");
         }
-        
+
+        // Run beforeInsert to know whether or not we can continue
+        $resultAfter = null;
+        if(is_callable(array($entity, 'beforeInsert'))) {
+            if(false === $entity->beforeInsert($this)) {
+                return false;
+            }
+        }
+
         // Ensure there is actually data to update
         if(count($data) > 0) {
             // Save only known, defined fields
             $entityFields = $this->fields($entityName);
             $data = array_intersect_key($data, $entityFields);
-            
+
             // Send to adapter via named connection
             $result = $this->connection($entityName)->create($this->datasource($entityName), $data);
-    
+
             // Update primary key on entity object
             $pkField = $this->primaryKeyField($entityName);
             $entity->$pkField = $result;
-            
+
             // Load relations on new entity
             $this->loadRelations($entity);
+
+            // Run afterInsert
+            if(is_callable(array($entity, 'afterInsert'))) {
+                $resultAfter = $entity->afterInsert($this, $result);
+            }
         } else {
             $result = false;
         }
-    
-        return $result;
+
+        return (null !== $resultAfter) ? $resultAfter : $result;
     }
-    
-    
+
+
     /**
      * Update given entity object
      *
@@ -480,18 +492,31 @@ class Mapper
         } else {
             throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
-    
+
+        // Run beforeUpdate to know whether or not we can continue
+        $resultAfter = null;
+        if(is_callable(array($entity, 'beforeUpdate'))) {
+            if(false === $entity->beforeUpdate($this)) {
+                return false;
+            }
+        }
+
         // Handle with adapter
         if(count($data) > 0) {
             $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
+
+            // Run afterUpdate
+            if(is_callable(array($entity, 'afterUpdate'))) {
+                $resultAfter = $entity->afterUpdate($this, $result);
+            }
         } else {
             $result = true;
         }
-    
-        return $result;
+
+        return (null !== $resultAfter) ? $resultAfter : $result;
     }
-    
-    
+
+
     /**
      * Delete items matching given conditions
      *
@@ -506,8 +531,25 @@ class Mapper
             $entityName = get_class($entityName);
             $conditions = array($this->primaryKeyField($entityName) => $this->primaryKey($entity));
             // @todo Clear entity from identity map on delete, when implemented
+
+            // Run beforeUpdate to know whether or not we can continue
+            $resultAfter = null;
+            if(is_callable(array($entity, 'beforeDelete'))) {
+                if(false === $entity->beforeDelete($this)) {
+                    return false;
+                }
+            }
+
+            $result = $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
+
+            // Run afterUpdate
+            if(is_callable(array($entity, 'afterDelete'))) {
+                $resultAfter = $entity->afterDelete($this, $result);
+            }
+
+            return (null !== $resultAfter) ? $resultAfter : $result;
         }
-    
+
         if(is_array($conditions)) {
             $conditions = array(0 => array('conditions' => $conditions));
             return $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
@@ -515,8 +557,8 @@ class Mapper
             throw new $this->_exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
     }
-    
-    
+
+
     /**
      * Truncate data source
      * Should delete all rows and reset serial/auto_increment keys to 0
@@ -526,8 +568,8 @@ class Mapper
     public function truncateDatasource($entityName) {
         return $this->connection($entityName)->truncateDatasource($this->datasource($entityName));
     }
-    
-    
+
+
     /**
      * Drop/delete data source
      * Destructive and dangerous - drops entire data source and all data
@@ -537,8 +579,8 @@ class Mapper
     public function dropDatasource($entityName) {
         return $this->connection($entityName)->dropDatasource($this->datasource($entityName));
     }
-    
-    
+
+
     /**
      * Migrate table structure changes from model to database
      *
@@ -549,12 +591,12 @@ class Mapper
         return $this->connection($entityName)
             ->migrate(
                 $this->datasource($entityName),
-                $this->fields($entityName), 
+                $this->fields($entityName),
                 $this->entityManager()->datasourceOptions($entityName)
-                );
+            );
     }
-    
-    
+
+
     /**
      * Load defined relations
      */
@@ -569,15 +611,15 @@ class Mapper
                 if(!$relationEntity) {
                     throw new $this->_exceptionClass("Entity for '" . $field . "' relation has not been defined.");
                 }
-    
+
                 // Self-referencing entity relationship?
                 if($relationEntity == ':self') {
                     $relationEntity = $entityName;
                 }
-    
+
                 // Load relation class to lazy-loading relations on demand
                 $relationClass = '\\Spot\\Relation\\' . $relation['type'];
-                
+
                 // Set field equal to relation class instance
                 $relationObj = new $relationClass($this, $entity, $relation);
                 $relations[$field] = $relationObj;
@@ -586,8 +628,8 @@ class Mapper
         }
         return $relations;
     }
-    
-    
+
+
     /**
      * Run set validation rules on fields
      *
@@ -596,7 +638,7 @@ class Mapper
     public function validate($entity)
     {
         $entityName = get_class($entity);
-        
+
         // Check validation rules on each feild
         foreach($this->fields($entityName) as $field => $fieldAttrs) {
             if(isset($fieldAttrs['required']) && true === $fieldAttrs['required']) {
@@ -606,12 +648,12 @@ class Mapper
                 }
             }
         }
-    
+
         // Return error result
         return !$entity->hasErrors();
     }
-    
-    
+
+
     /**
      * Check if a value is empty, excluding 0 (annoying PHP issue)
      *
@@ -622,8 +664,8 @@ class Mapper
     {
         return empty($value) && !is_numeric($value);
     }
-    
-    
+
+
     /**
      * Check if any errors exist
      *
@@ -640,8 +682,8 @@ class Mapper
         }
         return count($this->_errors);
     }
-    
-    
+
+
     /**
      * Get array of error messages
      *
@@ -655,7 +697,7 @@ class Mapper
         // Return errors for given field
         if(is_string($msgs)) {
             return isset($this->_errors[$msgs]) ? $this->_errors[$msgs] : array();
-    
+
         // Set error messages from given array
         } elseif(is_array($msgs)) {
             foreach($msgs as $field => $msg) {
@@ -664,8 +706,8 @@ class Mapper
         }
         return $this->_errors;
     }
-    
-    
+
+
     /**
      * Add an error to error messages array
      *
