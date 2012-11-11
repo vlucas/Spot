@@ -500,6 +500,45 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 
 
     /**
+     * Begin transaction
+     */
+    public function beginTransaction() {
+        $sql = "BEGIN";
+
+        // Add query to log
+        \Spot\Log::addQuery($this, $sql);
+
+        return $this->connection()->exec($sql);
+    }
+
+
+    /**
+     * Commit transaction
+     */
+    public function commit() {
+        $sql = "COMMIT";
+
+        // Add query to log
+        \Spot\Log::addQuery($this, $sql);
+
+        return $this->connection()->exec($sql);
+    }
+
+
+    /**
+     * Rollback transaction
+     */
+    public function rollback() {
+        $sql = "ROLLBACK";
+
+        // Add query to log
+        \Spot\Log::addQuery($this, $sql);
+
+        return $this->connection()->exec($sql);
+    }
+
+
+    /**
      * Truncate a database table
      * Should delete all rows and reset serial/auto_increment keys to 0
      */

@@ -187,10 +187,12 @@ class Mapper
      * @return Spot_Adapter
      * @throws Spot_Exception
      */
-    public function connection($connectionName)
+    public function connection($connectionName = null)
     {
         // Try getting connection based on given name
-        if($connection = $this->config()->connection($connectionName)) {
+        if($connectionName === null) {
+            return $this->config()->defaultConnection();
+        } elseif($connection = $this->config()->connection($connectionName)) {
             return $connection;
         } elseif($connection = $this->entityManager()->connection($connectionName)) {
             return $connection;
@@ -560,12 +562,42 @@ class Mapper
 
 
     /**
+     * Transaction with closure
+     */
+    public function transaction(\Closure $work, $entityName = null)
+    {
+        $connection = $this->connection($entityName);
+
+        try {
+            $connection->beginTransaction();
+
+            // Execute closure for work inside transaction
+            $result = $work($this);
+
+            // Rollback on boolean 'false' return
+            if($result === false) {
+                $connection->rollback();
+            } else {
+                $connection->commit();
+            }
+        } catch(\Exception $e) {
+            // Rollback on uncaught exception
+            $connection->rollback();
+
+            // Re-throw exception so we don't bury it
+            throw $e;
+        }
+    }
+
+
+    /**
      * Truncate data source
      * Should delete all rows and reset serial/auto_increment keys to 0
      *
      * @param string $entityName Name of the entity class
      */
-    public function truncateDatasource($entityName) {
+    public function truncateDatasource($entityName)
+    {
         return $this->connection($entityName)->truncateDatasource($this->datasource($entityName));
     }
 
@@ -576,7 +608,8 @@ class Mapper
      *
      * @param string $entityName Name of the entity class
      */
-    public function dropDatasource($entityName) {
+    public function dropDatasource($entityName)
+    {
         return $this->connection($entityName)->dropDatasource($this->datasource($entityName));
     }
 

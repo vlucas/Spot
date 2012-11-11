@@ -98,6 +98,24 @@ interface AdapterInterface
 	
 	
 	/**
+	 * Begin transaction
+	 */
+	public function beginTransaction();
+	
+	
+	/**
+	 * Commit transaction
+	 */
+	public function commit();
+	
+	
+	/**
+	 * Rollback transaction
+	 */
+	public function rollback();
+	
+
+	/**
 	 * Truncate data source (table for SQL)
 	 * Should delete all rows and reset serial/auto_increment keys to 0
 	 */
