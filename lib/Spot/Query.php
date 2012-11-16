@@ -25,8 +25,14 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public $limit;
     public $offset;
 
+
     // Custom methods added by extensions or plugins
     protected static $_customMethods = array();
+    
+    protected static $_resettable = array(
+        'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset'
+    );
+    protected $_snapshot = array();
 
 
     /**
@@ -39,6 +45,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         $this->_mapper = $mapper;
         $this->_entityName = $entityName;
+        foreach (static::$_resettable as $field) {
+            $this->_snapshot[$field] = $this->$field;
+        }
     }
 
 
@@ -370,6 +379,52 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         // Execute query and return result set for iteration
         $result = $this->execute();
         return ($result !== false) ? $result : array();
+    }
+
+
+    /**
+     * Reset the query back to its original state
+     * Called automatically after a 'foreach' loop
+     * @param $hard_reset boolean Inidicate whether to reset the variables
+     *      to their initial state or just back to the snapshot() state
+     *
+     * @see getIterator
+     * @see snapshot
+     * @return Spot_Query_Set
+     */
+    public function reset($hard_reset = false)
+    {
+        foreach ($this->_snapshot as $field => $value) {
+            if ($hard_reset) {
+                // TODO: Look at an actual 'initialize' type
+                // method that assigns all the defaults for
+                // conditions, etc
+                if (is_array($value)) {
+                    $this->$field = array();
+                } else {
+                    $this->$field = null;
+                }
+            } else {
+                $this->$field = $value;
+            }
+        }
+        return $this;
+    }
+
+
+    /**
+     * Reset the query back to its original state
+     * Called automatically after a 'foreach' loop
+     *
+     * @see getIterator
+     * @return Spot_Query_Set
+     */
+    public function snapshot()
+    {
+        foreach (static::$_resettable as $field) {
+             $this->_snapshot[$field] = $this->$field;
+        }
+        return $this;
     }
 
 

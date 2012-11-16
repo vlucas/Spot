@@ -195,4 +195,39 @@ class Test_Query extends PHPUnit_Framework_TestCase
     $postCount = count($posts->toArray());
 		$this->assertEquals(1, $postCount);
 	}
+	
+	public function testQueryManualReset()
+	{
+		$mapper = test_spot_mapper();
+		$posts = $mapper->all('Entity_Post');
+		$this->assertEquals(10, $posts->count());
+		
+		$posts->where(array('title' => 'odd_title'));
+		$this->assertEquals(5, $posts->count());
+		
+		// We assert twice to verify that reset wasn't called internally
+		$this->assertNotEquals(10, $posts->count());
+		
+		$posts->reset();
+		
+		$this->assertEquals($posts->conditions, array());
+		$this->assertEquals(10, $posts->count());
+	}
+	
+	public function testQuerySnapshot()
+	{
+		$mapper = test_spot_mapper();
+		$posts = $mapper->all('Entity_Post', array('title' => 'odd_title'));
+		
+		$this->assertEquals(5, $posts->count());
+		$posts->snapshot();
+		
+		$this->assertEquals(5, $posts->count());
+		$posts->reset();
+		
+		$this->assertEquals(5, $posts->count());
+		$posts->reset(true);
+		
+		$this->assertEquals(10, $posts->count());
+	}
 }
