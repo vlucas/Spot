@@ -378,6 +378,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         // Execute query and return result set for iteration
         $result = $this->execute();
+        $this->reset();
         return ($result !== false) ? $result : array();
     }
 

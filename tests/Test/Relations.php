@@ -142,4 +142,70 @@ class Test_Relations extends PHPUnit_Framework_TestCase
         $sortedComments = $post->comments->order(array('date_created' => 'DESC'));
         $this->assertTrue($sortedComments instanceof \Spot\Query);
     }
+    
+    
+    /**
+     * @depends testBlogPostInsert
+     */
+    public function testRelationshipQueryNotReset($postId)
+    {
+        $mapper = test_spot_mapper();
+        $post = $mapper->get('Entity_Post', $postId);
+        
+        $before_conditions = $post->comments->execute()->conditions;
+        $before_count = $post->comments->count();
+        foreach($post->comments as $comment) {
+          $query = $comment->post->execute();
+        }
+        
+        $this->assertSame($before_count, $post->comments->count());
+        $this->assertSame($before_conditions, $post->comments->execute()->conditions);
+    }
+    
+    /**
+     * @depends testBlogPostInsert
+     */
+    public function testRelationshipQueryResetting($postId)
+    {
+        $mapper = test_spot_mapper();
+        $post = $mapper->get('Entity_Post', $postId);
+        
+        $before_conditions = $post->comments->execute()->conditions;
+        $before_count = $post->comments->count();
+        
+        // Make sure a manual reset doesn't reset
+        $post->comments->reset();
+        $this->assertSame($before_conditions, $post->comments->execute()->conditions);
+        
+        // Make sure a hard reset does
+        $post->comments->reset(true);
+        $this->assertSame(array(), $post->comments->execute()->conditions);
+    }
+    
+    /**
+     * @depends testBlogPostInsert
+     */
+    public function testRelationshipQueryAdditionalConditionResetting($postId)
+    {
+        $mapper = test_spot_mapper();
+        $post = $mapper->get('Entity_Post', $postId);
+        
+        $initial_conditions = $post->comments->execute()->conditions;
+        
+        $post->comments->where(array('body' => 'hi'));
+        
+        $this->assertNotSame($initial_conditions, $post->comments->execute()->conditions);
+        
+        // Make sure a manual reset returns to initial relationship state
+        $post->comments->reset();
+        $this->assertSame($initial_conditions, $post->comments->execute()->conditions);
+        
+        // Make sure a hard reset does
+        $post->comments->reset(true);
+        $this->assertNotSame($initial_conditions, $post->comments->execute()->conditions);
+        $this->assertSame(array(), $post->comments->execute()->conditions);
+    }
+    
+    // TODO: Write query snapshot tests for HasManyThrough relations
+    
 }

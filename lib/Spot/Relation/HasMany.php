@@ -16,7 +16,9 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
      */
     protected function toQuery()
     {
-        return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder());
+        $query = $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder());
+        $query->snapshot();
+        return $query;
     }
     
     

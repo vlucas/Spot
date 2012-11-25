@@ -206,9 +206,23 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$this->assertEquals(5, $posts->count());
 		
 		// We assert twice to verify that reset wasn't called internally
+		// where it shouldn't have
 		$this->assertNotEquals(10, $posts->count());
 		
 		$posts->reset();
+		
+		$this->assertEquals($posts->conditions, array());
+		$this->assertEquals(10, $posts->count());
+	}
+	
+	public function testQueryAutomaticReset() {
+		$mapper = test_spot_mapper();
+		$posts = $mapper->all('Entity_Post');
+		$this->assertEquals(10, $posts->count());
+		
+		$posts->where(array('title' => 'odd_title'));
+		$this->assertNotEquals(10, $posts->count());
+		foreach ($posts as $post) {}
 		
 		$this->assertEquals($posts->conditions, array());
 		$this->assertEquals(10, $posts->count());
@@ -226,7 +240,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$posts->reset();
 		
 		$this->assertEquals(5, $posts->count());
-		$posts->reset(true);
+		$posts->reset($hard = true);
 		
 		$this->assertEquals(10, $posts->count());
 	}

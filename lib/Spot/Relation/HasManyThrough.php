@@ -54,6 +54,7 @@ class HasManyThrough extends RelationAbstract implements \Countable, \IteratorAg
             $entities = $this->mapper()
                 ->all($this->entityName(), $twe)
                 ->order($this->relationOrder());
+            $enties->snapshot();
             return $entities;
         }
 
