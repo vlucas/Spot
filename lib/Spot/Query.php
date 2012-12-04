@@ -462,7 +462,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->mapper()->connection($this->entityName())->read($this);
     }
-    
+
+
     /**
      * Runs a function on every object in the query, returning the resulting array
      * 
@@ -477,7 +478,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
         return $ret;
     }
-    
+
+
     /**
      * Runs a function on every object in the query, returning an array containing every
      *  object for which the function returns true.
