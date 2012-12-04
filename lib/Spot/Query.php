@@ -462,4 +462,36 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->mapper()->connection($this->entityName())->read($this);
     }
+    
+    /**
+     * Runs a function on every object in the query, returning the resulting array
+     * 
+     * @return mixed An array containing the result of running the passed function
+     *  on each member of the collect
+     */
+    public function map($func)
+    {
+        $ret = array();
+        foreach ($this->execute() as $obj) {
+            $ret[] = $func($obj);
+        }
+        return $ret;
+    }
+    
+    /**
+     * Runs a function on every object in the query, returning an array containing every
+     *  object for which the function returns true.
+     * 
+     * @return mixed An array of Entity objects
+     */
+    public function filter($func)
+    {
+        $ret = array();
+        foreach ($this->execute() as $obj) {
+            if ($func($obj)) {
+                $ret[] = $obj;
+            }
+        }
+        return $ret;
+    }
 }
