@@ -116,7 +116,44 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	{
          return call_user_func_array($callback, array($this->_results));
 	}
+	
 
+
+	/**
+	 * Runs a function on every object in the query, returning the resulting array
+	 * 
+	 * @param function The function to run
+	 * @return mixed An array containing the result of running the passed function
+	 *  on each member of the collect
+	 */
+	public function map($func)
+	{
+	    $ret = array();
+	    foreach ($this as $obj) {
+	        $ret[] = $func($obj);
+	    }
+	    return $ret;
+	}
+
+
+	/**
+	 * Runs a function on every object in the query, returning an array containing every
+	 *  object for which the function returns true.
+	 *
+	 * @param function The function to run
+	 * @return mixed An array of Entity objects
+	 */
+	public function filter($func)
+	{
+	    $ret = new static();
+	    foreach ($this as $obj) {
+	        if ($func($obj)) {
+	            $ret->add($obj);
+	        }
+	    }
+	    return $ret;
+	}
+	
 	/**
 	* Provides a string representation of the class
 	* Brackets contain the number of elements contained

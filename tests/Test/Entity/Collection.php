@@ -132,4 +132,24 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals("Spot\\Entity\\Collection[1]", (string) $this->collection);
 	}
+	
+	public function testFunctionalMethods()
+	{
+		$this->assertEquals(array(), $this->collection->map(function($x){ return $x; }));
+		
+		$ep = new Entity_Post(array('key'=>'value'));
+		$this->collection->add(new Entity_Post(array('key'=>'value2')));
+		$this->collection->add($ep);
+		
+		$this->assertEquals(
+			array('value2', 'value'),
+			$this->collection->map(function($x){ return $x->key; })
+		);
+		
+		$filterResult = $this->collection->filter(function($x) { return $x->key == 'value'; });
+		
+		$this->assertTrue($filterResult instanceOf \Spot\Entity\Collection);
+		$this->assertSame(1, $filterResult->count());
+		$this->assertSame($ep, $filterResult->first());
+	}
 }
