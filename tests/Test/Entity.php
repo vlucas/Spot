@@ -109,7 +109,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $this->assertEquals($data, $post->dataModified());
 
         $this->assertTrue($post->isModified('title'));
-
+//				var_dump( $post->dataUnmodified('id'));
         $this->assertFalse($post->isModified('id'));
 
         $this->assertNull($post->isModified('asdf'));
