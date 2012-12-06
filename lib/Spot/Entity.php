@@ -278,9 +278,9 @@ abstract class Entity
     {
         $v = null;
 
-        if(isset($this->_dataModified[$field])) {
+        if(array_key_exists($field, $this->_dataModified)) {
             $v =  $this->_dataModified[$field];
-        } elseif(isset($this->_data[$field])) {
+        } elseif(array_key_exists($field, $this->_data)) {
             $v = $this->_data[$field];
         }
 
