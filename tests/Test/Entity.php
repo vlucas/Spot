@@ -124,4 +124,42 @@ class Test_Entity extends PHPUnit_Framework_TestCase
 
         $this->assertNull($post->dataModified('status'));
     }
+
+
+    public function testDataNulls()
+    {
+        $data = array(
+            'title' => 'A Post',
+            'body' => 'A Body',
+            'status' => 0
+        );
+
+        $post = new Entity_Post($data);
+
+        $post->status = null;
+
+        $this->assertTrue($post->isModified('status'));
+
+        $post->status = 1;
+
+        $this->assertTrue($post->isModified('status'));
+
+        $post->data(array('status' => null));
+
+        $this->assertTrue($post->isModified('status'));
+
+        $post->title = '';
+
+        $this->assertTrue($post->isModified('title'));
+
+        $this->title = null;
+
+        $this->assertTrue($post->isModified('title'));
+
+        $this->title = 'A Post';
+
+        $post->data(array('title' => null));
+        
+        $this->assertTrue($post->isModified('title'));
+    }
 }

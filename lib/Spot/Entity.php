@@ -120,7 +120,7 @@ abstract class Entity
             $fields = $this->fields();
             foreach($data as $k => $v) {
                 // Ensure value is set with type handler if Entity field type
-                if(isset($fields[$k])) {
+                if(array_key_exists($k, $fields)) {
                     $typeHandler = Config::typeHandler($fields[$k]['type']);
                     $v = $typeHandler::set($this, $v);
                 }
@@ -183,6 +183,10 @@ abstract class Entity
     {
         if (null !== $field) {
             if (array_key_exists($field, $this->_dataModified)) {
+                if (is_null($this->_dataModified[$field]) || is_null($this->_data[$field])) {
+                    // Use strict comparison for null values, non-strict otherwise
+                    return $this->_dataModified[$field] !== $this->_data[$field];
+                }
                 return $this->_dataModified[$field] != $this->_data[$field];
             } else if (array_key_exists($field, $this->_data)) {
                 return false;
