@@ -40,8 +40,8 @@ function test_spot_mapper() {
  * Autoload test fixtures
  */
 function test_spot_autoloader($className) {
-    // Don't attempt to autoload 'PHPUnit_' or 'Spot' namespaced classes
-    if(false !== strpos($className, 'PHPUnit_') || false !== strpos($className, 'Spot')) {
+    // Only autoload classes that start with "Test_" and "Entity_"
+    if(false === strpos($className, 'Test_') && false === strpos($className, 'Entity_')) {
         return false;
     }
     $classFile = str_replace('_', '/', $className) . '.php';

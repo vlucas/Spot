@@ -215,7 +215,8 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$this->assertEquals(10, $posts->count());
 	}
 	
-	public function testQueryAutomaticReset() {
+  public function testQueryAutomaticReset()
+  {
 		$mapper = test_spot_mapper();
 		$posts = $mapper->all('Entity_Post');
 		$this->assertEquals(10, $posts->count());
