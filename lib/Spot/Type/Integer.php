@@ -9,10 +9,10 @@ class Integer implements TypeInterface
      */
     public static function cast($value)
     {
-        if(null !== $value) {
+        if(strlen($value)) {
             return (int) $value;
         }
-        return $value;
+        return null;
     }
 
     /**

@@ -9,7 +9,11 @@ class Float implements TypeInterface
      */
     public static function cast($value)
     {
-        return (float) $value;
+        if(strlen($value)) {
+            return (float) $value;
+        }
+        return null;
+        
     }
 
     /**
