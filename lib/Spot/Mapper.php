@@ -674,10 +674,17 @@ class Mapper
 
         // Check validation rules on each feild
         foreach($this->fields($entityName) as $field => $fieldAttrs) {
+            // Required field
             if(isset($fieldAttrs['required']) && true === $fieldAttrs['required']) {
-                // Required field
                 if($this->isEmpty($entity->$field)) {
                     $entity->error($field, "Required field '" . $field . "' was left blank");
+                }
+            }
+
+            // Unique field
+            if(isset($fieldAttrs['unique']) && true === $fieldAttrs['unique']) {
+                if($this->first($entityName, array($field => $entity->$field)) !== false) {
+                    $entity->error($field, "" . ucwords(str_replace('_', ' ', $field)) . " '" . $entity->$field . "' is already taken.");
                 }
             }
         }
@@ -696,70 +703,5 @@ class Mapper
     public function isEmpty($value)
     {
         return empty($value) && !is_numeric($value);
-    }
-
-
-    /**
-     * Check if any errors exist
-     *
-     * @deprecated Please use Entity::hasErrors instead
-     * @param string $field OPTIONAL field name
-     * @return boolean
-     */
-    public function hasErrors($field = null)
-    {
-        trigger_error('Error checks at the Mapper level have been deprecated in favor of checking error at the Entity level. Please use Entity::hasErrors instead. Mapper error methods will be completely removed in v1.0.', E_DEPRECATED);
-
-        if(null !== $field) {
-            return isset($this->_errors[$field]) ? count($this->_errors[$field]) : false;
-        }
-        return count($this->_errors);
-    }
-
-
-    /**
-     * Get array of error messages
-     *
-     * @deprecated Please use Entity::errors instead
-     * @return array
-     */
-    public function errors($msgs = null)
-    {
-        trigger_error('Error checks at the Mapper level have been deprecated in favor of checking error at the Entity level. Please use Entity::errors instead. Mapper error methods will be completely removed in v1.0.', E_DEPRECATED);
-
-        // Return errors for given field
-        if(is_string($msgs)) {
-            return isset($this->_errors[$msgs]) ? $this->_errors[$msgs] : array();
-
-        // Set error messages from given array
-        } elseif(is_array($msgs)) {
-            foreach($msgs as $field => $msg) {
-                $this->error($field, $msg);
-            }
-        }
-        return $this->_errors;
-    }
-
-
-    /**
-     * Add an error to error messages array
-     *
-     * @param string $field Field name that error message relates to
-     * @param mixed $msg Error message text - String or array of messages
-     */
-    public function error($field, $msg)
-    {
-        // Deprecation warning
-        trigger_error('Adding errors at the Mapper level have been deprecated in favor of adding errors at the Entity level. Please use Entity::error instead. Mapper error methods will be completely removed in v1.0.', E_DEPRECATED);
-
-        if(is_array($msg)) {
-            // Add array of error messages about field
-            foreach($msg as $msgx) {
-                $this->_errors[$field][] = $msgx;
-            }
-        } else {
-            // Add to error array
-            $this->_errors[$field][] = $msg;
-        }
     }
 }

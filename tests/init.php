@@ -1,7 +1,6 @@
 -<?php
 /**
  * @package Spot
- * @link http://spot.os.ly
  */
 
 // Require Spot_Config

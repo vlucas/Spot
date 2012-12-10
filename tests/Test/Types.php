@@ -1,12 +1,12 @@
 <?php
 /**
  * @package Spot
- * @link http://spot.os.ly
  */
 class Test_Types extends PHPUnit_Framework_TestCase
 {
 
-    public function testInteger() {
+  public function testInteger()
+  {
         $cls = 'Spot\\Type\\Integer';
 
         $this->assertSame($cls::cast(0), 0);
@@ -27,7 +27,8 @@ class Test_Types extends PHPUnit_Framework_TestCase
     }
 
 
-    public function testFloat() {
+    public function testFloat()
+    {
         $cls = 'Spot\\Type\\Float';
 
         $this->assertSame($cls::cast(0), 0.0);
@@ -52,7 +53,8 @@ class Test_Types extends PHPUnit_Framework_TestCase
     }
 
 
-    public function testString() {
+    public function testString()
+    {
         $cls = 'Spot\\Type\\String';
 
         $this->assertSame($cls::cast('abc'), 'abc');
@@ -73,7 +75,8 @@ class Test_Types extends PHPUnit_Framework_TestCase
     }
 
 
-    public function testBoolean() {
+    public function testBoolean()
+    {
         $cls = 'Spot\\Type\\Boolean';
 
         $truths = array('a', 1, 100, 256, -12, 0.2, true);
