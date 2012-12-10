@@ -11,8 +11,8 @@
          bootstrap="./tests/init.php"
 >
   <testsuites>
-    <testsuite name="Spot ORM Tests">
-      <directory>./tests/</directory>
+    <testsuite name="Spot">
+      <directory suffix=".php">./tests/Test</directory>
     </testsuite>
   </testsuites>
 </phpunit>
