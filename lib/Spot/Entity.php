@@ -278,19 +278,12 @@ abstract class Entity
     {
         $v = null;
 
+        // We can't use isset for _dataModified because it returns
+        // false for NULL values
         if(array_key_exists($field, $this->_dataModified)) {
             $v =  $this->_dataModified[$field];
-        } elseif(array_key_exists($field, $this->_data)) {
+        } elseif(isset($field, $this->_data)) {
             $v = $this->_data[$field];
-        }
-
-        if(null !== $v) {
-            $fields = $this->fields();
-            if(isset($fields[$field])) {
-                // Ensure value is get with type handler
-                $typeHandler = Config::typeHandler($fields[$field]['type']);
-                $v = $typeHandler::get($this, $v);
-            }
         }
 
         return $v;
