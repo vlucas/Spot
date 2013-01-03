@@ -30,6 +30,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         ksort($testData);
 
         $this->assertEquals($testData, $data);
+        
+        $this->assertNull($post->asdf);
     }
 
     public function testEntitySetDataConstruct()
