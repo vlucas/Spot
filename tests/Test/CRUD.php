@@ -95,4 +95,22 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
 
         $this->assertTrue((boolean) $result);
     }
+
+    public function testMultipleConditionDelete()
+    {
+        $mapper = test_spot_mapper();
+        for( $i = 1; $i <= 10; $i++ ) {
+            $mapper->insert('Entity_Post', array(
+                'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
+                'body' => '<p>' . $i  . '_body</p>',
+                'status' => $i ,
+                'date_created' => $mapper->connection('Entity_Post')->dateTime()
+            ));
+        }
+        
+        $result = $mapper->delete('Entity_Post', array('status !=' => array(3,4,5), 'title' => 'odd_title'));
+        $this->assertTrue((boolean) $result);
+        $this->assertEquals(3, $result);
+        
+    }
 }

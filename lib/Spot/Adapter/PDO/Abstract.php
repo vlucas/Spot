@@ -752,6 +752,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                 }
 
                 // Increment ensures column name distinction
+                // We need to do this whether it was used or not
+                // to maintain compatibility with statementConditions()
                 $ci++;
             }
             if ( $sqlStatement != "(" ) {
@@ -816,10 +818,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                     }
                     $col = $colData[0];
 
-                    // Increment ensures column name distinction
                     if(false !== $ci) {
                         $col = $col . $ci;
-                        $ci++;
                     }
 
                     $colParam = preg_replace('/\W+/', '_', $col);
@@ -827,6 +827,10 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
                     // Add to binds array and add to WHERE clause
                     $binds[$colParam] = $bindValue;
                 }
+                // Increment ensures column name distinction
+                // We need to do this whether it was used or not
+                // to maintain compatibility with statementConditions()
+                $ci++;
             }
             if($loopOnce) { break; }
         }
