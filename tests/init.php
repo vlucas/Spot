@@ -13,14 +13,14 @@ date_default_timezone_set('America/Chicago');
 
 $cfg = new \Spot\Config();
           
-if ($GLOBALS['db_type'] == "mysql") {
+if ($_ENV['db_type'] == "mysql") {
     // MySQL
-    $cfg->addConnection('test', $GLOBALS['db_dsn']);
+    $cfg->addConnection('test', $_ENV['db_dsn']);
 }
 elseif ($GLOBALS['db_type'] == "mongo")
 {
     // MongoDB with adapter options
-    $cfg->addConnection('test_mongodb', $GLOBALS['db_dsn'], array(
+    $cfg->addConnection('test_mongodb', $_ENV['db_dsn'], array(
         'cursor' => array(
             'timeout' => 10
         ),

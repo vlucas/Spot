@@ -11,8 +11,8 @@
          bootstrap="./tests/init.php"
 >
     <php>
-        <var name="db_type" value="mongo" /> 
-        <var name="db_dsn" value="mongodb://localhost/test" />
+        <env name="db_type" value="mongo" /> 
+        <env name="db_dsn" value="mongodb://localhost/test" />
     </php>
 
   <testsuites>

@@ -11,8 +11,8 @@
          bootstrap="./tests/init.php"
 >
     <php>
-        <var name="db_type" value="mysql" />
-        <var name="db_dsn" value="mysql://root@localhost/spot_test" />
+        <env name="db_type" value="mysql" />
+        <env name="db_dsn" value="mysql://root@localhost/spot_test" />
     </php>
 
   <testsuites>
