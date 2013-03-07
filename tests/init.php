@@ -1,7 +1,7 @@
--<?php
+<?php
 /**
- * @package Spot
- */
+* @package Spot
+*/
 
 // Require Spot_Config
 require_once dirname(__DIR__) . '/lib/Spot/Config.php';
@@ -12,22 +12,32 @@ date_default_timezone_set('America/Chicago');
 // Setup available adapters for testing
 
 $cfg = new \Spot\Config();
-// MySQL
-$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/spot_test');
-// MongoDB with adapter options
-$adapter = $cfg->addConnection('test_mongodb', 'mongodb://localhost:28017', array(
-    'cursor' => array(
-        'timeout' => 10
-    ),
-    'mapper' => array(
-        'translate_id' => true
-	)
-));
-
+          
+if ($_ENV['db_type'] == "mysql") {
+    // MySQL
+    $cfg->addConnection('test', $_ENV['db_dsn']);
+}
+elseif ($GLOBALS['db_type'] == "mongo")
+{
+    // MongoDB with adapter options
+    $cfg->addConnection('test_mongodb', $_ENV['db_dsn'], array(
+        'cursor' => array(
+            'timeout' => 10
+        ),
+        'mapper' => array(
+            'translate_id' => true
+        )
+    ));
+}
+else
+{
+    // Db Type hasn't been configured
+    exit(1);
+}
 
 /**
- * Return Spot mapper for use
- */
+* Return Spot mapper for use
+*/
 $mapper = new \Spot\Mapper($cfg);
 function test_spot_mapper() {
     global $mapper;
@@ -36,8 +46,8 @@ function test_spot_mapper() {
 
 
 /**
- * Autoload test fixtures
- */
+* Autoload test fixtures
+*/
 function test_spot_autoloader($className) {
     // Only autoload classes that start with "Test_" and "Entity_"
     if(false === strpos($className, 'Test_') && false === strpos($className, 'Entity_')) {

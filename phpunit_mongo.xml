@@ -10,6 +10,11 @@
          syntaxCheck="false"
          bootstrap="./tests/init.php"
 >
+    <php>
+        <env name="db_type" value="mongo" /> 
+        <env name="db_dsn" value="mongodb://localhost/test" />
+    </php>
+
   <testsuites>
     <testsuite name="Spot">
       <directory suffix=".php">./tests/Test</directory>
