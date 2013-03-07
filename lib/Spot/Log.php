@@ -3,16 +3,17 @@ namespace Spot;
 
 /**
  * Logging class for all query activity
- * 
+ *
  * @package Spot
  * @link http://spot.os.ly
  */
 class Log
 {
+    protected static $_queryCount = 0;
     protected static $_queryLimit = 200;
     protected static $_queries = array();
-    
-    
+
+
     /**
      * Add query to log
      *
@@ -32,9 +33,11 @@ class Log
             'query' => $query,
             'data' => $data
         );
+
+        self::$_queryCount++;
     }
-    
-    
+
+
     /**
      * Get full query log
      *
@@ -44,8 +47,8 @@ class Log
     {
         return self::$_queries;
     }
-    
-    
+
+
     /**
      * Get last query run from log
      *
@@ -55,8 +58,8 @@ class Log
     {
         return end(self::$_queries);
     }
-    
-    
+
+
     /**
      * Get a count of how many queries have been run
      *
@@ -64,7 +67,7 @@ class Log
      */
     public static function queryCount()
     {
-        return count(self::$_queries);
+        return self::$_queryCount;
     }
 
 
