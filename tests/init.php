@@ -3,6 +3,8 @@
 * @package Spot
 */
 
+error_reporting(-1);
+
 // Require Spot_Config
 require_once dirname(__DIR__) . '/lib/Spot/Config.php';
 
