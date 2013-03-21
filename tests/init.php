@@ -4,6 +4,7 @@
 */
 
 error_reporting(-1);
+ini_set('display_errors', 1);
 
 // Require Spot_Config
 require_once dirname(__DIR__) . '/lib/Spot/Config.php';
