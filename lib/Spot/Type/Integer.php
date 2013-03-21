@@ -2,8 +2,10 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class Integer implements TypeInterface
+class Integer extends \Spot\Type
 {
+    public static $_defaultType = 'integer';
+    
     /**
      * Cast given value to type required
      */
@@ -13,21 +15,5 @@ class Integer implements TypeInterface
             return (int) $value;
         }
         return null;
-    }
-
-    /**
-     * Geting value off Entity object
-     */
-    public static function get(Entity $entity, $value)
-    {
-        return self::cast($value);
-    }
-
-    /**
-     * Setting value on Entity object
-     */
-    public static function set(Entity $entity, $value)
-    {
-        return self::cast($value);
     }
 }

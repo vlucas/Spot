@@ -2,8 +2,10 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class Boolean implements TypeInterface
+class Boolean extends \Spot\Type
 {
+    public static $_defaultType = 'boolean';
+    
     /**
      * Cast given value to type required
      */
@@ -11,20 +13,12 @@ class Boolean implements TypeInterface
     {
         return (bool) $value;
     }
-
+    
     /**
-     * Geting value off Entity object
+     * Boolean is generally persisted as an integer
      */
-    public static function get(Entity $entity, $value)
+    public static function dump($value)
     {
-        return self::cast($value);
-    }
-
-    /**
-     * Setting value on Entity object
-     */
-    public static function set(Entity $entity, $value)
-    {
-        return self::cast($value);
+        return (int) $value;
     }
 }

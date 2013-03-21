@@ -274,16 +274,16 @@ abstract class Entity
     /**
      * Getter for field properties
      */
-    public function __get($field)
+    public function &__get($field)
     {
         $v = null;
 
         // We can't use isset for _dataModified because it returns
         // false for NULL values
         if(array_key_exists($field, $this->_dataModified)) {
-            $v =  $this->_dataModified[$field];
+            $v =&  $this->_dataModified[$field];
         } elseif(isset($this->_data[$field])) {
-            $v = $this->_data[$field];
+            $v =& $this->_data[$field];
         }
 
         return $v;

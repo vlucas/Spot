@@ -17,16 +17,16 @@ if ($_ENV['db_type'] == "mysql") {
     // MySQL
     $cfg->addConnection('test', $_ENV['db_dsn']);
 }
-elseif ($GLOBALS['db_type'] == "mongo")
+elseif ($_ENV['db_type'] == "mongo")
 {
     // MongoDB with adapter options
     $cfg->addConnection('test_mongodb', $_ENV['db_dsn'], array(
-        'cursor' => array(
+        /* 'cursor' => array(
             'timeout' => 10
         ),
         'mapper' => array(
             'translate_id' => true
-        )
+        ) */
     ));
 }
 else

@@ -2,8 +2,11 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class Float implements TypeInterface
+class Float extends \Spot\Type
 {
+    public static $_defaultType = 'decimal';
+    public static $_defaultOptions = array('precision' => 14, 'scale' => 10);
+    
     /**
      * Cast given value to type required
      */
@@ -14,21 +17,5 @@ class Float implements TypeInterface
         }
         return null;
         
-    }
-
-    /**
-     * Geting value off Entity object
-     */
-    public static function get(Entity $entity, $value)
-    {
-        return self::cast($value);
-    }
-
-    /**
-     * Setting value on Entity object
-     */
-    public static function set(Entity $entity, $value)
-    {
-        return self::cast($value);
     }
 }
