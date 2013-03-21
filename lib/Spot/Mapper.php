@@ -220,8 +220,13 @@ class Mapper
 
         // Fetch all results into new entity class
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
+        $entityFields = $this->fields($entityName);
         foreach($cursor as $data) {
             // Entity with data set
+            $data = array_intersect_key($data, $entityFields);
+            
+            $data = $this->loadEntity($entityName, $data);
+            
             $entity = new $entityName($data);
 
             // Load relation objects
@@ -454,7 +459,9 @@ class Mapper
             // Save only known, defined fields
             $entityFields = $this->fields($entityName);
             $data = array_intersect_key($data, $entityFields);
-
+            
+            $data = $this->dumpEntity($entityName, $data);
+            
             // Send to adapter via named connection
             $result = $this->connection($entityName)->create($this->datasource($entityName), $data);
 
@@ -505,6 +512,8 @@ class Mapper
 
         // Handle with adapter
         if(count($data) > 0) {
+            $data = $this->dumpEntity($entityName, $data);
+            
             $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
 
             // Run afterUpdate
@@ -559,8 +568,35 @@ class Mapper
             throw new $this->_exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
     }
-
-
+    
+    /**
+     * Prepare data to be dumped to the data store
+     */
+    public function dumpEntity($entityName, $data)
+    {
+        $dumpedData = array();
+        $fields = $entityName::fields();
+        foreach($data as $field => $value) {
+            $typeHandler = \Spot\Config::typeHandler($fields[$field]['type']);
+            $dumpedData[$field] = $typeHandler::_dump($value);
+        }
+        return $dumpedData;
+    }
+    
+    /**
+     * Retrieve data from the data store
+     */
+    public function loadEntity($entityName, $data)
+    {
+        $loadedData = array();
+        $fields = $entityName::fields();
+        foreach($data as $field => $value) {
+            $typeHandler = \Spot\Config::typeHandler($fields[$field]['type']);
+            $loadedData[$field] = $typeHandler::_load($value);
+        }
+        return $loadedData;
+    }
+    
     /**
      * Transaction with closure
      */

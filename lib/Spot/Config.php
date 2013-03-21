@@ -32,6 +32,8 @@ class Config implements \Serializable
         self::typeHandler('year', '\Spot\Type\Integer');
         self::typeHandler('month', '\Spot\Type\Integer');
         self::typeHandler('day', '\Spot\Type\Integer');
+
+        self::typeHandler('serialized', '\Spot\Type\Serialized');
     }
 
     /**

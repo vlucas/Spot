@@ -2,8 +2,10 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class String implements TypeInterface
+class String extends \Spot\Type
 {
+    public static $_defaultType = 'string';
+    
     /**
      * Cast given value to type required
      */
@@ -13,21 +15,5 @@ class String implements TypeInterface
             return (string) $value;
         }
         return $value;
-    }
-
-    /**
-     * Geting value off Entity object
-     */
-    public static function get(Entity $entity, $value)
-    {
-        return self::cast($value);
-    }
-
-    /**
-     * Setting value on Entity object
-     */
-    public static function set(Entity $entity, $value)
-    {
-        return self::cast($value);
     }
 }

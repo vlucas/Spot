@@ -17,7 +17,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		//ksort($sortedFields);
 		
 		// Assert $fields are correct
-		$testFields = array('id', 'title', 'body', 'status', 'date_created');
+		$testFields = array('id', 'title', 'body', 'status', 'date_created', 'data');
 		//ksort($testFields);
 		$this->assertEquals($sortedFields, $testFields);
 	}

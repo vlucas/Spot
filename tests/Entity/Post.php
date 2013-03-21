@@ -15,7 +15,8 @@ class Entity_Post extends \Spot\Entity
             'title' => array('type' => 'string', 'required' => true),
             'body' => array('type' => 'text', 'required' => true),
             'status' => array('type' => 'int', 'default' => 0, 'index' => true),
-            'date_created' => array('type' => 'datetime')
+            'date_created' => array('type' => 'datetime'),
+            'data' => array('type' => 'serialized')
         );
     }
 

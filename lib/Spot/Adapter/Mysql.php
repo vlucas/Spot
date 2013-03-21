@@ -55,7 +55,8 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		'year' => array('adapter_type' => 'year', 'length' => 4),
 		'month' => array('adapter_type' => 'month', 'length' => 2),
 		'time' => array('adapter_type' => 'time'),
-		'timestamp' => array('adapter_type' => 'int', 'length' => 11)
+		'timestamp' => array('adapter_type' => 'int', 'length' => 11),
+		'serialized' => array('adapter_type' => 'text'),
   );
 
 

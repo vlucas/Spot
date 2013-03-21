@@ -25,7 +25,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'title' => 'My Awesome Post',
             'body' => '<p>Body</p>',
             'status' => 0,
-            'date_created' => null
+            'date_created' => null,
+            'data' => null
             );
         ksort($testData);
 
@@ -50,7 +51,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'title' => 'My Awesome Post',
             'body' => '<p>Body</p>',
             'status' => 0,
-            'date_created' => null
+            'date_created' => null,
+            'data' => null
             );
         ksort($testData);
 
@@ -94,7 +96,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'title' => 'My Awesome Post',
             'body' => '<p>Body</p>',
             'status' => 0,
-            'date_created' => null
+            'date_created' => null,
+            'data' => null
             );
         
         // Set initial data
@@ -163,5 +166,76 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $post->data(array('title' => null));
 
         $this->assertTrue($post->isModified('title'));
+    }
+
+    public function testSerialized()
+    {
+        $data = array(
+            'title' => 'A Post',
+            'body' => 'A Body',
+            'status' => 0,
+            'data' => array('posts' => 'are cool', 'another field' => 'to serialize')
+        );
+
+        $post = new Entity_Post($data);
+
+        $this->assertEquals($post->data, array('posts' => 'are cool', 'another field' => 'to serialize'));
+
+        $mapper = test_spot_mapper();
+
+        $mapper->save($post);
+
+        $post = $mapper->all('Entity_Post')->first();
+
+        $this->assertEquals($post->data, array('posts' => 'are cool', 'another field' => 'to serialize'));
+
+        $post->data = 'asdf';
+
+        $this->assertEquals($post->data, 'asdf');
+
+        $mapper->save($post);
+
+        $post = $mapper->all('Entity_Post')->first();
+
+        $this->assertEquals($post->data, 'asdf');
+    }
+
+    public function testDataReferences()
+    {
+        $data = array(
+            'title' => 'A Post',
+            'body' => 'A Body',
+            'status' => 0,
+            'data' => array('posts' => 'are cool', 'another field' => 'to serialize')
+        );
+
+        $post = new Entity_Post($data);
+
+        $title = $post->title;
+
+        $this->assertEquals($title, $post->title);
+
+        $title = 'asdf';
+
+        $this->assertEquals('A Post', $post->title);
+
+        $this->assertEquals('asdf', $title);
+
+        // Test implicit 
+        $this->assertNull($post->date_created);
+
+        $post->date_created = null;
+
+        $this->assertNull($post->date_created);
+
+        $post->data['posts'] = 'are really cool';
+
+        $this->assertEquals($post->data, array('posts' => 'are really cool', 'another field' => 'to serialize'));
+
+        $data =& $post->data;
+
+        $data['posts'] = 'are still cool';
+
+        $this->assertEquals($post->data, array('posts' => 'are still cool', 'another field' => 'to serialize'));
     }
 }

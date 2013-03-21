@@ -2,8 +2,11 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class Datetime implements TypeInterface
+class Datetime extends \Spot\Type
 {
+    public static $_defaultType = 'datetime';
+    public static $_format = 'Y-m-d H:i:s';
+    
     /**
      * Cast given value to type required
      */
@@ -21,20 +24,13 @@ class Datetime implements TypeInterface
         }
         return $value;
     }
-
-    /**
-     * Geting value off Entity object
-     */
-    public static function get(Entity $entity, $value)
+    
+    public static function dump($value)
     {
-        return self::cast($value);
-    }
-
-    /**
-     * Setting value on Entity object
-     */
-    public static function set(Entity $entity, $value)
-    {
-        return self::cast($value);
+        $value = static::cast($value);
+        if ($value) {
+            $value = $value->format(static::$_format);
+        }
+        return $value;
     }
 }
