@@ -10,24 +10,13 @@ require_once dirname(__DIR__) . '/lib/Spot/Config.php';
 date_default_timezone_set('America/Chicago');
 
 // Setup available adapters for testing
-
 $cfg = new \Spot\Config();
-          
-if ($_ENV['db_type'] == "mysql") {
+$db_type = getenv('SPOT_DB_TYPE');
+$db_dsn  = getenv('SPOT_DB_DSN');
+
+if ($db_type == "mysql") {
     // MySQL
-    $cfg->addConnection('test', $_ENV['db_dsn']);
-}
-elseif ($_ENV['db_type'] == "mongo")
-{
-    // MongoDB with adapter options
-    $cfg->addConnection('test_mongodb', $_ENV['db_dsn'], array(
-        /* 'cursor' => array(
-            'timeout' => 10
-        ),
-        'mapper' => array(
-            'translate_id' => true
-        ) */
-    ));
+    $cfg->addConnection('test', $db_dsn);
 }
 else
 {

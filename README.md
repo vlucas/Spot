@@ -1,6 +1,6 @@
-Spot PHP ORM+ODM
+Spot PHP ORM
 ----------------
-For Relational Databases and MongoDB
+For RDBMS (Currently only has a MySQL adapter)
 
 
 Connecting to a Database
@@ -13,16 +13,6 @@ DSN strings so Spot can establish a database connection.
 // MySQL
 $cfg = new \Spot\Config();
 $adapter = $cfg->addConnection('test_mysql', 'mysql://user:password@localhost/database_name');
-
-// MongoDB with adapter options
-$adapter = $cfg->addConnection('test_mongodb', 'mongodb://localhost:28017', array(
-    'cursor' => array(
-        'timeout' => 10
-    ),
-    'mapper' => array(
-        'translate_id' => true // Aliases 'id' to '_id' for intet-operability
-	)
-));
 ```
 
 Accessing the Mapper
