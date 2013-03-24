@@ -14,7 +14,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
 	{
 		$mapper = test_spot_mapper();
 		
-        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag') as $entity) {
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
             $mapper->migrate($entity);
             $mapper->truncateDatasource($entity);
         }
