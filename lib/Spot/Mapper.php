@@ -259,7 +259,6 @@ class Mapper
             $related_entities = $relationObj->execute()->execute();
 
             // Load all entities related to the collection
-            $initalQueryCount = \Spot\Log::queryCount();
             foreach ($collection as $entity) {
                 $collectedEntities = array();
                 $collectedIdentities = array();
