@@ -256,7 +256,7 @@ class Mapper
 
             // double execute() to make sure we get the 
             // \Spot\Entity\Collection back (and not just the \Spot\Query)
-            $related_entities = $relationObj->execute()->execute();
+            $related_entities = $relationObj->execute()->limit(null)->execute();
 
             // Load all entities related to the collection
             foreach ($collection as $entity) {
@@ -276,9 +276,13 @@ class Mapper
                         }
                     }
                 }
-                $relation_collection = new \Spot\Entity\Collection(
-                    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
-                );
+                if ($relationObj instanceof \Spot\Relation\HasOne) {
+                    $relation_collection = array_shift($collectedEntities);
+                } else {
+                    $relation_collection = new \Spot\Entity\Collection(
+                        $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
+                    );
+                }
                 $entity->$relationName->assignCollection($relation_collection);
             }
         }

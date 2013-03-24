@@ -23,6 +23,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $post = $mapper->get('Entity_Post');
         $post->title = "Test Post";
         $post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
+        $post->author_id = 1;
         $post->date_created = new \DateTime();
         $result = $mapper->insert($post); // returns an id
 
@@ -35,6 +36,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $post = $mapper->get('Entity_Post');
         $post->title = "Test Post With Empty Values";
         $post->body = "<p>Test post here.</p>";
+        $post->author_id = 1;
         $post->date_created = null;
         try {
             $result = $mapper->insert($post); // returns an id
@@ -62,6 +64,7 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
         $post->status = 1;
         $post->date_created = new \DateTime();
+        $post->author_id = 1;
         $result = $mapper->insert($post); // returns an id
 
         // Read Post from database

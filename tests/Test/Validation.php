@@ -9,12 +9,12 @@ class Test_Validation extends PHPUnit_Framework_TestCase
     public static function setupBeforeClass()
     {
         $mapper = test_spot_mapper();
-        $mapper->migrate('Entity_User');
+        $mapper->migrate('Entity_Author');
     }
     public static function tearDownAfterClass()
     {
         $mapper = test_spot_mapper();
-        $mapper->truncateDatasource('Entity_User');
+        $mapper->truncateDatasource('Entity_Author');
     }
 
     public function testUniqueFieldCreatesValidationError()
@@ -22,7 +22,7 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
 
         // Setup new user
-        $user1 = new Entity_User(array(
+        $user1 = new Entity_Author(array(
             'email' => 'test@test.com',
             'password' => 'test',
             'is_admin' => true
@@ -30,7 +30,7 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper->save($user1);
 
         // Setup new user (identical, expecting a validation error)
-        $user2 = new Entity_User(array(
+        $user2 = new Entity_Author(array(
             'email' => 'test@test.com',
             'password' => 'test',
             'is_admin' => false

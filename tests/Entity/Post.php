@@ -16,7 +16,8 @@ class Entity_Post extends \Spot\Entity
             'body' => array('type' => 'text', 'required' => true),
             'status' => array('type' => 'int', 'default' => 0, 'index' => true),
             'date_created' => array('type' => 'datetime'),
-            'data' => array('type' => 'serialized')
+            'data' => array('type' => 'serialized'),
+            'author_id' => array('type' => 'int', 'required' => true),
         );
     }
 
@@ -37,7 +38,13 @@ class Entity_Post extends \Spot\Entity
                 'throughEntity' => 'Entity_PostTag',
                 'throughWhere' => array('post_id' => ':entity.id'),
                 'where' => array('id' => ':throughEntity.tag_id'),
-            )
+            ),
+            // Each post entity 'hasOne' author entites
+            'author' => array(
+                'type' => 'HasOne',
+                'entity' => 'Entity_Author',
+                'where' => array('id' => ':entity.author_id')
+            ),
         );
     }
 }

@@ -19,6 +19,7 @@ class Test_Transactions extends PHPUnit_Framework_TestCase
         $post->title = "Test Post with Transaction";
         $post->body = "<p>This is a really awesome super-duper post -- in a TRANSACTION!.</p>";
         $post->date_created = $mapper->connection('Entity_Post')->dateTime();
+        $post->author_id = 1;
 
         // Save in transation
         $phpunit = $this;
@@ -37,6 +38,7 @@ class Test_Transactions extends PHPUnit_Framework_TestCase
         $post->title = "Rolledback";
         $post->body = "<p>This is a really awesome super-duper post -- in a TRANSACTION!.</p>";
         $post->date_created = $mapper->connection('Entity_Post')->dateTime();
+        $post->author_id = 1;
 
         // Save in transation
         $phpunit = $this;
@@ -61,6 +63,7 @@ class Test_Transactions extends PHPUnit_Framework_TestCase
         $post->title = "Rolledback";
         $post->body = "<p>This is a really awesome super-duper post -- in a TRANSACTION!.</p>";
         $post->date_created = $mapper->connection('Entity_Post')->dateTime();
+        $post->author_id = 1;
 
         // Save in transation
         $phpunit = $this;

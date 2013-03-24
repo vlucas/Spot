@@ -20,9 +20,15 @@ class Test_Query extends PHPUnit_Framework_TestCase
         }
 
 		// Insert blog dummy data
-        for ( $i = 1; $i <= 3; $i++ ) {
+        for( $i = 1; $i <= 3; $i++ ) {
             $tag_id = $mapper->insert('Entity_Tag', array(
                 'name' => "Title {$i}"
+            ));
+        }
+        for( $i = 1; $i <= 3; $i++ ) {
+            $author_id = $mapper->insert('Entity_Author', array(
+                'email' => $i.'user@somewhere.com',
+                'password' => 'securepassword'
             ));
         }
 		for( $i = 1; $i <= 10; $i++ ) {
@@ -30,7 +36,8 @@ class Test_Query extends PHPUnit_Framework_TestCase
 				'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
 				'body' => '<p>' . $i  . '_body</p>',
 				'status' => $i ,
-				'date_created' => $mapper->connection('Entity_Post')->dateTime()
+				'date_created' => $mapper->connection('Entity_Post')->dateTime(),
+                'author_id' => rand(1,3)
 			));
             for( $j = 1; $j <= 2; $j++ ) {
                 $mapper->insert('Entity_Post_Comment', array(
@@ -333,6 +340,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $count3 = \Spot\Log::queryCount();
 
         foreach ($posts as $post) {
+            $this->assertInstanceOf('\\Spot\\Relation\\HasMany', $post->comments);
             foreach ($post->comments as $comment) {
                 $this->assertEquals($comment->post_id, $post->id);
             }
@@ -364,5 +372,28 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $count4 = \Spot\Log::queryCount();
 
         $this->assertEquals($count3 + 5, $count4);
+    }
+
+    public function testQueryHasOneWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('author'))->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        // @todo: Theoretically, 'HasOne' calls could be added as JOIN
+        $this->assertEquals($count1 + 2, $count2);
+
+        foreach ($posts as $post) {
+            $this->assertEquals($post->author_id, $post->author->id);
+            $this->assertInstanceOf('\Spot\Relation\HasOne', $post->author);
+        }
+
+        $count3 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count1 + 2, $count3);
     }
 }

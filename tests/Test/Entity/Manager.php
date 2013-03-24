@@ -17,7 +17,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		//ksort($sortedFields);
 		
 		// Assert $fields are correct
-		$testFields = array('id', 'title', 'body', 'status', 'date_created', 'data');
+		$testFields = array('id', 'title', 'body', 'status', 'date_created', 'data', 'author_id');
 		//ksort($testFields);
 		$this->assertEquals($sortedFields, $testFields);
 	}
@@ -32,7 +32,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		sort($sortedRelations);
 		
 		// Assert $relations are correct
-		$testRelations = array('comments', 'tags');
+		$testRelations = array('comments', 'tags', 'author');
 		sort($testRelations);
 		$this->assertEquals($sortedRelations, $testRelations);
 	}

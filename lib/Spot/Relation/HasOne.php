@@ -15,7 +15,7 @@ class HasOne extends RelationAbstract
 	 */
 	protected function toQuery()
 	{
-		return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->first();
+		return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->limit(1);
 	}
 	
 	
