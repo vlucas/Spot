@@ -14,29 +14,38 @@ class Test_Query extends PHPUnit_Framework_TestCase
 	{
 		$mapper = test_spot_mapper();
 		
-		$mapper->migrate('Entity_Post');
-		$mapper->truncateDatasource('Entity_Post');
-		
-		$mapper->migrate('Entity_Post_Comment');
-		$mapper->truncateDatasource('Entity_Post_Comment');
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag') as $entity) {
+            $mapper->migrate($entity);
+            $mapper->truncateDatasource($entity);
+        }
 
 		// Insert blog dummy data
+        for ( $i = 1; $i <= 3; $i++ ) {
+            $tag_id = $mapper->insert('Entity_Tag', array(
+                'name' => "Title {$i}"
+            ));
+        }
 		for( $i = 1; $i <= 10; $i++ ) {
-			$id = $mapper->insert('Entity_Post', array(
+			$post_id = $mapper->insert('Entity_Post', array(
 				'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
 				'body' => '<p>' . $i  . '_body</p>',
 				'status' => $i ,
 				'date_created' => $mapper->connection('Entity_Post')->dateTime()
 			));
-                for( $j = 1; $j <= 2; $j++ ) {
-                    $mapper->insert('Entity_Post_Comment', array(
-                        'post_id' => $id,
-                        'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
-                        'email' => 'bob@somewhere.com'
-                    ));
-                }
-            
-		}
+            for( $j = 1; $j <= 2; $j++ ) {
+                $mapper->insert('Entity_Post_Comment', array(
+                    'post_id' => $post_id,
+                    'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
+                    'email' => 'bob@somewhere.com'
+                ));
+            }
+            for( $j = 1; $j <= $i % 3; $j++ ) {
+                $posttag_id = $mapper->insert('Entity_PostTag', array(
+                    'post_id' => $post_id,
+                    'tag_id' => $j
+                ));
+            }
+        }
 	}
 	
 	public function testQueryInstance()
@@ -333,5 +342,27 @@ class Test_Query extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($count3 + 2, $count4);
         
+    }
+
+    public function testQueryHasManyThroughWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('tags'))->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        // @todo: Currently 'HasManyThrough' queries take 3 DB calls
+        $this->assertEquals($count1 + 4, $count2);
+
+        $count3 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('tags', 'comments'))->execute();
+
+        $count4 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count3 + 5, $count4);
     }
 }

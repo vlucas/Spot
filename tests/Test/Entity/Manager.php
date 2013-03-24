@@ -32,7 +32,7 @@ class Test_Entity_Manager extends PHPUnit_Framework_TestCase
 		sort($sortedRelations);
 		
 		// Assert $relations are correct
-		$testRelations = array('comments');
+		$testRelations = array('comments', 'tags');
 		sort($testRelations);
 		$this->assertEquals($sortedRelations, $testRelations);
 	}

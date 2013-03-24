@@ -29,6 +29,14 @@ class Entity_Post extends \Spot\Entity
                 'entity' => 'Entity_Post_Comment',
                 'where' => array('post_id' => ':entity.id'),
                 'order' => array('date_created' => 'ASC')
+            ),
+            // Each post entity 'hasManyThrough' tag entities
+            'tags' => array(
+                'type' => 'HasManyThrough',
+                'entity' => 'Entity_Tag',
+                'throughEntity' => 'Entity_PostTag',
+                'throughWhere' => array('post_id' => ':entity.id'),
+                'where' => array('id' => ':throughEntity.tag_id'),
             )
         );
     }
