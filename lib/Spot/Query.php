@@ -22,6 +22,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public $order = array();
     public $group = array();
     public $having = array();
+    public $with = array();
     public $limit;
     public $offset;
 
@@ -30,7 +31,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected static $_customMethods = array();
     
     protected static $_resettable = array(
-        'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset'
+        'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset', 'with'
     );
     protected $_snapshot = array();
 
@@ -180,6 +181,37 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         return $this->where($conditions, $type, "AND");
     }
 
+    /**
+     * Relations to be loaded non-lazily
+     *
+     * @param mixed $relations Array/string of relation(s) to be loaded.  False to erase all withs.  Null to return existing $with value
+     */
+    public function with($relations = null) {
+        if(is_null($relations)) {
+            return $this->with;
+        } else if(is_bool($relations) && !$relations) {
+            $this->with = array();
+        }
+        
+        $entityName = $this->entityName();
+        $entityRelations = array_keys($entityName::relations());
+        foreach((array)$relations as $idx => $relation) {
+            $add = true;
+            if(!is_numeric($idx) && isset($this->with[$idx])) {
+                $add = $relation;
+                $relation = $idx;
+            }
+            if($add && in_array($relation, $entityRelations)) {
+                $this->with[] = $relation;
+            } else if(!$add) {
+                foreach (array_keys($this->with, $relation, true) as $key) {
+                    unset($this->with[$key]);
+                }
+            }
+        }
+        $this->with = array_unique($this->with);
+        return $this;
+    }
 
     /**
      * Search criteria (FULLTEXT, LIKE, or REGEX, depending on storage engine and driver)

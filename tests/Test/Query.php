@@ -22,12 +22,20 @@ class Test_Query extends PHPUnit_Framework_TestCase
 
 		// Insert blog dummy data
 		for( $i = 1; $i <= 10; $i++ ) {
-			$mapper->insert('Entity_Post', array(
+			$id = $mapper->insert('Entity_Post', array(
 				'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
 				'body' => '<p>' . $i  . '_body</p>',
 				'status' => $i ,
 				'date_created' => $mapper->connection('Entity_Post')->dateTime()
 			));
+                for( $j = 1; $j <= 2; $j++ ) {
+                    $mapper->insert('Entity_Post_Comment', array(
+                        'post_id' => $id,
+                        'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
+                        'email' => 'bob@somewhere.com'
+                    ));
+                }
+            
 		}
 	}
 	
@@ -273,4 +281,57 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$this->assertEquals(5, count($filtered_array));
 		
 	}
+    
+    public function testWithRelationsSyntax()
+    {
+        $mapper = test_spot_mapper();
+
+        $posts = $mapper->all('Entity_Post');
+
+        $this->assertInstanceOf('\Spot\Query', $posts->with('comments'));
+
+        $posts->with('comments');
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(array('nothing'));
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(array('comments', 'comments'));
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(false);
+
+        $this->assertEquals($posts->with(), array());
+    }
+
+    public function testQueryHasManyWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with('comments');
+
+        $found_posts = $posts->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count1 + 2, $count2);
+
+        $count3 = \Spot\Log::queryCount();
+
+        foreach ($posts as $post) {
+            foreach ($post->comments as $comment) {
+                $this->assertEquals($comment->post_id, $post->id);
+            }
+        }
+
+        $count4 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count3 + 2, $count4);
+        
+    }
 }

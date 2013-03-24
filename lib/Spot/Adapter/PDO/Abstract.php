@@ -850,7 +850,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             // Set PDO fetch mode
             $stmt->setFetchMode(\PDO::FETCH_ASSOC);
 
-            $collection = $mapper->collection($entityClass, $stmt);
+            $collection = $mapper->collection($entityClass, $stmt, $query->with());
 
             // Ensure statement is closed
             $stmt->closeCursor();
