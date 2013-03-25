@@ -20,7 +20,7 @@ class Entity_Post_Comment extends \Spot\Entity
             'date_created' => array('type' => 'datetime')
         );
     }
-    
+
     public static function relations() {
       return array(
           // Each post entity 'hasMany' comment entites

@@ -8,8 +8,8 @@ class Type implements Type\TypeInterface
     public static $_dumpHandlers = array();
     public static $_defaultType = 'string';
     public static $_defaultOptions = array();
-    
-    
+
+
     /**
      * Cast given value to type required
      */
@@ -33,7 +33,7 @@ class Type implements Type\TypeInterface
     {
         return static::cast($value);
     }
-    
+
     /**
      * Load value as passed from the datasource
      * internal to allow for extending on a per-adapter basis
@@ -44,14 +44,14 @@ class Type implements Type\TypeInterface
         }
         return static::load($value);
     }
-    
+
     /**
      * Load value as passed from the datasource
      */
     public static function load($value) {
         return static::cast($value);
     }
-    
+
     /**
      * Dumps value as passed to the datasource
      * internal to allow for extending on a per-adapter basis
@@ -62,7 +62,7 @@ class Type implements Type\TypeInterface
         }
         return static::dump($value);
     }
-    
+
     /**
      * Dump value as passed to the datasource
      */

@@ -109,10 +109,10 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
                 'date_created' => $mapper->connection('Entity_Post')->dateTime()
             ));
         }
-        
+
         $result = $mapper->delete('Entity_Post', array('status !=' => array(3,4,5), 'title' => 'odd_title'));
         $this->assertTrue((boolean) $result);
         $this->assertEquals(3, $result);
-        
+
     }
 }

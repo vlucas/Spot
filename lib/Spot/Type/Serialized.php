@@ -5,7 +5,7 @@ use Spot\Entity;
 class Serialized extends \Spot\Type
 {
     public static $_defaultType = 'serialized';
-    
+
     /**
      * Cast given value to type required
      */
@@ -18,7 +18,7 @@ class Serialized extends \Spot\Type
         }
         return $value;
     }
-    
+
     public static function dump($value)
     {
         return serialize($value);

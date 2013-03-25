@@ -33,7 +33,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         ksort($testData);
 
         $this->assertEquals($testData, $data);
-        
+
         $this->assertNull($post->asdf);
     }
 
@@ -88,13 +88,13 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         // Errors for one key only
         $this->assertEquals($postErrors['title'], $post->errors('title'));
     }
-    
+
     public function testDataModified() {
         $data = array(
             'title' => 'My Awesome Post 2',
             'body' => '<p>Body 2</p>'
         );
-        
+
         $testData = array(
             'id' => null,
             'title' => 'My Awesome Post',
@@ -104,7 +104,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'data' => null,
             'author_id' => 1
             );
-        
+
         // Set initial data
         $post = new Entity_Post($testData);
 

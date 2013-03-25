@@ -6,7 +6,7 @@ class Datetime extends \Spot\Type
 {
     public static $_defaultType = 'datetime';
     public static $_format = 'Y-m-d H:i:s';
-    
+
     /**
      * Cast given value to type required
      */
@@ -24,7 +24,7 @@ class Datetime extends \Spot\Type
         }
         return $value;
     }
-    
+
     public static function dump($value)
     {
         $value = static::cast($value);

@@ -18,8 +18,8 @@ abstract class RelationAbstract
     protected $_relationData;
     protected $_collection;
     protected $_relationRowCount;
-    
-    
+
+
     /**
      * Constructor function
      *
@@ -48,8 +48,8 @@ abstract class RelationAbstract
             throw new \InvalidArgumentException("Relation description key 'entity' must be set to an Entity class name.");
         }
     }
-    
-    
+
+
     /**
      * Get source entity object
      */
@@ -66,8 +66,8 @@ abstract class RelationAbstract
     {
         return ($this->_entityName == ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\Collection ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->_entityName;
     }
-    
-    
+
+
     /**
      * Get mapper instance
      */
@@ -121,8 +121,8 @@ abstract class RelationAbstract
         }
         return $conditions;
     }
-    
-    
+
+
     /**
      * Get sorting for relations
      *
@@ -133,8 +133,8 @@ abstract class RelationAbstract
         $sorting = isset($this->_relationData['order']) ? $this->_relationData['order'] : array();
         return $sorting;
     }
-    
-    
+
+
     /**
      * Called automatically when attribute is printed
      */
@@ -144,17 +144,17 @@ abstract class RelationAbstract
         $res = $this->execute();
         return ($res) ? "1" : "0";
     }
-    
-    
-    
+
+
+
     /**
      * Load query object with current relation data
      *
      * @return \Spot\Query
      */
     abstract protected function toQuery();
-    
-    
+
+
     /**
      * Fetch and cache returned query object from internal toQuery() method
      */

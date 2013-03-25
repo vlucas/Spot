@@ -6,7 +6,7 @@ class Float extends \Spot\Type
 {
     public static $_defaultType = 'decimal';
     public static $_defaultOptions = array('precision' => 14, 'scale' => 10);
-    
+
     /**
      * Cast given value to type required
      */
@@ -16,6 +16,6 @@ class Float extends \Spot\Type
             return (float) $value;
         }
         return null;
-        
+
     }
 }

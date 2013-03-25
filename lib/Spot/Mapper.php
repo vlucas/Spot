@@ -24,7 +24,7 @@ class Mapper
 
 
     /**
-     *	Constructor Method
+     *  Constructor Method
      */
     public function __construct(Config $config)
     {
@@ -224,9 +224,9 @@ class Mapper
         foreach($cursor as $data) {
             // Entity with data set
             $data = array_intersect_key($data, $entityFields);
-            
+
             $data = $this->loadEntity($entityName, $data);
-            
+
             $entity = new $entityName($data);
 
             // Load relation objects
@@ -264,7 +264,7 @@ class Mapper
                 $collectedIdentities = array();
                 foreach ($related_entities as $related_entity) {
                     $resolvedConditions = $relationObj->resolveEntityConditions($entity, $relationObj->unresolvedConditions());
-                    
+
                     // @todo this is awkward, but $resolvedConditions['where'] is returned as an array
                     foreach ($resolvedConditions as $key => $value) {
                         if ($related_entity->$key == $value) {
@@ -316,7 +316,7 @@ class Mapper
      * @param string $entityClass Name of the entity class
      * @param mixed $identifier Primary key or array of key/values
      * @return mixed Depends on input
-     * 			false If $identifier is scalar and no entity exists
+     *         false If $identifier is scalar and no entity exists
      */
     public function get($entityClass, $identifier = false)
     {
@@ -502,9 +502,9 @@ class Mapper
             // Save only known, defined fields
             $entityFields = $this->fields($entityName);
             $data = array_intersect_key($data, $entityFields);
-            
+
             $data = $this->dumpEntity($entityName, $data);
-            
+
             // Send to adapter via named connection
             $result = $this->connection($entityName)->create($this->datasource($entityName), $data);
 
@@ -556,7 +556,7 @@ class Mapper
         // Handle with adapter
         if(count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
-            
+
             $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
 
             // Run afterUpdate
@@ -611,7 +611,7 @@ class Mapper
             throw new $this->_exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
     }
-    
+
     /**
      * Prepare data to be dumped to the data store
      */
@@ -625,7 +625,7 @@ class Mapper
         }
         return $dumpedData;
     }
-    
+
     /**
      * Retrieve data from the data store
      */
@@ -639,7 +639,7 @@ class Mapper
         }
         return $loadedData;
     }
-    
+
     /**
      * Transaction with closure
      */
@@ -718,7 +718,7 @@ class Mapper
         if (!$entityName) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
-        
+
         $relations = array();
         $rels = $this->relations($entityName);
         if(count($rels) > 0) {
@@ -739,7 +739,7 @@ class Mapper
         if (!$entityName) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
-        
+
         $rels = $this->relations($entityName);
         if (isset($rels[$name])) {
             return $this->getRelationObject($entity, $name, $rels[$name]);
@@ -752,11 +752,11 @@ class Mapper
         if (!$entityName) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
-        
+
         if (isset($entity->$field) && !$reload) {
             return $entity->$field;
         }
-        
+
         $relationEntity = isset($relation['entity']) ? $relation['entity'] : false;
         if(!$relationEntity) {
             throw new $this->_exceptionClass("Entity for '" . $field . "' relation has not been defined.");

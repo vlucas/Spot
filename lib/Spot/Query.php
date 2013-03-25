@@ -37,10 +37,10 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
 
     /**
-     *	Constructor Method
+     *  Constructor Method
      *
-     *	@param Spot_Mapper
-     *	@param string $entityName Name of the entity to query on/for
+     *  @param Spot_Mapper
+     *  @param string $entityName Name of the entity to query on/for
      */
     public function __construct(\Spot\Mapper $mapper, $entityName)
     {
@@ -192,7 +192,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         } else if(is_bool($relations) && !$relations) {
             $this->with = array();
         }
-        
+
         $entityName = $this->entityName();
         $entityRelations = array_keys($entityName::relations());
         foreach((array)$relations as $idx => $relation) {
@@ -403,7 +403,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
             // Set cache
             $this->_cache[$cacheKey] = $result;
         }
-		
+
         return is_numeric($result) ? $result : 0;
     }
 

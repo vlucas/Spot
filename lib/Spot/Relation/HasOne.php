@@ -8,53 +8,53 @@ namespace Spot\Relation;
  */
 class HasOne extends RelationAbstract
 {
-	/**
-	 * Load query object with current relation data
+    /**
+     * Load query object with current relation data
      * 
      * @return Spot_Query
-	 */
-	protected function toQuery()
-	{
-		return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->limit(1);
-	}
-	
-	
-	/**
-	 * isset() functionality passthrough to entity
-	 */
-	public function __isset($key)
-	{
-		$entity = $this->execute();
-		if($entity) {
-			return isset($entity->$key);
-		} else {
-			return false;
-		}
-	}
-	
-	
-	/**
-	 * Getter passthrough to entity
-	 */
-	public function __get($var)
-	{
-		$entity = $this->execute();
-		if($entity) {
-			return $entity->$var;
-		} else {
-			return null;
-		}
-	}
-	
-	
-	/**
-	 * Setter passthrough to entity
-	 */
-	public function __set($var, $value)
-	{
-		$entity = $this->execute();
-		if($entity) {
-			$entity->$var = $value;
-		}
-	}
+     */
+    protected function toQuery()
+    {
+        return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->limit(1);
+    }
+    
+    
+    /**
+     * isset() functionality passthrough to entity
+     */
+    public function __isset($key)
+    {
+        $entity = $this->execute();
+        if($entity) {
+            return isset($entity->$key);
+        } else {
+            return false;
+        }
+    }
+    
+    
+    /**
+     * Getter passthrough to entity
+     */
+    public function __get($var)
+    {
+        $entity = $this->execute();
+        if($entity) {
+            return $entity->$var;
+        } else {
+            return null;
+        }
+    }
+    
+    
+    /**
+     * Setter passthrough to entity
+     */
+    public function __set($var, $value)
+    {
+        $entity = $this->execute();
+        if($entity) {
+            $entity->$var = $value;
+        }
+    }
 }
