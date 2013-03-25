@@ -207,7 +207,7 @@ class Mapper
     /**
      * Create collection
      */
-    public function collection($entityName, $cursor)
+    public function collection($entityName, $cursor, $with = array())
     {
         $results = array();
         $resultsIdentities = array();
@@ -243,7 +243,50 @@ class Mapper
         }
 
         $collectionClass = $this->collectionClass();
-        return new $collectionClass($results, $resultsIdentities);
+        $collection = new $collectionClass($results, $resultsIdentities, $entityName);
+        return $this->with($collection, $entityName, $with);
+    }
+
+    /**
+     * Pre-emtively load associations for an entire collection
+     */
+    public function with($collection, $entityName, $with = array()) {
+        foreach($with as $relationName) {
+            $relationObj = $this->loadRelation($collection, $relationName);
+
+            // double execute() to make sure we get the 
+            // \Spot\Entity\Collection back (and not just the \Spot\Query)
+            $related_entities = $relationObj->execute()->limit(null)->execute();
+
+            // Load all entities related to the collection
+            foreach ($collection as $entity) {
+                $collectedEntities = array();
+                $collectedIdentities = array();
+                foreach ($related_entities as $related_entity) {
+                    $resolvedConditions = $relationObj->resolveEntityConditions($entity, $relationObj->unresolvedConditions());
+                    
+                    // @todo this is awkward, but $resolvedConditions['where'] is returned as an array
+                    foreach ($resolvedConditions as $key => $value) {
+                        if ($related_entity->$key == $value) {
+                            $pk = $this->primaryKey($related_entity);
+                            if(!in_array($pk, $collectedIdentities) && !empty($pk)) {
+                                $collectedIdentities[] = $pk;
+                            }
+                            $collectedEntities[] = $related_entity;
+                        }
+                    }
+                }
+                if ($relationObj instanceof \Spot\Relation\HasOne) {
+                    $relation_collection = array_shift($collectedEntities);
+                } else {
+                    $relation_collection = new \Spot\Entity\Collection(
+                        $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
+                    );
+                }
+                $entity->$relationName->assignCollection($relation_collection);
+            }
+        }
+        return $collection;
     }
 
 
@@ -669,33 +712,67 @@ class Mapper
     /**
      * Load defined relations
      */
-    public function loadRelations($entity)
+    public function loadRelations($entity, $reload = false)
     {
-        $entityName = get_class($entity);
+        $entityName = $entity instanceof \Spot\Entity\Collection ? $entity->entityName() : get_class($entity);
+        if (!$entityName) {
+            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
+        }
+        
         $relations = array();
         $rels = $this->relations($entityName);
         if(count($rels) > 0) {
             foreach($rels as $field => $relation) {
-                $relationEntity = isset($relation['entity']) ? $relation['entity'] : false;
-                if(!$relationEntity) {
-                    throw new $this->_exceptionClass("Entity for '" . $field . "' relation has not been defined.");
-                }
-
-                // Self-referencing entity relationship?
-                if($relationEntity == ':self') {
-                    $relationEntity = $entityName;
-                }
-
-                // Load relation class to lazy-loading relations on demand
-                $relationClass = '\\Spot\\Relation\\' . $relation['type'];
-
-                // Set field equal to relation class instance
-                $relationObj = new $relationClass($this, $entity, $relation);
-                $relations[$field] = $relationObj;
-                $entity->$field = $relationObj;
+                $relations[$field] = $this->loadRelation($entity, $field, $reload);
             }
         }
         return $relations;
+    }
+
+
+    /**
+     * Load defined relations
+     */
+    public function loadRelation($entity, $name, $reload = false)
+    {
+        $entityName = $entity instanceof \Spot\Entity\Collection ? $entity->entityName() : get_class($entity);
+        if (!$entityName) {
+            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
+        }
+        
+        $rels = $this->relations($entityName);
+        if (isset($rels[$name])) {
+            return $this->getRelationObject($entity, $name, $rels[$name]);
+        }
+    }
+
+
+    protected function getRelationObject($entity, $field, $relation, $reload = false) {
+        $entityName = $entity instanceof \Spot\Entity\Collection ? $entity->entityName() : get_class($entity);
+        if (!$entityName) {
+            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
+        }
+        
+        if (isset($entity->$field) && !$reload) {
+            return $entity->$field;
+        }
+        
+        $relationEntity = isset($relation['entity']) ? $relation['entity'] : false;
+        if(!$relationEntity) {
+            throw new $this->_exceptionClass("Entity for '" . $field . "' relation has not been defined.");
+        }
+
+        // Self-referencing entity relationship?
+        if($relationEntity == ':self') {
+            $relationEntity = $entityName;
+        }
+
+        // Load relation class to lazy-loading relations on demand
+        $relationClass = '\\Spot\\Relation\\' . $relation['type'];
+
+        // Set field equal to relation class instance
+        $relationObj = new $relationClass($this, $entity, $relation);
+        return $entity->$field = $relationObj;
     }
 
 

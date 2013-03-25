@@ -14,21 +14,45 @@ class Test_Query extends PHPUnit_Framework_TestCase
 	{
 		$mapper = test_spot_mapper();
 		
-		$mapper->migrate('Entity_Post');
-		$mapper->truncateDatasource('Entity_Post');
-		
-		$mapper->migrate('Entity_Post_Comment');
-		$mapper->truncateDatasource('Entity_Post_Comment');
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
+            $mapper->migrate($entity);
+            $mapper->truncateDatasource($entity);
+        }
 
 		// Insert blog dummy data
+        for( $i = 1; $i <= 3; $i++ ) {
+            $tag_id = $mapper->insert('Entity_Tag', array(
+                'name' => "Title {$i}"
+            ));
+        }
+        for( $i = 1; $i <= 3; $i++ ) {
+            $author_id = $mapper->insert('Entity_Author', array(
+                'email' => $i.'user@somewhere.com',
+                'password' => 'securepassword'
+            ));
+        }
 		for( $i = 1; $i <= 10; $i++ ) {
-			$mapper->insert('Entity_Post', array(
+			$post_id = $mapper->insert('Entity_Post', array(
 				'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
 				'body' => '<p>' . $i  . '_body</p>',
 				'status' => $i ,
-				'date_created' => $mapper->connection('Entity_Post')->dateTime()
+				'date_created' => $mapper->connection('Entity_Post')->dateTime(),
+                'author_id' => rand(1,3)
 			));
-		}
+            for( $j = 1; $j <= 2; $j++ ) {
+                $mapper->insert('Entity_Post_Comment', array(
+                    'post_id' => $post_id,
+                    'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
+                    'email' => 'bob@somewhere.com'
+                ));
+            }
+            for( $j = 1; $j <= $i % 3; $j++ ) {
+                $posttag_id = $mapper->insert('Entity_PostTag', array(
+                    'post_id' => $post_id,
+                    'tag_id' => $j
+                ));
+            }
+        }
 	}
 	
 	public function testQueryInstance()
@@ -273,4 +297,103 @@ class Test_Query extends PHPUnit_Framework_TestCase
 		$this->assertEquals(5, count($filtered_array));
 		
 	}
+    
+    public function testWithRelationsSyntax()
+    {
+        $mapper = test_spot_mapper();
+
+        $posts = $mapper->all('Entity_Post');
+
+        $this->assertInstanceOf('\Spot\Query', $posts->with('comments'));
+
+        $posts->with('comments');
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(array('nothing'));
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(array('comments', 'comments'));
+
+        $this->assertEquals($posts->with(), array('comments'));
+
+        $posts->with(false);
+
+        $this->assertEquals($posts->with(), array());
+    }
+
+    public function testQueryHasManyWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with('comments');
+
+        $found_posts = $posts->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count1 + 2, $count2);
+
+        $count3 = \Spot\Log::queryCount();
+
+        foreach ($posts as $post) {
+            $this->assertInstanceOf('\\Spot\\Relation\\HasMany', $post->comments);
+            foreach ($post->comments as $comment) {
+                $this->assertEquals($comment->post_id, $post->id);
+            }
+        }
+
+        $count4 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count3 + 2, $count4);
+        
+    }
+
+    public function testQueryHasManyThroughWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('tags'))->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        // @todo: Currently 'HasManyThrough' queries take 3 DB calls
+        $this->assertEquals($count1 + 4, $count2);
+
+        $count3 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('tags', 'comments'))->execute();
+
+        $count4 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count3 + 5, $count4);
+    }
+
+    public function testQueryHasOneWith()
+    {
+        $mapper = test_spot_mapper();
+
+        $count1 = \Spot\Log::queryCount();
+
+        $posts = $mapper->all('Entity_Post')->with(array('author'))->execute();
+
+        $count2 = \Spot\Log::queryCount();
+
+        // @todo: Theoretically, 'HasOne' calls could be added as JOIN
+        $this->assertEquals($count1 + 2, $count2);
+
+        foreach ($posts as $post) {
+            $this->assertEquals($post->author_id, $post->author->id);
+            $this->assertInstanceOf('\Spot\Relation\HasOne', $post->author);
+        }
+
+        $count3 = \Spot\Log::queryCount();
+
+        $this->assertEquals($count1 + 2, $count3);
+    }
 }

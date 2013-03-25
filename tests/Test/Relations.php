@@ -27,6 +27,7 @@ class Test_Relations extends PHPUnit_Framework_TestCase
         $post->title = "My Awesome Blog Post";
         $post->body = "<p>This is a really awesome super-duper post.</p><p>It's testing the relationship functions.</p>";
         $post->date_created = $mapper->connection('Entity_Post')->dateTime();
+        $post->author_id = 1;
         $postId = $mapper->insert($post);
         
         $this->assertTrue($postId !== false);
@@ -103,6 +104,7 @@ class Test_Relations extends PHPUnit_Framework_TestCase
         $post = $mapper->get('Entity_Post');
         $post->title = "No Comments";
         $post->body = "<p>Comments relation test</p>";
+        $post->author_id = 1;
         $mapper->save($post);
 
         // Testing that we can iterate over an empty set

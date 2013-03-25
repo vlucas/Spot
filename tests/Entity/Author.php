@@ -1,12 +1,12 @@
 <?php
 /**
- * User
+ * Author
  *
  * @package Spot
  */
-class Entity_User extends \Spot\Entity
+class Entity_Author extends \Spot\Entity
 {
-    protected static $_datasource = 'test_users';
+    protected static $_datasource = 'test_authors';
 
     public static function fields()
     {

@@ -16,6 +16,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         // Set data
         $post->title = "My Awesome Post";
         $post->body = "<p>Body</p>";
+        $post->author_id = 1;
 
         $data = $post->data();
         ksort($data);
@@ -26,7 +27,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'body' => '<p>Body</p>',
             'status' => 0,
             'date_created' => null,
-            'data' => null
+            'data' => null,
+            'author_id' => 1
             );
         ksort($testData);
 
@@ -40,7 +42,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
         $post = new Entity_Post(array(
             'title' => 'My Awesome Post',
-            'body' => '<p>Body</p>'
+            'body' => '<p>Body</p>',
+            'author_id' => 1
         ));
 
         $data = $post->data();
@@ -52,7 +55,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'body' => '<p>Body</p>',
             'status' => 0,
             'date_created' => null,
-            'data' => null
+            'data' => null,
+            'author_id' => 1
             );
         ksort($testData);
 
@@ -97,7 +101,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'body' => '<p>Body</p>',
             'status' => 0,
             'date_created' => null,
-            'data' => null
+            'data' => null,
+            'author_id' => 1
             );
         
         // Set initial data
@@ -136,7 +141,8 @@ class Test_Entity extends PHPUnit_Framework_TestCase
         $data = array(
             'title' => 'A Post',
             'body' => 'A Body',
-            'status' => 0
+            'status' => 0,
+            'author_id' => 1,
         );
 
         $post = new Entity_Post($data);
@@ -174,6 +180,7 @@ class Test_Entity extends PHPUnit_Framework_TestCase
             'title' => 'A Post',
             'body' => 'A Body',
             'status' => 0,
+            'author_id' => 1,
             'data' => array('posts' => 'are cool', 'another field' => 'to serialize')
         );
 

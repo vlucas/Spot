@@ -20,6 +20,7 @@ class Test_Insert extends PHPUnit_Framework_TestCase
         $post->title = "Test Post";
         $post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
         $post->date_created = $mapper->connection('Entity_Post')->dateTime();
+        $post->author_id = 1;
 
         $result = $mapper->insert($post); // returns inserted id
 

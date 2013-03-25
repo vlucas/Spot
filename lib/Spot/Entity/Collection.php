@@ -11,6 +11,7 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 {
 	protected $_results = array();
 	protected $_resultsIdentities = array();
+    protected $_entityName = null;
 
 
 	/**
@@ -19,11 +20,19 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	 * @param array $results Array of pre-loaded Spot_Entity objects or Iterator that will fetch them lazily
 	 * @param array $resultsIdentities Array of key values for given result set primary key
 	 */
-	public function __construct(array $results = array(), array $resultsIdentities = array())
+	public function __construct(array $results = array(), array $resultsIdentities = array(), $entityName = null)
 	{
 		$this->_results = $results;
 		$this->_resultsIdentities = $resultsIdentities;
+        $this->_entityName = $entityName;
 	}
+
+
+    public function entityName()
+    {
+        return $this->_entityName;
+    }
+
 
 	/**
 	 * Returns first result in set
@@ -213,7 +222,7 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 		return isset($this->_results[$key]);
 	}
 
-	public function offsetGet($key) {
+	public function &offsetGet($key) {
 		return $this->_results[$key];
 	}
 
