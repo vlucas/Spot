@@ -12,7 +12,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 {
     protected $_mapper;
     protected $_entityName;
-    protected $_cache;
+    protected $_cache = array();
 
     // Storage for query properties
     public $fields = array();
@@ -29,7 +29,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     // Custom methods added by extensions or plugins
     protected static $_customMethods = array();
-    
+
     protected static $_resettable = array(
         'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset', 'with'
     );
@@ -385,17 +385,23 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         $obj = $this;
         // New scope with closure to get only PUBLIC properties of object instance (can't include cache property)
-        $cacheKey = function() use($obj) { return sha1(var_export(get_object_vars($obj), true)) . "_count"; };
-        $cacheResult = isset($this->_cache[$cacheKey()]) ? $this->_cache[$cacheKey()] : false;
+        $cacheParams = function() use($obj) {
+            $props = get_object_vars($obj); // This trick doesn't seem to work by itself in PHP 5.4...
+            // Depends on protected/private properties starting with underscore ('_')
+            $publics = array_filter(array_keys($props), function($key) { return strpos($key, '_') !== 0; });
+            return array_intersect_key($props, array_flip($publics));
+        };
+        $cacheKey = sha1(var_export($cacheParams(), true)) . "_count";
+        $cacheResult = isset($this->_cache[$cacheKey]) ? $this->_cache[$cacheKey] : false;
 
         // Check cache
         if($cacheResult) {
             $result = $cacheResult;
         } else {
-        	// Execute query
-        	$result = $this->mapper()->connection($this->entityName())->count($this);
+            // Execute query
+            $result = $this->mapper()->connection($this->entityName())->count($this);
             // Set cache
-            $this->_cache[$cacheKey()] = $result;
+            $this->_cache[$cacheKey] = $result;
         }
 		
         return is_numeric($result) ? $result : 0;
