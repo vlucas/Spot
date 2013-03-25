@@ -402,7 +402,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 
         return $result;
     }
-	
+
     /**
      * Update entity
      */

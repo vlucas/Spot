@@ -5,7 +5,7 @@ use Spot\Entity;
 class Boolean extends \Spot\Type
 {
     public static $_defaultType = 'boolean';
-    
+
     /**
      * Cast given value to type required
      */
@@ -13,7 +13,7 @@ class Boolean extends \Spot\Type
     {
         return (bool) $value;
     }
-    
+
     /**
      * Boolean is generally persisted as an integer
      */

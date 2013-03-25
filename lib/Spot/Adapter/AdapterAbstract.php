@@ -9,140 +9,140 @@ namespace Spot\Adapter;
  */
 abstract class AdapterAbstract
 {
-	// Format for date columns, formatted for PHP's date() function
-	protected $_format_date;
-	protected $_format_time;
-	protected $_format_datetime;
-	
-	// Connection details
-	protected $_connection;
-	protected $_dsn;
-	protected $_dsnParts;
-	protected $_options;
-	
-	
-	/**
+    // Format for date columns, formatted for PHP's date() function
+    protected $_format_date;
+    protected $_format_time;
+    protected $_format_datetime;
+    
+    // Connection details
+    protected $_connection;
+    protected $_dsn;
+    protected $_dsnParts;
+    protected $_options;
+    
+    
+    /**
     * @param mixed $dsn DSN string or pre-existing Mongo object
     * @param array $options
     */
     public function __construct($dsn, array $options = array())
     {
-		$this->_dsn = $dsn;
-		if(is_string($dsn)) {
-			// Parse DSN string
-			$this->_dsnParts = self::parseDSN($dsn);
-			
-		} elseif(is_array($dsn)) {
-			// Array of keys => values
-			$this->_dsnParts = $dsn;
-			
-		} elseif(null === $dsn) {
-			// No DSN string given
-			$this->_dsnParts = array();
-		}
+        $this->_dsn = $dsn;
+        if(is_string($dsn)) {
+            // Parse DSN string
+            $this->_dsnParts = self::parseDSN($dsn);
+            
+        } elseif(is_array($dsn)) {
+            // Array of keys => values
+            $this->_dsnParts = $dsn;
+            
+        } elseif(null === $dsn) {
+            // No DSN string given
+            $this->_dsnParts = array();
+        }
         $this->_options = $options;
     }
-	
-	
-	/**
-	 * Get database format
-	 *
-	 * @return string Date format for PHP's date() function
-	 */
-	public function dateFormat()
-	{
-		return $this->_format_date;
-	}
-	
-	
-	/**
-	 * Get database time format
-	 *
-	 * @return string Time format for PHP's date() function
-	 */
-	public function timeFormat()
-	{
-		return $this->_format_time;
-	}
-	
-	
-	/**
-	 * Get database format
-	 *
-	 * @return string DateTime format for PHP's date() function
-	 */
-	public function dateTimeFormat()
-	{
-		return $this->_format_datetime;
-	}
-	
-	
-	/**
-	 * Get date
-	 *
-	 * @return object DateTime
-	 */
-	public function date($format = null)
-	{
-		if(null === $format) {
-			$format = $this->dateFormat();
-		}
-		return $this->dateTimeObject($format . ' ' . $this->timeFormat());
-	}
-	
-	
-	/**
-	 * Get database time format
-	 *
-	 * @return object DateTime
-	 */
-	public function time($format = null)
-	{
-		if(null === $format) {
-			$format = $this->timeFormat();
-		}
-		return $this->dateTimeObject($this->dateFormat() . ' ' . $format);
-	}
-	
-	
-	/**
-	 * Get datetime
-	 *
-	 * @return object DateTIme
-	 */
-	public function dateTime($format = null)
-	{
-		if(null === $format) {
-			$format = $this->dateTimeFormat();
-		}
-		return $this->dateTimeObject($format);
-	}
-	
-	
-	/**
-	 * Turn formstted date into timestamp
-	 * Also handles input timestamps
-	 *
-	 * @return DateTime object
-	 */
-	protected function dateTimeObject($format)
-	{
-		// Already a timestamp?
-		if(is_int($format) || is_float($format)) { // @link http://www.php.net/manual/en/function.is-int.php#97006
-			$dt = new \DateTime();
+    
+    
+    /**
+     * Get database format
+     *
+     * @return string Date format for PHP's date() function
+     */
+    public function dateFormat()
+    {
+        return $this->_format_date;
+    }
+    
+    
+    /**
+     * Get database time format
+     *
+     * @return string Time format for PHP's date() function
+     */
+    public function timeFormat()
+    {
+        return $this->_format_time;
+    }
+    
+    
+    /**
+     * Get database format
+     *
+     * @return string DateTime format for PHP's date() function
+     */
+    public function dateTimeFormat()
+    {
+        return $this->_format_datetime;
+    }
+    
+    
+    /**
+     * Get date
+     *
+     * @return object DateTime
+     */
+    public function date($format = null)
+    {
+        if(null === $format) {
+            $format = $this->dateFormat();
+        }
+        return $this->dateTimeObject($format . ' ' . $this->timeFormat());
+    }
+    
+    
+    /**
+     * Get database time format
+     *
+     * @return object DateTime
+     */
+    public function time($format = null)
+    {
+        if(null === $format) {
+            $format = $this->timeFormat();
+        }
+        return $this->dateTimeObject($this->dateFormat() . ' ' . $format);
+    }
+    
+    
+    /**
+     * Get datetime
+     *
+     * @return object DateTIme
+     */
+    public function dateTime($format = null)
+    {
+        if(null === $format) {
+            $format = $this->dateTimeFormat();
+        }
+        return $this->dateTimeObject($format);
+    }
+    
+    
+    /**
+     * Turn formstted date into timestamp
+     * Also handles input timestamps
+     *
+     * @return DateTime object
+     */
+    protected function dateTimeObject($format)
+    {
+        // Already a timestamp?
+        if(is_int($format) || is_float($format)) { // @link http://www.php.net/manual/en/function.is-int.php#97006
+            $dt = new \DateTime();
             $dt->setTimestamp($format); // Timestamps must be prefixed with '@' symbol
-		} else {
+        } else {
             $dt = new \DateTime();
             $dt->format($format);
         }
-		return $dt;
-	}
-	
-	
-	/**
-	 * Taken from PHPUnit 3.4:
-	 * @link http://github.com/sebastianbergmann/phpunit/blob/3.4/PHPUnit/Util/PDO.php
-	 *
+        return $dt;
+    }
+    
+    
+    /**
+     * Taken from PHPUnit 3.4:
+     * @link http://github.com/sebastianbergmann/phpunit/blob/3.4/PHPUnit/Util/PDO.php
+     *
      * Returns the Data Source Name as a structure containing the various parts of the DSN.
      *
      * Additional keys can be added by appending a URI query string to the

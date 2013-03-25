@@ -20,8 +20,8 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
         $query->snapshot();
         return $query;
     }
-    
-    
+
+
     /**
      * Find first entity in the set
      *
@@ -31,8 +31,8 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
     {
         return $this->execute()->first();
     }
-    
-    
+
+
     /**
      * SPL Countable function
      * Called automatically when attribute is used in a 'count()' function call
@@ -44,8 +44,8 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
         $results = $this->execute();
         return $results ? count($results) : 0;
     }
-    
-    
+
+
     /**
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
@@ -58,30 +58,30 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
         $data = $this->execute();
         return $data ? $data : array();
     }
-    
-    
+
+
     // SPL - ArrayAccess functions
     // ----------------------------------------------
     public function offsetExists($key) {
         $this->execute();
         return isset($this->_collection[$key]);
     }
-    
+
     public function offsetGet($key) {
         $this->execute();
         return $this->_collection[$key];
     }
-    
+
     public function offsetSet($key, $value) {
         $this->execute();
-    
+
         if($key === null) {
             return $this->_collection[] = $value;
         } else {
             return $this->_collection[$key] = $value;
         }
     }
-    
+
     public function offsetUnset($key) {
         $this->execute();
         unset($this->_collection[$key]);
