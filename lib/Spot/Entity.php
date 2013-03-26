@@ -97,6 +97,15 @@ abstract class Entity
 
 
     /**
+     * Return defined hooks of the entity
+     */
+    public static function hooks()
+    {
+        return array();
+    }
+
+
+    /**
      * Return defined fields of the entity
      */
     public static function relations()
