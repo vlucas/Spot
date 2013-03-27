@@ -7,6 +7,8 @@
 class Entity_Post extends \Spot\Entity
 {
     protected static $_datasource = 'test_posts';
+    // For testing purposes only
+    public static $hooks = array();
 
     public static function fields()
     {
@@ -46,5 +48,15 @@ class Entity_Post extends \Spot\Entity
                 'where' => array('id' => ':entity.author_id')
             ),
         );
+    }
+
+    public static function hooks()
+    {
+        return static::$hooks;
+    }
+    
+    public function mock_save_hook()
+    {
+        $this->status++;
     }
 }

@@ -158,6 +158,76 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
     }
 
 
+    public function testEntityHooks()
+    {
+        $mapper = test_spot_mapper();
+        $post = new Entity_Post(array(
+            'title' => 'A title',
+            'body' => '<p>body</p>',
+            'status' => 1,
+            'author_id' => 1,
+            'date_created' => new \DateTime()
+        ));
+
+        $i = $post->status;
+
+        Entity_Post::$hooks = array(
+            'beforeSave' => array('mock_save_hook')
+        );
+
+        $mapper->save($post);
+
+        $this->assertEquals($i + 1, $post->status);
+
+        Entity_Post::$hooks = array(
+            'beforeSave' => array('mock_save_hook', 'mock_save_hook')
+        );
+
+        $i = $post->status;
+
+        $mapper->save($post);
+
+        $this->assertEquals($i + 2, $post->status);
+    }
+
+
+    public function testWithHooks()
+    {
+        $mapper = test_spot_mapper();
+        $testcase = $this;
+
+        $hooks = array();
+
+        $mapper->on('Entity_Post', 'beforeWith', function($entityClass, $collection, $with, $mapper) use (&$hooks, &$testcase) {
+            $testcase->assertEquals('Entity_Post', $entityClass);
+            $testcase->assertInstanceOf('\\Spot\\Entity\\Collection', $collection);
+            $testcase->assertEquals(array('comments'), $with);
+            $testcase->assertInstanceOf('\\Spot\\Mapper', $mapper);
+            $hooks[] = 'Called beforeWith';
+        });
+
+        $mapper->on('Entity_Post', 'loadWith', function($entityClass, $collection, $relationName, $mapper) use (&$hooks, $testcase) {
+            $testcase->assertEquals('Entity_Post', $entityClass);
+            $testcase->assertInstanceOf('\\Spot\\Entity\\Collection', $collection);
+            $testcase->assertInstanceOf('\\Spot\\Mapper', $mapper);
+            $testcase->assertEquals('comments', $relationName);
+            $hooks[] = 'Called loadWith';
+        });
+
+        $mapper->on('Entity_Post', 'afterWith', function($entityClass, $collection, $with, $mapper) use (&$hooks, $testcase) {
+            $testcase->assertEquals('Entity_Post', $entityClass);
+            $testcase->assertInstanceOf('\\Spot\\Entity\\Collection', $collection);
+            $testcase->assertEquals(array('comments'), $with);
+            $testcase->assertInstanceOf('\\Spot\\Mapper', $mapper);
+            $hooks[] = 'Called afterWith';
+        });
+
+        $mapper->all('Entity_Post')->with('comments')->execute();
+
+        $this->assertEquals(array('Called beforeWith', 'Called loadWith', 'Called afterWith'), $hooks);
+    }
+
+
     public function testHookReturnsFalse()
     {
         $mapper = test_spot_mapper();

@@ -253,7 +253,17 @@ class Mapper
      * Pre-emtively load associations for an entire collection
      */
     public function with($collection, $entityName, $with = array()) {
+        $return = $this->triggerStaticHook($entityName, 'beforeWith', array($collection, $with, $this));
+        if (false === $return) {
+            return $collection;
+        }
+
         foreach($with as $relationName) {
+            $return = $this->triggerStaticHook($entityName, 'loadWith', array($collection, $relationName, $this));
+            if (false === $return) {
+                continue;
+            }
+
             $relationObj = $this->loadRelation($collection, $relationName);
 
             // double execute() to make sure we get the 
@@ -288,6 +298,8 @@ class Mapper
                 $entity->$relationName->assignCollection($relation_collection);
             }
         }
+        
+        $resultAfter = $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
         return $collection;
     }
 
@@ -804,7 +816,7 @@ class Mapper
         return empty($value) && !is_numeric($value);
     }
 
-    public function on($entityName, $hook, $callback)
+    public function on($entityName, $hook, $callable)
     {
         if (!isset($this->_hooks[$entityName])) {
             $this->_hooks[$entityName] = array();
@@ -812,10 +824,10 @@ class Mapper
         if (!isset($this->_hooks[$entityName][$hook])) {
             $this->_hooks[$entityName][$hook] = array();
         }
-        $this->_hooks[$entityName][$hook][] = $callback;
+        $this->_hooks[$entityName][$hook][] = $callable;
     }
 
-    public function off($entityName, $hook, $callback = null)
+    public function off($entityName, $hook, $callable = null)
     {
         $hooks = is_array($hook) ? $hook : array($hook);
         if (isset($this->_hooks[$entityName])) {
@@ -823,8 +835,8 @@ class Mapper
                 if (true === $hook) {
                     unset($this->_hooks[$entityName]);
                 } if (isset($this->_hooks[$entityName][$hook])) {
-                    if ($callback) {
-                        if ($key = array_search($this->_hooks[$entityName][$hook], $callback, true)) {
+                    if ($callable) {
+                        if ($key = array_search($this->_hooks[$entityName][$hook], $callable, true)) {
                             unset($this->_hooks[$entityName][$hook][$key]);
                         }
                     } else {
@@ -841,8 +853,16 @@ class Mapper
         if (isset($this->_hooks[$entityName]) && isset($this->_hooks[$entityName][$hook])) {
             $hooks = $this->_hooks[$entityName][$hook];
         }
-        if ($entityName instanceof \Spot\Entity) {
-            $hooks = array_merge($hooks, $entityName::hooks());
+        if (is_callable(array($entityName, 'hooks'))) {
+            $entityHooks = $entityName::hooks();
+            if (isset($entityHooks[$hook])) {
+                // If you pass an object/method combination
+                if (is_callable($entityHooks[$hook])) {
+                    $hooks[] = $entityHooks[$hook];
+                } else {
+                    $hooks = array_merge($hooks, $entityHooks[$hook]);
+                }
+            }
         }
         return $hooks;
     }
@@ -852,18 +872,22 @@ class Mapper
      */
     protected function triggerInstanceHook($object, $hook, $arguments = array())
     {
+        if (is_object($arguments) || !is_array($arguments)) {
+            $arguments = array($arguments);
+        }
+        $ret = null;
         foreach($this->getHooks(get_class($object), $hook) as $callable) {
-            $ret = true;
             if (is_callable(array($object, $callable))) {
                 $ret = call_user_func_array(array($object, $callable), $arguments);
             } else {
-                $args = array_merge(array($object), is_array($arguments) ? $arguments : array($arguments));
+                $args = array_merge(array($object), $arguments);
                 $ret = call_user_func_array($callable, $args);
             }
             if (false === $ret) {
                 return false;
             }
         }
+        return $ret;
     }
 
     /**
@@ -872,12 +896,14 @@ class Mapper
      */
     protected function triggerStaticHook($objectClass, $hook, $arguments)
     {
+        if (is_object($arguments) || !is_array($arguments)) {
+            $arguments = array($arguments);
+        }
+        array_unshift($arguments, $objectClass);
         foreach ($this->getHooks($objectClass, $hook) as $callable) {
-            $return = call_user_func_array($callable, array_merge((array)$object, (array)$arguments));
-            if ($return instanceof $objectClass) {
-                $object = $return;
-            } else if (false === $ret) {
-                return $ret;
+            $return = call_user_func_array($callable, $arguments);
+            if (false === $return) {
+                return false;
             }
         }
     }
