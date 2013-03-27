@@ -7,6 +7,51 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
 {
     protected $backupGlobals = false;
 
+    public static function setUpBeforeClass()
+    {
+        $mapper = test_spot_mapper();
+
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
+            $mapper->migrate($entity);
+            $mapper->truncateDatasource($entity);
+        }
+
+        // Insert blog dummy data
+        for( $i = 1; $i <= 3; $i++ ) {
+            $tag_id = $mapper->insert('Entity_Tag', array(
+                'name' => "Title {$i}"
+            ));
+        }
+        for( $i = 1; $i <= 3; $i++ ) {
+            $author_id = $mapper->insert('Entity_Author', array(
+                'email' => $i.'user@somewhere.com',
+                'password' => 'securepassword'
+            ));
+        }
+        for( $i = 1; $i <= 10; $i++ ) {
+            $post_id = $mapper->insert('Entity_Post', array(
+                'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
+                'body' => '<p>' . $i  . '_body</p>',
+                'status' => $i ,
+                'date_created' => $mapper->connection('Entity_Post')->dateTime(),
+                'author_id' => rand(1,3)
+            ));
+            for( $j = 1; $j <= 2; $j++ ) {
+                $mapper->insert('Entity_Post_Comment', array(
+                    'post_id' => $post_id,
+                    'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
+                    'email' => 'bob@somewhere.com'
+                ));
+            }
+            for( $j = 1; $j <= $i % 3; $j++ ) {
+                $posttag_id = $mapper->insert('Entity_PostTag', array(
+                    'post_id' => $post_id,
+                    'tag_id' => $j
+                ));
+            }
+        }
+    }
+
     protected function tearDown()
     {
         $mapper = test_spot_mapper();
@@ -28,12 +73,12 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
 
         $hooks = array();
 
-        $mapper->on('Entity_Post', 'beforeSave', function($post, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'beforeSave', function($post, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array());
             $hooks[] = 'called beforeSave';
         });
 
-        $mapper->on('Entity_Post', 'afterSave', function($post, $mapper, $result) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'afterSave', function($post, $mapper, $result) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array('called beforeSave'));
             $testcase->assertInstanceOf('Entity_Post', $post);
             $testcase->assertInstanceOf('\\Spot\\Mapper', $mapper);
@@ -69,12 +114,12 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
 
         $hooks = array();
         
-        $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array());
             $hooks[] = 'called beforeInsert';
         });
 
-        $mapper->on('Entity_Post', 'afterInsert', function($post, $mapper, $result) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'afterInsert', function($post, $mapper, $result) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array('called beforeInsert'));
             $hooks[] = 'called afterInsert';
         });
@@ -102,16 +147,16 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
 
         $hooks = array();
 
-        $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) use ($testcase) {
+        $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) use (&$testcase) {
             $testcase->assertTrue(false);
         });
 
-        $mapper->on('Entity_Post', 'beforeUpdate', function($post, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'beforeUpdate', function($post, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array());
             $hooks[] = 'called beforeUpdate';
         });
 
-        $mapper->on('Entity_Post', 'afterUpdate', function($post, $mapper, $result) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'afterUpdate', function($post, $mapper, $result) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array('called beforeUpdate'));
             $hooks[] = 'called afterUpdate';
         });
@@ -140,12 +185,12 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
 
         $hooks = array();
 
-        $mapper->on('Entity_Post', 'beforeDelete', function($post, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'beforeDelete', function($post, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array());
             $hooks[] = 'called beforeDelete';
         });
 
-        $mapper->on('Entity_Post', 'afterDelete', function($post, $mapper, $result) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'afterDelete', function($post, $mapper, $result) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array('called beforeDelete'));
             $hooks[] = 'called afterDelete';
         });
@@ -206,7 +251,7 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
             $hooks[] = 'Called beforeWith';
         });
 
-        $mapper->on('Entity_Post', 'loadWith', function($entityClass, $collection, $relationName, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'loadWith', function($entityClass, $collection, $relationName, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals('Entity_Post', $entityClass);
             $testcase->assertInstanceOf('\\Spot\\Entity\\Collection', $collection);
             $testcase->assertInstanceOf('\\Spot\\Mapper', $mapper);
@@ -214,7 +259,7 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
             $hooks[] = 'Called loadWith';
         });
 
-        $mapper->on('Entity_Post', 'afterWith', function($entityClass, $collection, $with, $mapper) use (&$hooks, $testcase) {
+        $mapper->on('Entity_Post', 'afterWith', function($entityClass, $collection, $with, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals('Entity_Post', $entityClass);
             $testcase->assertInstanceOf('\\Spot\\Entity\\Collection', $collection);
             $testcase->assertEquals(array('comments'), $with);
@@ -222,10 +267,36 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
             $hooks[] = 'Called afterWith';
         });
 
-        $mapper->all('Entity_Post')->with('comments')->execute();
+        $mapper->all('Entity_Post', array('id' => array(1,2)))->with('comments')->execute();
 
         $this->assertEquals(array('Called beforeWith', 'Called loadWith', 'Called afterWith'), $hooks);
     }
+
+
+    public function testWithAssignmentHooks()
+    {
+        $mapper = test_spot_mapper();
+        $testcase = $this;
+        
+        $mapper->on('Entity_Post', 'loadWith', function($entityClass, $collection, $relationName, $mapper) use (&$testcase) {
+            $relationObj = $mapper->loadRelation($collection, $relationName);
+            $query = $relationObj->execute()->limit(1)->snapshot();
+
+            foreach($collection as $post) {
+                $one_comment = $query->execute();
+                
+                $post->comments->assignCollection($one_comment);
+                $testcase->assertEquals(1, $post->comments->count());
+            }
+            return false;
+        });
+
+        $posts = $mapper->all('Entity_Post')->with('comments')->execute();
+        foreach($posts as $post) {
+            $this->assertEquals(1, $post->comments->count());
+        }
+    }
+
 
 
     public function testHookReturnsFalse()
