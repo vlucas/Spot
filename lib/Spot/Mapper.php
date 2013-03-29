@@ -818,24 +818,19 @@ class Mapper
 
     public function on($entityName, $hook, $callable)
     {
-        if (!isset($this->_hooks[$entityName])) {
-            $this->_hooks[$entityName] = array();
+        if (is_callable($callable)) {
+            $this->_hooks[$entityName][$hook][] = $callable;
         }
-        if (!isset($this->_hooks[$entityName][$hook])) {
-            $this->_hooks[$entityName][$hook] = array();
-        }
-        $this->_hooks[$entityName][$hook][] = $callable;
     }
 
-    public function off($entityName, $hook, $callable = null)
+    public function off($entityName, $hooks, $callable = null)
     {
-        $hooks = is_array($hook) ? $hook : array($hook);
         if (isset($this->_hooks[$entityName])) {
-            foreach ($hooks as $hook) {
+            foreach ((array)$hooks as $hook) {
                 if (true === $hook) {
                     unset($this->_hooks[$entityName]);
-                } if (isset($this->_hooks[$entityName][$hook])) {
-                    if ($callable) {
+                } else if (isset($this->_hooks[$entityName][$hook])) {
+                    if (null !== $callable) {
                         if ($key = array_search($this->_hooks[$entityName][$hook], $callable, true)) {
                             unset($this->_hooks[$entityName][$hook][$key]);
                         }

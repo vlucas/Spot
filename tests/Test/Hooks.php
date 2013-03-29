@@ -1,7 +1,6 @@
 <?php
 /**
  * @package Spot
- * @link http://spot.os.ly
  */
 class Test_Hooks extends PHPUnit_Framework_TestCase
 {
@@ -33,7 +32,7 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
                 'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
                 'body' => '<p>' . $i  . '_body</p>',
                 'status' => $i ,
-                'date_created' => $mapper->connection('Entity_Post')->dateTime(),
+                'date_created' => new \DateTime(),
                 'author_id' => rand(1,3)
             ));
             for( $j = 1; $j <= 2; $j++ ) {
@@ -56,6 +55,17 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
     {
         $mapper = test_spot_mapper();
         $mapper->off('Entity_Post', true);
+    }
+
+    public function testInvalidHooks()
+    {
+        $mapper = test_spot_mapper();
+        $testcase = $this;
+        
+        $mapper->on('Entity_Post', 'beforeSave', 'asdf');
+        $mapper->on('Entity_Post', 'beforeSave', array($this, 'garbage'));
+        
+        $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
     }
 
     public function testSaveHooks()
