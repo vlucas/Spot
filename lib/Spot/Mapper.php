@@ -818,9 +818,11 @@ class Mapper
 
     public function on($entityName, $hook, $callable)
     {
-        if (is_callable($callable)) {
-            $this->_hooks[$entityName][$hook][] = $callable;
+        if (!is_callable($callable)) {
+            throw new \InvalidArgumentException(__METHOD__ . " for {$entityName}->{$hook} requires a valid callable, given " . gettype($callable) . "");
         }
+        $this->_hooks[$entityName][$hook][] = $callable;
+        return $this;
     }
 
     public function off($entityName, $hooks, $callable = null)
@@ -840,6 +842,7 @@ class Mapper
                 }
             }
         }
+        return $this;
     }
 
     public function getHooks($entityName, $hook)

@@ -55,17 +55,7 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
     {
         $mapper = test_spot_mapper();
         $mapper->off('Entity_Post', true);
-    }
-
-    public function testInvalidHooks()
-    {
-        $mapper = test_spot_mapper();
-        $testcase = $this;
-        
-        $mapper->on('Entity_Post', 'beforeSave', 'asdf');
-        $mapper->on('Entity_Post', 'beforeSave', array($this, 'garbage'));
-        
-        $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
+        Entity_Post::$hooks = array();
     }
 
     public function testSaveHooks()
@@ -308,7 +298,6 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
     }
 
 
-
     public function testHookReturnsFalse()
     {
         $mapper = test_spot_mapper();
@@ -336,5 +325,61 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         $mapper->off('Entity_Post', array('beforeSave', 'afterSave'));
 
         $this->assertEquals($hooks, array('called beforeSave'));
+    }
+
+
+    public function testMapperChaining()
+    {
+        $mapper = test_spot_mapper();
+        $post = new Entity_Post(array(
+            'title' => 'A title',
+            'body' => '<p>body</p>',
+            'status' => 1,
+            'author_id' => 1,
+            'date_created' => new \DateTime()
+        ));
+
+        $hooks = array();
+
+        $mapper->on('Entity_Post', 'beforeSave', function($post, $mapper) use (&$hooks) {
+            $hooks[] = 'called beforeSave';
+        })->on('Entity_Post', 'afterSave', function($post, $mapper, $result) use (&$hooks) {
+            $hooks[] = 'called afterSave';
+        });
+
+        $mapper->save($post);
+
+        $this->assertEquals($hooks, array('called beforeSave', 'called afterSave'));
+
+        $mapper->off('Entity_Post', 'beforeSave')->off('Entity_Post', 'afterSave');
+
+        $mapper->save($post);
+
+        $this->assertEquals($hooks, array('called beforeSave', 'called afterSave'));
+    }
+
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testInvalidCallable()
+    {
+        $mapper = test_spot_mapper();
+        $mapper->on('Entity_Post', 'beforeSave', 'asdf');
+        $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
+        
+        $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
+    }
+    
+    public function testInvalidCallablesArentMapped()
+    {
+        $mapper = test_spot_mapper();
+        try {
+            $mapper->on('Entity_Post', 'beforeSave', 'asdf');
+            $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
+        } catch (\InvalidArgumentException $e) {
+            $this->assertTrue(true);
+        }
+        $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
     }
 }
