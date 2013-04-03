@@ -22,6 +22,8 @@ class Mapper
     // Array of error messages and types
     protected $_errors = array();
 
+    // Array of hooks
+    protected $_hooks = array();
 
     /**
      *  Constructor Method
@@ -251,7 +253,17 @@ class Mapper
      * Pre-emtively load associations for an entire collection
      */
     public function with($collection, $entityName, $with = array()) {
+        $return = $this->triggerStaticHook($entityName, 'beforeWith', array($collection, $with, $this));
+        if (false === $return) {
+            return $collection;
+        }
+
         foreach($with as $relationName) {
+            $return = $this->triggerStaticHook($entityName, 'loadWith', array($collection, $relationName, $this));
+            if (false === $return) {
+                continue;
+            }
+
             $relationObj = $this->loadRelation($collection, $relationName);
 
             // double execute() to make sure we get the 
@@ -286,6 +298,8 @@ class Mapper
                 $entity->$relationName->assignCollection($relation_collection);
             }
         }
+        
+        $resultAfter = $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
         return $collection;
     }
 
@@ -441,10 +455,8 @@ class Mapper
         }
 
         // Run beforeSave to know whether or not we can continue
-        if(is_callable(array($entity, 'beforeSave'))) {
-            if(false === $entity->beforeSave($this)) {
-                return false;
-            }
+        if (false === $this->triggerInstanceHook($entity, 'beforeSave', $this)) {
+            return false;
         }
 
         // Run validation
@@ -462,10 +474,7 @@ class Mapper
         }
 
         // Use return value from 'afterSave' method if not null
-        $resultAfter = null;
-        if(is_callable(array($entity, 'afterSave'))) {
-            $resultAfter = $entity->afterSave($this, $result);
-        }
+        $resultAfter = $this->triggerInstanceHook($entity, 'afterSave', array($this, $result));
         return (null !== $resultAfter) ? $resultAfter : $result;
     }
 
@@ -491,10 +500,8 @@ class Mapper
 
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
-        if(is_callable(array($entity, 'beforeInsert'))) {
-            if(false === $entity->beforeInsert($this)) {
-                return false;
-            }
+        if (false === $this->triggerInstanceHook($entity, 'beforeInsert', $this)) {
+            return false;
         }
 
         // Ensure there is actually data to update
@@ -516,9 +523,7 @@ class Mapper
             $this->loadRelations($entity);
 
             // Run afterInsert
-            if(is_callable(array($entity, 'afterInsert'))) {
-                $resultAfter = $entity->afterInsert($this, $result);
-            }
+            $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', array($this, $result));
         } else {
             $result = false;
         }
@@ -547,11 +552,10 @@ class Mapper
 
         // Run beforeUpdate to know whether or not we can continue
         $resultAfter = null;
-        if(is_callable(array($entity, 'beforeUpdate'))) {
-            if(false === $entity->beforeUpdate($this)) {
-                return false;
-            }
+        if (false === $this->triggerInstanceHook($entity, 'beforeUpdate', $this)) {
+            return false;
         }
+        
 
         // Handle with adapter
         if(count($data) > 0) {
@@ -560,9 +564,7 @@ class Mapper
             $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
 
             // Run afterUpdate
-            if(is_callable(array($entity, 'afterUpdate'))) {
-                $resultAfter = $entity->afterUpdate($this, $result);
-            }
+            $resultAfter = $this->triggerInstanceHook($entity, 'afterUpdate', array($this, $result));
         } else {
             $result = true;
         }
@@ -586,21 +588,17 @@ class Mapper
             $conditions = array($this->primaryKeyField($entityName) => $this->primaryKey($entity));
             // @todo Clear entity from identity map on delete, when implemented
 
-            // Run beforeUpdate to know whether or not we can continue
+            // Run beforeDelete to know whether or not we can continue
             $resultAfter = null;
-            if(is_callable(array($entity, 'beforeDelete'))) {
-                if(false === $entity->beforeDelete($this)) {
-                    return false;
-                }
+            if (false === $this->triggerInstanceHook($entity, 'beforeDelete', $this)) {
+                return false;
             }
+            
 
             $result = $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
 
-            // Run afterUpdate
-            if(is_callable(array($entity, 'afterDelete'))) {
-                $resultAfter = $entity->afterDelete($this, $result);
-            }
-
+            // Run afterDelete
+            $resultAfter = $this->triggerInstanceHook($entity, 'afterDelete', array($this, $result));
             return (null !== $resultAfter) ? $resultAfter : $result;
         }
 
@@ -816,5 +814,95 @@ class Mapper
     public function isEmpty($value)
     {
         return empty($value) && !is_numeric($value);
+    }
+
+    public function on($entityName, $hook, $callable)
+    {
+        if (!is_callable($callable)) {
+            throw new \InvalidArgumentException(__METHOD__ . " for {$entityName}->{$hook} requires a valid callable, given " . gettype($callable) . "");
+        }
+        $this->_hooks[$entityName][$hook][] = $callable;
+        return $this;
+    }
+
+    public function off($entityName, $hooks, $callable = null)
+    {
+        if (isset($this->_hooks[$entityName])) {
+            foreach ((array)$hooks as $hook) {
+                if (true === $hook) {
+                    unset($this->_hooks[$entityName]);
+                } else if (isset($this->_hooks[$entityName][$hook])) {
+                    if (null !== $callable) {
+                        if ($key = array_search($this->_hooks[$entityName][$hook], $callable, true)) {
+                            unset($this->_hooks[$entityName][$hook][$key]);
+                        }
+                    } else {
+                        unset($this->_hooks[$entityName][$hook]);
+                    }
+                }
+            }
+        }
+        return $this;
+    }
+
+    public function getHooks($entityName, $hook)
+    {
+        $hooks = array();
+        if (isset($this->_hooks[$entityName]) && isset($this->_hooks[$entityName][$hook])) {
+            $hooks = $this->_hooks[$entityName][$hook];
+        }
+        if (is_callable(array($entityName, 'hooks'))) {
+            $entityHooks = $entityName::hooks();
+            if (isset($entityHooks[$hook])) {
+                // If you pass an object/method combination
+                if (is_callable($entityHooks[$hook])) {
+                    $hooks[] = $entityHooks[$hook];
+                } else {
+                    $hooks = array_merge($hooks, $entityHooks[$hook]);
+                }
+            }
+        }
+        return $hooks;
+    }
+
+    /**
+     * Trigger an instance hook on the passed object.
+     */
+    protected function triggerInstanceHook($object, $hook, $arguments = array())
+    {
+        if (is_object($arguments) || !is_array($arguments)) {
+            $arguments = array($arguments);
+        }
+        $ret = null;
+        foreach($this->getHooks(get_class($object), $hook) as $callable) {
+            if (is_callable(array($object, $callable))) {
+                $ret = call_user_func_array(array($object, $callable), $arguments);
+            } else {
+                $args = array_merge(array($object), $arguments);
+                $ret = call_user_func_array($callable, $args);
+            }
+            if (false === $ret) {
+                return false;
+            }
+        }
+        return $ret;
+    }
+
+    /**
+     * Trigger a static hook.  These pass the $object as the first argument
+     * to the hook, and expect that as the return value.
+     */
+    protected function triggerStaticHook($objectClass, $hook, $arguments)
+    {
+        if (is_object($arguments) || !is_array($arguments)) {
+            $arguments = array($arguments);
+        }
+        array_unshift($arguments, $objectClass);
+        foreach ($this->getHooks($objectClass, $hook) as $callable) {
+            $return = call_user_func_array($callable, $arguments);
+            if (false === $return) {
+                return false;
+            }
+        }
     }
 }
