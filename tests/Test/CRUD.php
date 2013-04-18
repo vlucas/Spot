@@ -9,12 +9,17 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
     public static function setupBeforeClass()
     {
         $mapper = test_spot_mapper();
-        $mapper->migrate('Entity_Post');
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
+            $mapper->migrate($entity);
+        }
     }
+
     public static function tearDownAfterClass()
     {
         $mapper = test_spot_mapper();
-        $mapper->truncateDatasource('Entity_Post');
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
+            $mapper->dropDatasource($entity);
+        }
     }
 
     public function testSampleNewsInsert()
@@ -114,5 +119,21 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $this->assertTrue((boolean) $result);
         $this->assertEquals(3, $result);
 
+    }
+
+    public function testPostTagUpsert()
+    {
+        $mapper = test_spot_mapper();
+        $data = array(
+            'tag_id' => 2145,
+            'post_id' => 1295
+        );
+
+        // Posttags has unique constraint on tag+post, so insert will fail the second time
+        $result = $mapper->upsert('Entity_PostTag', $data);
+        $result2 = $mapper->upsert('Entity_PostTag', $data);
+
+        $this->assertTrue((boolean) $result);
+        $this->assertTrue((boolean) $result2);
     }
 }

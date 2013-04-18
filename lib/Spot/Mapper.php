@@ -364,16 +364,15 @@ class Mapper
 
 
     /**
-     * Get a new entity object and set given data on it
+     * Get a new entity object, set given data on it, and save it
      *
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
-     * @return object INstance of $entityClass with $data set on it
+     * @return object Instance of $entityClass with $data set on it
      */
     public function create($entityClass, array $data)
     {
-        return $this->get($entityClass)
-            ->data($data);
+        return $this->save($this->get($entityClass)->data($data));
     }
 
 
@@ -555,7 +554,6 @@ class Mapper
         if (false === $this->triggerInstanceHook($entity, 'beforeUpdate', $this)) {
             return false;
         }
-        
 
         // Handle with adapter
         if(count($data) > 0) {
@@ -570,6 +568,27 @@ class Mapper
         }
 
         return (null !== $resultAfter) ? $resultAfter : $result;
+    }
+
+
+    /**
+     * Upsert save entity - insert or update on duplicate key
+     *
+     * @param string $entityClass Name of the entity class
+     * @param array $data array of key/values to set on new Entity instance
+     * @return object Instance of $entityClass with $data set on it
+     */
+    public function upsert($entityClass, array $data)
+    {
+        $entity = new $entityClass($data);
+
+        try {
+            $result = $this->insert($entity);
+        } catch(\Exception $e) {
+            $result = $this->update($entity);
+        }
+
+        return $result;
     }
 
 
