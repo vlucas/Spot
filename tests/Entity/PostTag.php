@@ -12,22 +12,22 @@ class Entity_PostTag extends \Spot\Entity
     {
         return array(
             'id' => array('type' => 'int', 'primary' => true, 'serial' => true),
-            'tag_id' => array('type' => 'int', 'required' => true),
-            'post_id' => array('type' => 'int', 'required' => true),
+            'tag_id' => array('type' => 'int', 'required' => true, 'unique' => 'post_tag'),
+            'post_id' => array('type' => 'int', 'required' => true, 'unique' => 'post_tag'),
         );
     }
 
     public static function relations()
     {
         return array(
-            // Each post tag entity 'hasMany' post and tag entities
-            'posts' => array(
-                'type' => 'HasManyThrough',
+            // Each post tag entity 'HasOne' post and tag entity
+            'post' => array(
+                'type' => 'HasOne',
                 'entity' => 'Entity_Post',
                 'where' => array('post_id' => ':entity.id'),
             ),
-            'tags' => array(
-                'type' => 'HasManyThrough',
+            'tag' => array(
+                'type' => 'HasOne',
                 'entity' => 'Entity_Tag',
                 'where' => array('tag_id' => ':entity.id'),
             )

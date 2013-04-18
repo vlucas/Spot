@@ -8,6 +8,22 @@ class Test_Entity extends PHPUnit_Framework_TestCase
 {
     protected $backupGlobals = false;
 
+    public static function setupBeforeClass()
+    {
+        $mapper = test_spot_mapper();
+        foreach(array('Entity_Post') as $entity) {
+            $mapper->migrate($entity);
+        }
+    }
+
+    public static function tearDownAfterClass()
+    {
+        $mapper = test_spot_mapper();
+        foreach(array('Entity_Post') as $entity) {
+            $mapper->dropDatasource($entity);
+        }
+    }
+
     public function testEntitySetDataProperties()
     {
         $mapper = test_spot_mapper();
