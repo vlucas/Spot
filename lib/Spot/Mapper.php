@@ -795,20 +795,18 @@ class Mapper
 
     /**
      * Run set validation rules on fields
-     *
-     * @todo A LOT more to do here... More validation, break up into classes with rules, etc.
      */
-    public function validate($entity)
+    public function validate(\Spot\Entity $entity)
     {
         $entityName = get_class($entity);
+
+        $v = new \Valitron\Validator($entity->data());
 
         // Check validation rules on each feild
         foreach($this->fields($entityName) as $field => $fieldAttrs) {
             // Required field
             if(isset($fieldAttrs['required']) && true === $fieldAttrs['required']) {
-                if($this->isEmpty($entity->$field)) {
-                    $entity->error($field, "Required field '" . $field . "' was left blank");
-                }
+                $v->rule('required', $field);
             }
 
             // Unique field
@@ -817,24 +815,32 @@ class Mapper
                     $entity->error($field, "" . ucwords(str_replace('_', ' ', $field)) . " '" . $entity->$field . "' is already taken.");
                 }
             }
+
+            // Valitron validation rules
+            if(isset($fieldAttrs['validation']) && is_array($fieldAttrs['validation'])) {
+                foreach($fieldAttrs['validation'] as $rule => $ruleName) {
+                    $params = array();
+                    if(is_string($rule)) {
+                        $params = $ruleName;
+                        $ruleName = $rule;
+                    }
+                    $params = array_merge(array($ruleName, $field), $params);
+                    call_user_func_array(array($v, 'rule'), $params);
+                }
+            }
+        }
+
+        if(!$v->validate()) {
+            $entity->errors($v->errors(), false);
         }
 
         // Return error result
         return !$entity->hasErrors();
     }
 
-
     /**
-     * Check if a value is empty, excluding 0 (annoying PHP issue)
-     *
-     * @param mixed $value
-     * @return boolean
+     * Add event listener
      */
-    public function isEmpty($value)
-    {
-        return empty($value) && !is_numeric($value);
-    }
-
     public function on($entityName, $hook, $callable)
     {
         if (!is_callable($callable)) {
@@ -844,6 +850,9 @@ class Mapper
         return $this;
     }
 
+    /**
+     * Remove event listener
+     */
     public function off($entityName, $hooks, $callable = null)
     {
         if (isset($this->_hooks[$entityName])) {
@@ -864,6 +873,9 @@ class Mapper
         return $this;
     }
 
+    /**
+     * Get all hooks added on a model
+     */
     public function getHooks($entityName, $hook)
     {
         $hooks = array();

@@ -14,7 +14,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.2"
+        "php": ">=5.3.2",
+        "vlucas/valitron": "1.x"
     },
     "autoload": {
         "psr-0": {

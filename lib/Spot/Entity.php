@@ -237,7 +237,7 @@ abstract class Entity
      * @param $field string|array String return errors with field key, array sets errors
      * @return self|array|boolean Setter return self, getter returns array or boolean if key given and not found
      */
-    public function errors($msgs = null)
+    public function errors($msgs = null, $overwrite = true)
     {
         // Return errors for given field
         if(is_string($msgs)) {
@@ -245,7 +245,11 @@ abstract class Entity
 
         // Set error messages from given array
         } elseif(is_array($msgs)) {
-            $this->_errors = $msgs;
+            if($overwrite) {
+                $this->_errors = $msgs;
+            } else {
+                $this->_errors = array_merge_recursive($this->_errors, $msgs);
+            }
         }
         return $this->_errors;
     }
