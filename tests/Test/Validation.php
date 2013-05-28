@@ -17,7 +17,26 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper->truncateDatasource('Entity_Author');
     }
 
-    public function testUniqueFieldCreatesValidationError()
+    public function tearDown()
+    {
+        $mapper = test_spot_mapper();
+        $mapper->truncateDatasource('Entity_Author');
+    }
+
+    public function testRequiredField()
+    {
+        $mapper = test_spot_mapper();
+
+        $entity = new Entity_Author(array(
+            'is_admin' => true
+        ));
+        $mapper->save($entity);
+
+        $this->assertTrue($entity->hasErrors());
+        $this->assertContains("Required", $entity->errors('email'));
+    }
+
+    public function testUniqueField()
     {
         $mapper = test_spot_mapper();
 
@@ -39,6 +58,34 @@ class Test_Validation extends PHPUnit_Framework_TestCase
 
         $this->assertFalse($user1->hasErrors());
         $this->assertTrue($user2->hasErrors());
-        $this->assertEquals($user2->errors('email'), array("Email 'test@test.com' is already taken."));
+        $this->assertContains("Email 'test@test.com' is already taken.", $user2->errors('email'));
+    }
+
+    public function testEmail()
+    {
+        $mapper = test_spot_mapper();
+
+        $entity = new Entity_Author(array(
+            'email' => 'test',
+            'password' => 'test'
+        ));
+        $mapper->save($entity);
+
+        $this->assertTrue($entity->hasErrors());
+        $this->assertContains("Invalid email address", $entity->errors('email'));
+    }
+
+    public function testLength()
+    {
+        $mapper = test_spot_mapper();
+
+        $entity = new Entity_Author(array(
+            'email' => 't@t',
+            'password' => 'test'
+        ));
+        $mapper->save($entity);
+
+        $this->assertTrue($entity->hasErrors());
+        $this->assertContains("Must be longer than 4", $entity->errors('email'));
     }
 }
