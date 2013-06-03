@@ -32,8 +32,6 @@ class Mapper
     {
         $this->_config = $config;
 
-        // Ensure at least the exception class is loaded
-        $config::loadClass($this->_exceptionClass);
         if (!class_exists($this->_exceptionClass)) {
             throw new Exception("The exception class of '".$this->_exceptionClass."' defined in '".get_class($this)."' does not exist.");
         }

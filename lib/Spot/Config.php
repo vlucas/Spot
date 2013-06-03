@@ -126,25 +126,6 @@ class Config implements \Serializable
 
 
     /**
-     * Class loader
-     *
-     * @param string $className Name of class to load
-     */
-    public static function loadClass($className)
-    {
-        $loaded = false;
-
-        // Require Spot namespaced files by assumed folder structure (naming convention)
-        if(false !== strpos($className, "Spot\\")) {
-            $classFile = trim(str_replace("\\", "/", str_replace("_", "/", str_replace('Spot\\', '', $className))), '\\');
-            $loaded = require_once(__DIR__ . "/" . $classFile . ".php");
-        }
-
-        return $loaded;
-    }
-
-
-    /**
      * Default serialization behavior is to not attempt to serialize stored
      * adapter connections at all (thanks @TheSavior re: Issue #7)
      */
@@ -158,11 +139,15 @@ class Config implements \Serializable
     }
 }
 
-
 /**
- * Register 'spot_load_class' function as an autoloader for files prefixed with 'Spot_'
+ * Path trickery designed to find composer autoloader and require
  */
-spl_autoload_register(array('\Spot\Config', 'loadClass'));
-
-// Require composer autoloader
-require dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+$vendorPos = strpos(__DIR__, 'vendor/vlucas/spot');
+if($vendorPos !== false) {
+  // Package has been cloned within another composer package, resolve path to autoloader
+  $vendorDir = substr(__DIR__, 0, $vendorPos) . 'vendor/';
+  $loader = require $vendorDir . 'autoload.php';
+} else {
+  // Package itself (cloned standalone)
+  $loader = require __DIR__.'/../../vendor/autoload.php';
+}
