@@ -39,7 +39,8 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
                 $mapper->insert('Entity_Post_Comment', array(
                     'post_id' => $post_id,
                     'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
-                    'email' => 'bob@somewhere.com'
+                    'email' => 'bob@somewhere.com',
+                    'body' => ($j % 2 ? 'odd' : 'even' ). '_comment_body',
                 ));
             }
             for( $j = 1; $j <= $i % 3; $j++ ) {
@@ -113,7 +114,7 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         ));
 
         $hooks = array();
-        
+
         $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) use (&$hooks, &$testcase) {
             $testcase->assertEquals($hooks, array());
             $hooks[] = 'called beforeInsert';
@@ -129,6 +130,25 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         $mapper->save($post);
 
         $this->assertEquals($hooks, array('called beforeInsert', 'called afterInsert'));
+    }
+
+    public function testInsertHooksUpdatesProperty()
+    {
+        $mapper = test_spot_mapper();
+        $post = new Entity_Post(array(
+            'title' => 'A title',
+            'body' => '<p>body</p>',
+            'status' => 1,
+            'author_id' => 1234,
+            'date_created' => new \DateTime()
+        ));
+
+        $mapper->on('Entity_Post', 'beforeInsert', function($post, $mapper) {
+            $post->status = 2;
+        });
+        $mapper->save($post);
+        $post = $mapper->first('Entity_Post', array('author_id' => 1234));
+        $this->assertEquals(2, $post->status);
     }
 
     public function testUpdateHooks()
@@ -168,6 +188,30 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         $this->assertEquals($hooks, array('called beforeUpdate', 'called afterUpdate'));
     }
 
+    public function testUpdateHookUpdatesProperly()
+    {
+        $author_id = __LINE__;
+        $mapper = test_spot_mapper();
+        $testcase = $this;
+
+        $post = new Entity_Post(array(
+            'title' => 'A title',
+            'body' => '<p>body</p>',
+            'status' => 1,
+            'author_id' => $author_id,
+            'date_created' => new \DateTime()
+        ));
+        $mapper->save($post);
+
+        $mapper->on('Entity_Post', 'beforeUpdate', function($post, $mapper) {
+            $post->status = 9;
+        });
+        $mapper->save($post);
+
+        $post = $mapper->first('Entity_Post', array('author_id' => $author_id));
+
+        $this->assertEquals(9, $post->status);
+    }
 
     public function testDeleteHooks()
     {
@@ -277,14 +321,14 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
     {
         $mapper = test_spot_mapper();
         $testcase = $this;
-        
+
         $mapper->on('Entity_Post', 'loadWith', function($entityClass, $collection, $relationName, $mapper) use (&$testcase) {
             $relationObj = $mapper->loadRelation($collection, $relationName);
             $query = $relationObj->execute()->limit(1)->snapshot();
 
             foreach($collection as $post) {
                 $one_comment = $query->execute();
-                
+
                 $post->comments->assignCollection($one_comment);
                 $testcase->assertEquals(1, $post->comments->count());
             }
@@ -367,19 +411,18 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
         $mapper->on('Entity_Post', 'beforeSave', 'asdf');
         $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
-        
+
         $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
     }
-    
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
     public function testInvalidCallablesArentMapped()
     {
         $mapper = test_spot_mapper();
-        try {
-            $mapper->on('Entity_Post', 'beforeSave', 'asdf');
-            $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
-        } catch (\InvalidArgumentException $e) {
-            $this->assertTrue(true);
-        }
+        $mapper->on('Entity_Post', 'beforeSave', 'asdf');
+        $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
         $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
     }
 }

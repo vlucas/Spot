@@ -43,7 +43,8 @@ class Test_Query extends PHPUnit_Framework_TestCase
                 $mapper->insert('Entity_Post_Comment', array(
                     'post_id' => $post_id,
                     'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
-                    'email' => 'bob@somewhere.com'
+                    'email' => 'bob@somewhere.com',
+                    'body' => ($j % 2 ? 'odd' : 'even' ). '_comment_body',
                 ));
             }
             for( $j = 1; $j <= $i % 3; $j++ ) {

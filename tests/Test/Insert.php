@@ -32,6 +32,7 @@ class Test_Insert extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
         $post = array(
             'title' => "Test Post",
+            'author_id' => 1,
             'body' => "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>",
             'date_created' => $mapper->connection('Entity_Post')->dateTime()
         );
