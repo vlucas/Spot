@@ -486,11 +486,9 @@ class Mapper
     {
         if(is_object($entity)) {
             $entityName = get_class($entity);
-            $data = $entity->data();
         } elseif(is_string($entity)) {
             $entityName = $entity;
-            $entity = $this->get($entityName);
-            $data = $options;
+            $entity = $this->get($entityName)->data($options);
         } else {
             throw new $this->_exceptionClass(__METHOD__ . " Accepts either an entity object or entity name + data array");
         }
@@ -502,6 +500,7 @@ class Mapper
         }
 
         // Ensure there is actually data to update
+        $data = $entity->data();
         if(count($data) > 0) {
             // Save only known, defined fields
             $entityFields = $this->fields($entityName);
@@ -539,10 +538,6 @@ class Mapper
     {
         if(is_object($entity)) {
             $entityName = get_class($entity);
-            $data = $entity->dataModified();
-            // Save only known, defined fields
-            $entityFields = $this->fields($entityName);
-            $data = array_intersect_key($data, $entityFields);
         } else {
             throw new $this->_exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
@@ -553,7 +548,11 @@ class Mapper
             return false;
         }
 
-        // Handle with adapter
+        // Prepare data
+        $data = $entity->dataModified();
+        // Save only known, defined fields
+        $entityFields = $this->fields($entityName);
+        $data = array_intersect_key($data, $entityFields);
         if(count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
 

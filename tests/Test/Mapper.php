@@ -49,6 +49,7 @@ class Test_Mapper extends PHPUnit_Framework_TestCase
         for( $i = 1; $i <= 10; $i++ ) {
             $id = $mapper->insert('Entity_Post', array(
                 'title' => ($i % 2 ? 'odd' : 'even' ). '_title',
+                'author_id' => 1,
                 'body' => '<p>' . $i  . '_body</p>',
                 'status' => $i ,
                 'date_created' => $mapper->connection('Entity_Post')->dateTime()
@@ -57,7 +58,8 @@ class Test_Mapper extends PHPUnit_Framework_TestCase
                 $mapper->insert('Entity_Post_Comment', array(
                     'post_id' => $id,
                     'name' => ($j % 2 ? 'odd' : 'even' ). '_title',
-                    'email' => 'bob@somewhere.com'
+                    'email' => 'bob@somewhere.com',
+                    'body' => ($j % 2 ? 'odd' : 'even' ). '_comment_body',
                 ));
             }
         }
