@@ -33,7 +33,7 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper->save($entity);
 
         $this->assertTrue($entity->hasErrors());
-        $this->assertContains("Required", $entity->errors('email'));
+        $this->assertContains("Email is required", $entity->errors('email'));
     }
 
     public function testUniqueField()
@@ -72,7 +72,7 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper->save($entity);
 
         $this->assertTrue($entity->hasErrors());
-        $this->assertContains("Invalid email address", $entity->errors('email'));
+        $this->assertContains("Email is not a valid email address", $entity->errors('email'));
     }
 
     public function testLength()
@@ -86,6 +86,6 @@ class Test_Validation extends PHPUnit_Framework_TestCase
         $mapper->save($entity);
 
         $this->assertTrue($entity->hasErrors());
-        $this->assertContains("Must be longer than 4", $entity->errors('email'));
+        $this->assertContains("Email must be longer than 4", $entity->errors('email'));
     }
 }
