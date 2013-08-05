@@ -157,11 +157,8 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         $updateFormattedFields = array();
         foreach($tableColumns as $fieldName => $columnInfo) {
             if(isset($formattedFields[$fieldName])) {
-                // TODO: Need to do a more exact comparison and make this non-mysql specific
-                if (
-                        $this->_fieldTypeMap[$formattedFields[$fieldName]['type']] != $columnInfo['DATA_TYPE'] ||
-                        $formattedFields[$fieldName]['default'] !== $columnInfo['COLUMN_DEFAULT']
-                    ) {
+                // TODO: Need to do a more exact comparison
+                if ($this->shouldUpdateMigrateField($formattedFields[$fieldName], $columnInfo)) {
                     $updateFormattedFields[$fieldName] = $formattedFields[$fieldName];
                 }
 
@@ -201,7 +198,19 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
         }
         return true;
     }
-
+    
+    /**
+     * Should we update the field
+     *
+     * @param array $formattedField The formatted field
+     * @param array $columnInfo
+     * @return boolean
+     */
+    protected function shouldUpdateMigrateField($formattedField, $columnInfo)
+    {
+        return ($this->_fieldTypeMap[$formattedField['type']] != $columnInfo['DATA_TYPE'] ||
+                        $formattedField['default'] !== $columnInfo['COLUMN_DEFAULT']);
+    }
 
     /**
      * Prepare an SQL statement 

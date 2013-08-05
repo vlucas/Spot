@@ -1,6 +1,6 @@
 Spot PHP ORM
 ============
-For RDBMS (Currently only has a MySQL adapter)
+For RDBMS (Currently has a MySQL and Sqlite adapter)
 
 Using Spot In Your Project
 --------------------------
@@ -18,10 +18,15 @@ Create a new instance of `Spot\Config` and add database connections with
 DSN strings so Spot can establish a database connection.
 
 ```php
-// MySQL
+
 $cfg = new \Spot\Config();
+// MySQL
 $adapter = $cfg->addConnection('test_mysql', 'mysql://user:password@localhost/database_name');
+// Sqlite
+$adapter = $cfg->addConnection('test_sqlite', 'sqlite://path/to/database.sqlite');
 ```
+
+If you are using Sqlite, the Sqlite filename must be the name of your database followed by the extension e.g `blogs.sqlite`
 
 Accessing the Mapper
 --------------------
@@ -355,16 +360,3 @@ the `post_tags.tag_id` column. We get this by going through the
 `post_tags.post_id`.
 
 Another scenario and more detailed explanation is on the [HasManyThrough wiki page](https://github.com/vlucas/Spot/wiki/HasManyThrough-Relations).
-
-
-
-
-
-
-
-
-
-
-
-
-
