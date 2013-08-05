@@ -72,27 +72,27 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
             } else {
                 // try to find the database name from the dsn string signified by the filename
                 if (preg_match('/(\w+)\.\w+$/i', $this->_dsn, $matches)) {
-            
+
                     $this->_database = $matches[1];
                     // Establish connection
                     try {
                         $this->_connection = new \PDO($this->_dsn);
-                        
+
                         // Throw exceptions by default
                         $this->_connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                    } catch(Exception $e) {
+                    } catch (Exception $e) {
                         throw new \Spot\Exception($e->getMessage());
                     }
-                
+
                 } else {
                     throw new \Spot\Exception('Database not found in Sqlite DSN');
                 }
             }
         }
-        
+
         return $this->_connection;
     }
-    
+
     /**
      * Escape/quote direct user input
      *
@@ -106,22 +106,23 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
     /**
      * Get columns for current table
      *
-     * @param String $table Table name
-     * @param string $source
+     * @param  String $table  Table name
+     * @param  string $source
      * @return Array
      */
     protected function getColumnsForTable($table, $source)
     {
         $tableColumns = array();
         $tblCols = $this->connection()->query("PRAGMA table_info(`$table`)");
-        
+
         if ($tblCols) {
             while ($columnData = $tblCols->fetch(\PDO::FETCH_ASSOC)) {
                 $tableColumns[$columnData['name']] = $columnData;
             }
+
             return $tableColumns;
         }
-        
+
         return false;
     }
 
@@ -129,31 +130,31 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
     /**
      * Syntax for each column in CREATE TABLE command
      *
-     * @param string $fieldName Field name
-     * @param array $fieldInfo Array of field settings
+     * @param  string $fieldName Field name
+     * @param  array  $fieldInfo Array of field settings
      * @return string SQL syntax
      */
     public function migrateSyntaxFieldCreate($fieldName, array $fieldInfo)
     {
         // Ensure field type exists
-        if(!isset($this->_fieldTypeMap[$fieldInfo['type']])) {
+        if (!isset($this->_fieldTypeMap[$fieldInfo['type']])) {
             throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
         }
         //Ensure this class will choose adapter type
         unset($fieldInfo['adapter_type']);
-        
+
         $fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
 
         $syntax = $fieldName . ' ' . (($fieldInfo['unsigned']) ? 'unsigned ' : '') . $fieldInfo['adapter_type'];
-        
+
         // Column type and length
         $syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
-        
+
         // Primary
         $syntax .= ($fieldInfo['primary']) ? ' PRIMARY KEY' : '';
         // Nullable
         $isNullable = true;
-        if($fieldInfo['required'] || !$fieldInfo['null']) {
+        if ($fieldInfo['required'] || !$fieldInfo['null']) {
             $syntax .= ' NOT NULL';
             $isNullable = false;
         }
@@ -171,21 +172,20 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
                 $syntax .= " DEFAULT '" . $default . "'";
             }
         }
-        
+
         $syntax .= ($fieldInfo['unique']) ? ' UNIQUE' : '';
         $syntax .= ($fieldInfo['index']) ? ' INDEX' : '';
-        
+
         return $syntax;
     }
-
 
     /**
      * Syntax for CREATE TABLE with given fields and column syntax
      *
-     * @param string $table Table name
-     * @param array $formattedFields Array of fields with all settings
-     * @param array $columnsSyntax Array of SQL syntax of columns produced by 'migrateSyntaxFieldCreate' function
-     * @param Array $options Options that may affect migrations or how tables are setup
+     * @param  string $table           Table name
+     * @param  array  $formattedFields Array of fields with all settings
+     * @param  array  $columnsSyntax   Array of SQL syntax of columns produced by 'migrateSyntaxFieldCreate' function
+     * @param  Array  $options         Options that may affect migrations or how tables are setup
      * @return string SQL syntax
      */
     public function migrateSyntaxTableCreate($table, array $formattedFields, array $columnsSyntax, array $options)
@@ -203,8 +203,8 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
     /**
      * Syntax for each column in CREATE TABLE command
      *
-     * @param string $fieldName Field name
-     * @param array $fieldInfo Array of field settings
+     * @param  string $fieldName Field name
+     * @param  array  $fieldInfo Array of field settings
      * @return string SQL syntax
      */
     public function migrateSyntaxFieldUpdate($fieldName, array $fieldInfo, $add = false)
@@ -212,16 +212,16 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
         if ($add) {
             return "ADD COLUMN " . $this->migrateSyntaxFieldCreate($fieldName, $fieldInfo);
         }
-        
+
         return null; // sqlite doesnt support modifing a column
     }
 
     /**
      * Syntax for ALTER TABLE with given fields and column syntax
      *
-     * @param string $table Table name
-     * @param array $formattedFields Array of fields with all settings
-     * @param array $columnsSyntax Array of SQL syntax of columns produced by 'migrateSyntaxFieldUpdate' function
+     * @param  string $table           Table name
+     * @param  array  $formattedFields Array of fields with all settings
+     * @param  array  $columnsSyntax   Array of SQL syntax of columns produced by 'migrateSyntaxFieldUpdate' function
      * @return string SQL syntax
      */
     public function migrateSyntaxTableUpdate($table, array $formattedFields, array $columnsSyntax, array $options)
@@ -241,7 +241,7 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
 
         return $syntax;
     }
-    
+
     /**
      * {@inheritdoc}
      */
