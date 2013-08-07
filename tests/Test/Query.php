@@ -240,7 +240,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $this->assertEquals(10, $posts->count());
     }
 
-  public function testQueryAutomaticReset()
+  public function testQueryNoResetAfterForeach()
   {
         $mapper = test_spot_mapper();
         $posts = $mapper->all('Entity_Post');
@@ -249,9 +249,9 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $posts->where(array('title' => 'odd_title'));
         $this->assertNotEquals(10, $posts->count());
         foreach ($posts as $post) {}
-
-        $this->assertEquals($posts->conditions, array());
-        $this->assertEquals(10, $posts->count());
+        
+        $this->assertCount(1, $posts->conditions);
+        $this->assertNotEquals(10, $posts->count());
     }
 
     public function testQuerySnapshot()
