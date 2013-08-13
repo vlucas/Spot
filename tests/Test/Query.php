@@ -170,6 +170,11 @@ class Test_Query extends PHPUnit_Framework_TestCase
     public function testQueryHavingClause()
     {
         $mapper = test_spot_mapper();
+        
+        if ($mapper->config()->connection() instanceof \Spot\Adapter\Sqlite) {
+            $this->markTestSkipped('Not support in Sqlite - requires group by');
+        }
+        
         $posts = $mapper->all('Entity_Post')
             ->select('id, MAX(status) as maximus')
             ->having(array('maximus' => 10));

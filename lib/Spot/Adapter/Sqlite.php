@@ -125,7 +125,53 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
 
         return false;
     }
+    
+    /**
+     * Truncate a database table
+     * Should delete all rows and reset serial/auto_increment keys to 0
+     */
+    public function truncateDatasource($datasource) {
+        $sql = "DELETE FROM " . $datasource;
 
+        // Add query to log
+        \Spot\Log::addQuery($this, $sql);
+
+        try {
+            return $this->connection()->exec($sql);
+        } catch(\PDOException $e) {
+            // Table does not exist
+            if($e->getCode() == "42S02") {
+                throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $datasource . "' does not exist");
+            }
+
+            // Re-throw exception
+            throw $e;
+        }
+    }
+    
+    /**
+     * Migrate table structure changes to database
+     * @param String $table Table name
+     * @param Array $fields Fields and their attributes as defined in the mapper
+     * @param Array $options Options that may affect migrations or how tables are setup
+     */
+    public function migrate($table, array $fields, array $options = array())
+    {
+        // Get current fields for table
+        $tableExists = false;
+        $tableColumns = $this->getColumnsForTable($table, $this->_database);
+
+        if($tableColumns) {
+            $tableExists = true;
+        }
+        
+        if ($tableExists) {
+            $this->dropDatasource($table);
+        } 
+        
+        // Create table
+        $this->migrateTableCreate($table, $fields, $options);
+    }
 
     /**
      * Syntax for each column in CREATE TABLE command
@@ -145,36 +191,37 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
 
         $fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
 
-        $syntax = $fieldName . ' ' . (($fieldInfo['unsigned']) ? 'unsigned ' : '') . $fieldInfo['adapter_type'];
+        $syntax = $fieldName . ' '; 
 
-        // Column type and length
-        $syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
-
-        // Primary
-        $syntax .= ($fieldInfo['primary']) ? ' PRIMARY KEY' : '';
-        // Nullable
-        $isNullable = true;
-        if ($fieldInfo['required'] || !$fieldInfo['null']) {
-            $syntax .= ' NOT NULL';
-            $isNullable = false;
-        }
-        // Default value
-        if ($fieldInfo['default'] === null && $isNullable) {
-            $syntax .= " DEFAULT NULL";
-        } elseif ($fieldInfo['default'] !== null) {
-            $default = $fieldInfo['default'];
-            // If it's a boolean and $default is boolean then it should be 1 or 0
-            if ( is_bool($default) && $fieldInfo['type'] == "boolean" ) {
-                $default = $default ? 1 : 0;
+        if ($fieldInfo['primary']) {
+            $syntax .= ' INTEGER PRIMARY KEY AUTOINCREMENT';
+        } else {
+            $syntax .= (($fieldInfo['unsigned']) ? 'unsigned ' : '') . $fieldInfo['adapter_type'];
+    
+            // Column type and length
+            $syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
+            
+            // Nullable
+            $isNullable = true;
+            if ($fieldInfo['required'] || !$fieldInfo['null']) {
+                $syntax .= ' NOT NULL';
+                $isNullable = false;
             }
-
-            if (is_scalar($default)) {
-                $syntax .= " DEFAULT '" . $default . "'";
+            // Default value
+            if ($fieldInfo['default'] === null && $isNullable) {
+                $syntax .= " DEFAULT NULL";
+            } elseif ($fieldInfo['default'] !== null) {
+                $default = $fieldInfo['default'];
+                // If it's a boolean and $default is boolean then it should be 1 or 0
+                if ( is_bool($default) && $fieldInfo['type'] == "boolean" ) {
+                    $default = $default ? 1 : 0;
+                }
+    
+                if (is_scalar($default)) {
+                    $syntax .= " DEFAULT '" . $default . "'";
+                }
             }
         }
-
-        $syntax .= ($fieldInfo['unique']) ? ' UNIQUE' : '';
-        $syntax .= ($fieldInfo['index']) ? ' INDEX' : '';
 
         return $syntax;
     }
@@ -194,6 +241,35 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
         $syntax = "CREATE TABLE IF NOT EXISTS `" . $table . "` (\n";
         // Columns
         $syntax .= implode(",\n", $columnsSyntax);
+        
+        // Keys...
+        $tableKeys = array('unique' => array(),);
+        
+        $usedKeyNames = array();
+        
+        foreach ($formattedFields as $fieldName => $fieldInfo) {
+            
+            
+            // Determine key field name (can't use same key name twice, so we have to append a number)
+            $fieldKeyName = $fieldName;
+            while(in_array($fieldKeyName, $usedKeyNames)) {
+                $fieldKeyName = $fieldName . '_' . $ki;
+            }
+
+            if($fieldInfo['unique']) {
+                if(is_string($fieldInfo['unique'])) {
+                    // Named group
+                    $fieldKeyName = $fieldInfo['unique'];
+                }
+                $tableKeys['unique'][$fieldKeyName][] = $fieldName;
+                $usedKeyNames[] = $fieldKeyName;
+            }
+        }
+        
+        // UNIQUE
+        foreach($tableKeys['unique'] as $keyName => $keyFields) {
+            $syntax .= "\n, UNIQUE(" . implode(', ', $keyFields) . ")";
+        }
 
         $syntax .= "\n);";
 
@@ -226,13 +302,6 @@ class Sqlite extends PDO_Abstract implements AdapterInterface
      */
     public function migrateSyntaxTableUpdate($table, array $formattedFields, array $columnsSyntax, array $options)
     {
-        /*
-          Example:
-            ALTER TABLE `posts`
-            CHANGE `title` `title` VARCHAR( 255 ) NOT NULL ,
-            CHANGE `status` `status` VARCHAR( 40 ) NULL DEFAULT 'draft'
-        */
-
         // Begin syntax soup
         $syntax = "ALTER TABLE `" . $table . "` \n";
 
