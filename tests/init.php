@@ -17,14 +17,11 @@ $cfg = new \Spot\Config();
 $db_type = getenv('SPOT_DB_TYPE');
 $db_dsn  = getenv('SPOT_DB_DSN');
 
-if ($db_type == "mysql") {
-    // MySQL
+if (!empty($db_type)) {
     $cfg->addConnection('test', $db_dsn);
 }
-else
-{
-    // Db Type hasn't been configured
-    exit(1);
+else {
+    die('DSN not configured');
 }
 
 /**

@@ -213,6 +213,11 @@ abstract class AdapterAbstract
             $str = substr( $dsn, 0, $pos );
             $dsn = substr( $dsn, $pos + 3 );
         }
+        else if (( $pos = strpos( $dsn, ':' ) ) !== FALSE)
+        {
+            $str = substr( $dsn, 0, $pos );
+            $dsn = substr( $dsn, $pos + 1 );
+        }
         else
         {
             $str = $dsn;
