@@ -1,5 +1,7 @@
 <?php
-namespace Spot\Adapter;
+namespace Spot\Adapter\PDO;
+
+use Spot\Adapter;
 
 /**
  * Base PDO adapter
@@ -7,7 +9,7 @@ namespace Spot\Adapter;
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
+abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\AdapterInterface
 {
     protected $_database;
 
