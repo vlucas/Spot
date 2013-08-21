@@ -6,8 +6,7 @@
 error_reporting(-1);
 ini_set('display_errors', 1);
 
-// Require Spot_Config
-require_once dirname(__DIR__) . '/lib/Spot/Config.php';
+require dirname(dirname(__FILE__)) . '/vendor/autoload.php';
 
 // Date setup
 date_default_timezone_set('America/Chicago');
@@ -32,7 +31,6 @@ function test_spot_mapper() {
     global $mapper;
     return $mapper;
 }
-
 
 /**
 * Autoload test fixtures
