@@ -7,7 +7,7 @@ namespace Spot\Adapter;
  * @package Spot
  * @link http://spot.os.ly
  */
-class Sqlite extends PDO_Abstract implements AdapterInterface
+class Sqlite extends PDO\BaseAbstract implements AdapterInterface
 {
     // Format for date columns, formatted for PHP's date() function
     protected $_format_date = "Y-m-d";
