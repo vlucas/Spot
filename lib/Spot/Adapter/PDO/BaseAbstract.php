@@ -7,7 +7,6 @@ use Spot\Adapter;
  * Base PDO adapter
  *
  * @package Spot
- * @link http://spot.os.ly
  */
 abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\AdapterInterface
 {

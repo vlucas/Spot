@@ -16,6 +16,9 @@ abstract class Entity
     protected $_data = array();
     protected $_dataModified = array();
 
+    // Entity state
+    protected $_isNew = true;
+
     // Entity error messages (may be present after save attempt)
     protected $_errors = array();
 
@@ -159,7 +162,7 @@ abstract class Entity
 
 
     /**
-     * Gets data that has been modified since object construct, 
+     * Gets data that has been modified since object construct,
      * optionally allowing for selecting a single field
      */
     public function dataModified($field = null)
@@ -185,7 +188,21 @@ abstract class Entity
 
 
     /**
-     * Returns true if a field has been modified.  
+     * Is entity new (unsaved)?
+     *
+     * @return boolean
+     */
+    public function isNew($new = null)
+    {
+        if($new !== null) {
+            $this->_isNew = (boolean) $new;
+        }
+        return $this->_isNew;
+    }
+
+
+    /**
+     * Returns true if a field has been modified.
      * If no field name is passed in, return whether any fields have been changed
      */
     public function isModified($field = null)
@@ -233,7 +250,7 @@ abstract class Entity
 
     /**
      * Error message getter/setter
-     * 
+     *
      * @param $field string|array String return errors with field key, array sets errors
      * @return self|array|boolean Setter return self, getter returns array or boolean if key given and not found
      */

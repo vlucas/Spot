@@ -6,7 +6,6 @@ namespace Spot;
  *
  * @package Spot
  * @author Vance Lucas <vance@vancelucas.com>
- * @link http://spot.os.ly
  */
 class Query implements \Countable, \IteratorAggregate, QueryInterface
 {

@@ -5,7 +5,6 @@ namespace Spot;
  * Base DataMapper
  *
  * @package Spot
- * @link http://spot.os.ly
  */
 class Mapper
 {
@@ -228,6 +227,7 @@ class Mapper
             $data = $this->loadEntity($entityName, $data);
 
             $entity = new $entityName($data);
+            $entity->isNew(false);
 
             // Load relation objects
             $this->loadRelations($entity);
@@ -362,6 +362,19 @@ class Mapper
 
 
     /**
+     * Get a new entity object, set given data on it
+     *
+     * @param string $entityClass Name of the entity class
+     * @param array $data array of key/values to set on new Entity instance
+     * @return object Instance of $entityClass with $data set on it
+     */
+    public function build($entityClass, array $data)
+    {
+        return new $entityClass($data);
+    }
+
+
+    /**
      * Get a new entity object, set given data on it, and save it
      *
      * @param string $entityClass Name of the entity class
@@ -370,7 +383,11 @@ class Mapper
      */
     public function create($entityClass, array $data)
     {
-        return $this->save($this->get($entityClass)->data($data));
+        $entity = $this->build($entityClass, $data);
+        if($this->insert($entity)) {
+            return $entity;
+        }
+        return false;
     }
 
 
@@ -458,11 +475,8 @@ class Mapper
 
         // Run validation
         if($this->validate($entity)) {
-            $pk = $this->primaryKey($entity);
-            // No primary key, insert
-            if(empty($pk)) {
+            if($entity->isNew()) {
                 $result = $this->insert($entity);
-            // Has primary key, update
             } else {
                 $result = $this->update($entity);
             }
@@ -514,6 +528,7 @@ class Mapper
             // Update primary key on entity object
             $pkField = $this->primaryKeyField($entityName);
             $entity->$pkField = $result;
+            $entity->isNew(false);
 
             // Load relations on new entity
             $this->loadRelations($entity);
