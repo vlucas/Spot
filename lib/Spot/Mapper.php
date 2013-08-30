@@ -473,15 +473,10 @@ class Mapper
             return false;
         }
 
-        // Run validation
-        if($this->validate($entity)) {
-            if($entity->isNew()) {
-                $result = $this->insert($entity);
-            } else {
-                $result = $this->update($entity);
-            }
+        if($entity->isNew()) {
+            $result = $this->insert($entity);
         } else {
-            $result = false;
+            $result = $this->update($entity);
         }
 
         // Use return value from 'afterSave' method if not null
@@ -510,6 +505,11 @@ class Mapper
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
         if (false === $this->triggerInstanceHook($entity, 'beforeInsert', $this)) {
+            return false;
+        }
+
+        // Run validation
+        if(!$this->validate($entity)) {
             return false;
         }
 
@@ -560,6 +560,11 @@ class Mapper
         // Run beforeUpdate to know whether or not we can continue
         $resultAfter = null;
         if (false === $this->triggerInstanceHook($entity, 'beforeUpdate', $this)) {
+            return false;
+        }
+
+        // Run validation
+        if(!$this->validate($entity)) {
             return false;
         }
 
@@ -828,12 +833,17 @@ class Mapper
                 }
             }
 
+            // Field with 'options'
+            if(isset($fieldAttrs['options']) && is_array($fieldAttrs['options'])) {
+                $v->rule('in', $field, $fieldAttrs['options']);
+            }
+
             // Valitron validation rules
             if(isset($fieldAttrs['validation']) && is_array($fieldAttrs['validation'])) {
                 foreach($fieldAttrs['validation'] as $rule => $ruleName) {
                     $params = array();
                     if(is_string($rule)) {
-                        $params = $ruleName;
+                        $params = (array) $ruleName;
                         $ruleName = $rule;
                     }
                     $params = array_merge(array($ruleName, $field), $params);

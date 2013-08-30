@@ -10,6 +10,7 @@ class Test_Insert extends PHPUnit_Framework_TestCase
     {
         $mapper = test_spot_mapper();
         $mapper->migrate('Entity_Post');
+        $mapper->migrate('Entity_Event');
     }
 
     public function testInsertPostEntity()
@@ -100,4 +101,64 @@ class Test_Insert extends PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Entity_Post', $entity);
         $this->assertFalse($entity->isNew());
     }
+
+    public function testInsertEventRunsValidation()
+    {
+        $mapper = test_spot_mapper();
+        $event = new Entity_Event(array(
+            'title' => 'Test Event 1',
+            'description' => 'Test Description',
+            'date_start' => strtotime('+1 day')
+        ));
+        $result = $mapper->insert($event);
+
+        $this->assertFalse($result);
+        $this->assertEquals(array('Type is required'), $event->errors('type'));
+    }
+
+    public function testSaveEventRunsAfterInsertHook()
+    {
+        $mapper = test_spot_mapper();
+        $event = new Entity_Event(array(
+            'title' => 'Test Event 1',
+            'description' => 'Test Description',
+            'type' => 'free',
+            'date_start' => strtotime('+1 day')
+        ));
+        $result = $mapper->save($event);
+
+        $this->assertTrue($result !== false);
+    }
+
+    public function testInsertEventRunsDateValidation()
+    {
+        $mapper = test_spot_mapper();
+        $event = new Entity_Event(array(
+            'title' => 'Test Event 1',
+            'description' => 'Test Description',
+            'type' => 'vip',
+            'date_start' => strtotime('-1 day')
+        ));
+        $result = $mapper->insert($event);
+        $dsErrors = $event->errors('date_start');
+
+        $this->assertFalse($result);
+        $this->assertContains('Date Start must be date after', $dsErrors[0]);
+    }
+
+    public function testInsertEventRunsTypeOptionsValidation()
+    {
+        $mapper = test_spot_mapper();
+        $event = new Entity_Event(array(
+            'title' => 'Test Event 1',
+            'description' => 'Test Description',
+            'type' => 'invalid_value',
+            'date_start' => strtotime('+1 day')
+        ));
+        $result = $mapper->insert($event);
+
+        $this->assertFalse($result);
+        $this->assertEquals(array('Type contains invalid value'), $event->errors('type'));
+    }
 }
+

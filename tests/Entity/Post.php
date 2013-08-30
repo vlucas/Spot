@@ -54,7 +54,7 @@ class Entity_Post extends \Spot\Entity
     {
         return static::$hooks;
     }
-    
+
     public function mock_save_hook()
     {
         $this->status++;
