@@ -13,7 +13,8 @@ class Entity_PostTag extends \Spot\Entity
         return array(
             'id' => array('type' => 'int', 'primary' => true, 'serial' => true),
             'tag_id' => array('type' => 'int', 'required' => true, 'unique' => 'post_tag'),
-            'post_id' => array('type' => 'int', 'required' => true, 'unique' => 'post_tag')
+            'post_id' => array('type' => 'int', 'required' => true, 'unique' => 'post_tag'),
+            'random' => array('type' => 'string') // Totally unnecessary, but makes testing upserts easy
         );
     }
 

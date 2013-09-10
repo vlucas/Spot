@@ -593,15 +593,20 @@ class Mapper
      *
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
+     * @param array $where array of keys to select record by for updating if it already exists
      * @return object Instance of $entityClass with $data set on it
      */
-    public function upsert($entityClass, array $data)
+    public function upsert($entityClass, array $data, array $where)
     {
-        $entity = new $entityClass($data);
 
         try {
+            $entity = new $entityClass($data);
             $result = $this->insert($entity);
         } catch(\Exception $e) {
+            $entity = $this->first($entityClass, $where)->data($data);
+            if(!$entity) {
+                throw $e;
+            }
             $result = $this->update($entity);
         }
 
