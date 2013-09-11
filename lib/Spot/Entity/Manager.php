@@ -105,6 +105,12 @@ class Manager
                     self::$_fieldsDefined[$entityName][$fieldName] = $fieldOpts;
                 }
 
+                // Get adapter options and type from typeHandler
+                $typeHandler = Config::typeHandler($fieldOpts['type']);
+                $typeOptions = $typeHandler::adapterOptions();
+                // Use typeOptions as base, merge field options, but keep 'type' from typeOptions
+                $fieldOpts = array_merge($typeOptions, $fieldOpts, array('type' => $typeOptions['type']));
+
                 // Format field will full set of default options
                 if(isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
                     // Include type defaults
@@ -113,12 +119,6 @@ class Manager
                     // Merge with defaults
                     $fieldOpts = array_merge($fieldDefaults, $fieldOpts);
                 }
-
-                // Get adapter options and type from typeHandler
-                $typeHandler = Config::typeHandler($fieldOpts['type']);
-                $typeOptions = $typeHandler::adapterOptions();
-                // Use typeOptions as base, merge field options, but keep 'type' from typeOptions
-                $fieldOpts = array_merge($typeOptions, $fieldOpts, array('type' => $typeOptions['type']));
 
                 // Store primary key
                 if(true === $fieldOpts['primary']) {

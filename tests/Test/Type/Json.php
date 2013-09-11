@@ -4,7 +4,7 @@ use Spot\Type;
 
 class Json extends Type
 {
-    public static $_adapterType = 'text';
+    public static $_adapterType = 'string';
 
     public static function load($value)
     {
