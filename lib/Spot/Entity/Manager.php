@@ -11,7 +11,6 @@ use Spot;
 class Manager
 {
     // Field and relation info
-    protected static $_properties = array();
     protected static $_fields = array();
     protected static $_fieldsDefined = array();
     protected static $_fieldDefaultValues = array();
@@ -175,6 +174,15 @@ class Manager
             $this->fields($entityName);
         }
         return self::$_fieldDefaultValues[$entityName];
+    }
+
+    public function resetFields()
+    {
+        self::$_fields = array();
+        self::$_fieldsDefined = array();
+        self::$_fieldDefaultValues = array();
+        self::$_relations = array();
+        self::$_primaryKeyField = array();
     }
 
     /**
