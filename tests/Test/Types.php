@@ -89,4 +89,45 @@ class Test_Types extends PHPUnit_Framework_TestCase
             $this->assertSame($cls::cast($false), false);
         }
     }
+
+    public function testSerializedTypeSavesData()
+    {
+        $mapper = test_spot_mapper();
+        $mapper->migrate('Entity_Type');
+
+        $data = array(
+            'serialized' => array('a' => 'b', 'foo' => 'bar')
+        );
+        $result = $mapper->create('Entity_Type', $data);
+        $this->assertTrue($result !== false);
+
+        $entity = $mapper->get('Entity_Type', $result->id);
+        $this->assertSame($data['serialized'], $entity->serialized);
+    }
+
+    public function testCustomTypeRegistration()
+    {
+        $mapper = test_spot_mapper();
+        $cfg = $mapper->config();
+
+        // Register JSON type, add json field type, and migrate
+        $cfg->typeHandler('json_oneway', 'Test\Type\Json');
+        Entity_Type::$_fields['json_oneway'] = array('type' => 'json_oneway');
+        $mapper->entityManager()->resetFields(); // Have to resetFields b/c field definitions are cached
+        $this->assertArrayHasKey('json_oneway', $mapper->fields('Entity_Type'));
+        $mapper->migrate('Entity_Type');
+
+        // Save array data with JSON type
+        $data = array(
+            'json_oneway' => array('a' => 'b', 'foo' => 'bar')
+        );
+        $result = $mapper->create('Entity_Type', $data);
+        $this->assertTrue($result !== false);
+
+        // Select entity from db to ensure it is saved correctly
+        $entity = $mapper->get('Entity_Type', $result->id);
+        $this->assertSame(json_encode($data['json_oneway']), $entity->json_oneway);
+        $mapper->dropDatasource('Entity_Type');
+    }
 }
+

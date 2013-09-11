@@ -6,8 +6,8 @@ class Type implements Type\TypeInterface
 {
     public static $_loadHandlers = array();
     public static $_dumpHandlers = array();
-    public static $_defaultType = 'string';
-    public static $_defaultOptions = array();
+    public static $_adapterType = 'string';
+    public static $_adapterOptions = array();
 
 
     /**
@@ -68,5 +68,16 @@ class Type implements Type\TypeInterface
      */
     public static function dump($value) {
         return static::cast($value);
+    }
+
+    /**
+     * Array of adapter options with type
+     *
+     * @return array
+     */
+    public static function adapterOptions() {
+      return array_merge(static::$_adapterOptions, array(
+          'type' => static::$_adapterType
+      ));
     }
 }

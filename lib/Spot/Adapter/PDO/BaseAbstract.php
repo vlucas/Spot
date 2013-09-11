@@ -1,6 +1,5 @@
 <?php
 namespace Spot\Adapter\PDO;
-
 use Spot\Adapter;
 
 /**
@@ -11,7 +10,6 @@ use Spot\Adapter;
 abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\AdapterInterface
 {
     protected $_database;
-
 
     /**
      * Get database connection
@@ -41,7 +39,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $this->_connection;
     }
 
-
     /**
      * Escape/quote direct user input
      *
@@ -62,7 +59,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $field;
     }
 
-
     /**
      * Ensure migration options are full and have all keys required
      */
@@ -70,7 +66,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
     {
         return $options;
     }
-
 
     /**
      * Migrate table structure changes to database
@@ -103,10 +98,9 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
     }
 
-
     /**
      * Execute a CREATE TABLE command
-     * 
+     *
      * @param String $table Table name
      * @param Array $fields Fields and their attributes as defined in the mapper
      * @param Array $options Options that may affect migrations or how tables are setup
@@ -135,7 +129,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         $this->connection()->exec($sql);
         return true;
     }
-
 
     /**
      * Execute an ALTER/UPDATE TABLE command
@@ -199,7 +192,7 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
         return true;
     }
-    
+
     /**
      * Should we update the field
      *
@@ -214,13 +207,12 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
     }
 
     /**
-     * Prepare an SQL statement 
+     * Prepare an SQL statement
      */
     public function prepare($sql)
     {
         return $this->connection()->prepare($sql);
     }
-
 
     /**
      * Find records with custom SQL query
@@ -247,7 +239,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
             throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
         }
     }
-
 
     /**
      * Create new row object with set properties
@@ -291,7 +282,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         return $result;
     }
-
 
     /**
      * Build a select statement in SQL
@@ -471,7 +461,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $result;
     }
 
-
     /**
      * Delete entities matching given conditions
      *
@@ -512,7 +501,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
     }
 
-
     /**
      * Begin transaction
      */
@@ -524,7 +512,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         return $this->connection()->exec($sql);
     }
-
 
     /**
      * Commit transaction
@@ -538,7 +525,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $this->connection()->exec($sql);
     }
 
-
     /**
      * Rollback transaction
      */
@@ -550,7 +536,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         return $this->connection()->exec($sql);
     }
-
 
     /**
      * Truncate a database table
@@ -575,7 +560,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
     }
 
-
     /**
      * Drop a database table
      * Destructive and dangerous - drops entire table and all data
@@ -599,7 +583,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
     }
 
-
     /**
      * Create a database
      * Will throw errors if user does not have proper permissions
@@ -612,7 +595,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         return $this->connection()->exec($sql);
     }
-
 
     /**
      * Drop a database table
@@ -627,7 +609,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         return $this->connection()->exec($sql);
     }
-
 
     /**
      * Return fields as a string for a query statement
@@ -646,7 +627,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
         return count($fields) > 0 ? implode(', ', $preparedFields) : "*";
     }
-
 
     /**
      * Builds an SQL string given conditions
@@ -782,7 +762,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $sqlStatement;
     }
 
-
     /**
      * Returns array of binds to pass to query function
      */
@@ -847,7 +826,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return $binds;
     }
 
-
     /**
      * Return result set for current query
      */
@@ -873,7 +851,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
     }
 
-
     /**
      * Bind array of field/value data to given statement
      *
@@ -889,3 +866,4 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         return true;
     }
 }
+

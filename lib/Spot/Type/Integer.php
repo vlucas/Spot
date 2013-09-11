@@ -4,7 +4,7 @@ use Spot\Entity;
 
 class Integer extends \Spot\Type
 {
-    public static $_defaultType = 'integer';
+    public static $_adapterType = 'integer';
 
     /**
      * Cast given value to type required

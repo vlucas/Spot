@@ -1,5 +1,6 @@
 <?php
 namespace Spot\Entity;
+use Spot\Config;
 use Spot;
 
 /**
@@ -10,7 +11,6 @@ use Spot;
 class Manager
 {
     // Field and relation info
-    protected static $_properties = array();
     protected static $_fields = array();
     protected static $_fieldsDefined = array();
     protected static $_fieldDefaultValues = array();
@@ -21,7 +21,6 @@ class Manager
     protected static $_connection = array();
     protected static $_datasource = array();
     protected static $_datasourceOptions = array();
-
 
     /**
      * Get formatted fields with all neccesary array keys and values.
@@ -74,24 +73,22 @@ class Manager
                 'primary' => false,
                 'index' => false,
                 'unique' => false,
-                'serial' => false,
-
-                'relation' => false
-                );
+                'serial' => false
+            );
 
             // Type default overrides for specific field types
             $fieldTypeDefaults = array(
                 'string' => array(
                     'length' => 255
-                    ),
+                ),
                 'float' => array(
                     'length' => array(10,2)
-                    ),
+                ),
                 'int' => array(
                     'length' => 10,
                     'unsigned' => true
-                    )
-                );
+                )
+            );
 
             // Get entity fields from entity class
             $entityFields = false;
@@ -116,6 +113,12 @@ class Manager
                     // Merge with defaults
                     $fieldOpts = array_merge($fieldDefaults, $fieldOpts);
                 }
+
+                // Get adapter options and type from typeHandler
+                $typeHandler = Config::typeHandler($fieldOpts['type']);
+                $typeOptions = $typeHandler::adapterOptions();
+                // Use typeOptions as base, merge field options, but keep 'type' from typeOptions
+                $fieldOpts = array_merge($typeOptions, $fieldOpts, array('type' => $typeOptions['type']));
 
                 // Store primary key
                 if(true === $fieldOpts['primary']) {
@@ -145,7 +148,6 @@ class Manager
         return $returnFields;
     }
 
-
     /**
      * Get field information exactly how it is defined in the class
      *
@@ -159,7 +161,6 @@ class Manager
         }
         return self::$_fieldsDefined[$entityName];
     }
-
 
     /**
      * Get field default values as defined in class field definitons
@@ -175,6 +176,14 @@ class Manager
         return self::$_fieldDefaultValues[$entityName];
     }
 
+    public function resetFields()
+    {
+        self::$_fields = array();
+        self::$_fieldsDefined = array();
+        self::$_fieldDefaultValues = array();
+        self::$_relations = array();
+        self::$_primaryKeyField = array();
+    }
 
     /**
      * Get defined relations
@@ -190,7 +199,6 @@ class Manager
         return self::$_relations[$entityName];
     }
 
-
     /**
      * Get value of primary key for given row result
      *
@@ -204,7 +212,6 @@ class Manager
         return self::$_primaryKeyField[$entityName];
     }
 
-
     /**
      * Check if field exists in defined fields
      *
@@ -215,7 +222,6 @@ class Manager
     {
         return array_key_exists($field, $this->fields($entityName));
     }
-
 
     /**
      * Return field type
@@ -229,7 +235,6 @@ class Manager
         $fields = $this->fields($entityName);
         return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
     }
-
 
     /**
      * Get defined connection to use for entity
@@ -245,7 +250,6 @@ class Manager
         return self::$_connection[$entityName];
     }
 
-
     /**
      * Get name of datasource for given entity class
      *
@@ -259,7 +263,6 @@ class Manager
         }
         return self::$_datasource[$entityName];
     }
-
 
     /**
      * Get datasource options for given entity class
@@ -275,3 +278,4 @@ class Manager
         return self::$_datasourceOptions[$entityName];
     }
 }
+

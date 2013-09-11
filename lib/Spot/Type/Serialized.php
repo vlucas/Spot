@@ -4,7 +4,7 @@ use Spot\Entity;
 
 class Serialized extends \Spot\Type
 {
-    public static $_defaultType = 'serialized';
+    public static $_adapterType = 'text';
 
     /**
      * Cast given value to type required

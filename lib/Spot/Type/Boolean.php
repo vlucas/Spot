@@ -4,7 +4,7 @@ use Spot\Entity;
 
 class Boolean extends \Spot\Type
 {
-    public static $_defaultType = 'boolean';
+    public static $_adapterType = 'boolean';
 
     /**
      * Cast given value to type required

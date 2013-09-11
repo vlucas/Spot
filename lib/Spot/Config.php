@@ -14,7 +14,7 @@ class Config implements \Serializable
     {
         // Setup default type hanlders
         self::typeHandler('string', '\Spot\Type\String');
-        self::typeHandler('text', '\Spot\Type\String');
+        self::typeHandler('text', '\Spot\Type\Text');
 
         self::typeHandler('int', '\Spot\Type\Integer');
         self::typeHandler('integer', '\Spot\Type\Integer');

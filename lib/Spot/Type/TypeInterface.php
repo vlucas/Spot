@@ -11,4 +11,6 @@ interface TypeInterface
     public static function dump($value);
     public static function _load($value);
     public static function load($value);
+    public static function adapterOptions();
 }
+
