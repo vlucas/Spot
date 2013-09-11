@@ -1,5 +1,6 @@
 <?php
 namespace Spot\Adapter;
+use Spot\Config;
 
 /**
  * Mysql Database Adapter
@@ -22,30 +23,9 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
     // Map datamapper field types to actual database adapter types
     // @todo Have to improve this to allow custom types, callbacks, and validation
     protected $_fieldTypeMap = array(
-        'string' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'email' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'url' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'tel' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'password' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
+        'string' => array('adapter_type' => 'varchar', 'length' => 255),
         'text' => array('adapter_type' => 'text'),
-        'int' => array('adapter_type' => 'int'),
         'integer' => array('adapter_type' => 'int'),
-        'bool' => array('adapter_type' => 'tinyint', 'length' => 1),
         'boolean' => array('adapter_type' => 'tinyint', 'length' => 1),
         'float' => array('adapter_type' => 'float'),
         'double' => array('adapter_type' => 'double'),
@@ -55,9 +35,8 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
         'year' => array('adapter_type' => 'year', 'length' => 4),
         'month' => array('adapter_type' => 'month', 'length' => 2),
         'time' => array('adapter_type' => 'time'),
-        'timestamp' => array('adapter_type' => 'int', 'length' => 11),
-        'serialized' => array('adapter_type' => 'text'),
-  );
+        'timestamp' => array('adapter_type' => 'int', 'length' => 11)
+    );
 
 
     /**
@@ -70,7 +49,7 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
         }
         return $this->_engine;
     }
-    
+
     /**
      * Escape/quote direct user input
      *
@@ -136,16 +115,12 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
      */
     public function migrateSyntaxFieldCreate($fieldName, array $fieldInfo)
     {
-        // Ensure field type exists
-        if(!isset($this->_fieldTypeMap[$fieldInfo['type']])) {
-            throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
-        }
-        //Ensure this class will choose adapter type
-        unset($fieldInfo['adapter_type']);
-        
-        $fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
+        // Get adapter options and type from typeHandler
+        $typeHandler = Config::typeHandler($fieldInfo['type']);
+        $fieldInfo = array_merge($fieldInfo, $typeHandler::adapterOptions());
+        $adapterType = $this->_fieldTypeMap[$fieldInfo['type']]['adapter_type'];
 
-        $syntax = "`" . $fieldName . "` " . $fieldInfo['adapter_type'];
+        $syntax = "`" . $fieldName . "` " . $adapterType;
         // Column type and length
         $syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
         // Unsigned
@@ -243,7 +218,7 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
             // Ensure table type is MyISAM if FULLTEXT columns have been specified
             if('myisam' !== strtolower($options['engine'])) {
                 $options['engine'] = 'MyISAM';
-            } 
+            }
             $syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
         }
 
@@ -305,7 +280,7 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
 
         // Columns
         $syntax .= implode(",\n", $columnsSyntax);
-        
+
         // Keys...
         $ki = 0;
         $tableKeys = array(
@@ -352,10 +327,10 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
             // Ensure table type is MyISAM if FULLTEXT columns have been specified
             if('myisam' !== strtolower($options['engine'])) {
                 $options['engine'] = 'MyISAM';
-            } 
+            }
             $syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
         }
-        
+
         // PRIMARY
         if($tableKeys['primary']) {
             $syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";
@@ -375,3 +350,4 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
         return $syntax;
     }
 }
+

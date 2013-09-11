@@ -11,6 +11,7 @@ class Test_Insert extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
         $mapper->migrate('Entity_Post');
         $mapper->migrate('Entity_Event');
+        $mapper->migrate('Entity_Type');
     }
 
     public function testInsertPostEntity()
@@ -159,6 +160,16 @@ class Test_Insert extends PHPUnit_Framework_TestCase
 
         $this->assertFalse($result);
         $this->assertEquals(array('Type contains invalid value'), $event->errors('type'));
+    }
+
+    public function testCreateTypeEntity()
+    {
+        $mapper = test_spot_mapper();
+        $data = array(
+            'serialized' => array('a' => 'b', 'foo' => 'bar')
+        );
+        $result = $mapper->create('Entity_Type', $data);
+        $this->assertTrue($result !== false);
     }
 }
 

@@ -4,7 +4,7 @@ use Spot\Entity;
 
 class Datetime extends \Spot\Type
 {
-    public static $_defaultType = 'datetime';
+    public static $_adapterType = 'datetime';
     public static $_format = 'Y-m-d H:i:s';
 
     /**

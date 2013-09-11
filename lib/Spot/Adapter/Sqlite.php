@@ -22,30 +22,9 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
     // Map datamapper field types to actual database adapter types
     // @todo Have to improve this to allow custom types, callbacks, and validation
     protected $_fieldTypeMap = array(
-        'string' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'email' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'url' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'tel' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
-        'password' => array(
-            'adapter_type' => 'varchar',
-            'length' => 255
-            ),
+        'string' => array('adapter_type' => 'varchar', 'length' => 255),
         'text' => array('adapter_type' => 'text'),
-        'int' => array('adapter_type' => 'int'),
         'integer' => array('adapter_type' => 'int'),
-        'bool' => array('adapter_type' => 'tinyint', 'length' => 1),
         'boolean' => array('adapter_type' => 'tinyint', 'length' => 1),
         'float' => array('adapter_type' => 'float'),
         'double' => array('adapter_type' => 'double'),
@@ -125,7 +104,7 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
 
         return false;
     }
-    
+
     /**
      * Truncate a database table
      * Should delete all rows and reset serial/auto_increment keys to 0
@@ -148,7 +127,7 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
             throw $e;
         }
     }
-    
+
     /**
      * Migrate table structure changes to database
      * @param String $table Table name
@@ -164,11 +143,11 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
         if($tableColumns) {
             $tableExists = true;
         }
-        
+
         if ($tableExists) {
             $this->dropDatasource($table);
-        } 
-        
+        }
+
         // Create table
         $this->migrateTableCreate($table, $fields, $options);
     }
@@ -191,16 +170,16 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
 
         $fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
 
-        $syntax = $fieldName . ' '; 
+        $syntax = $fieldName . ' ';
 
         if ($fieldInfo['primary']) {
             $syntax .= ' INTEGER PRIMARY KEY AUTOINCREMENT';
         } else {
             $syntax .= (($fieldInfo['unsigned']) ? 'unsigned ' : '') . $fieldInfo['adapter_type'];
-    
+
             // Column type and length
             $syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
-            
+
             // Nullable
             $isNullable = true;
             if ($fieldInfo['required'] || !$fieldInfo['null']) {
@@ -216,7 +195,7 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
                 if ( is_bool($default) && $fieldInfo['type'] == "boolean" ) {
                     $default = $default ? 1 : 0;
                 }
-    
+
                 if (is_scalar($default)) {
                     $syntax .= " DEFAULT '" . $default . "'";
                 }
@@ -241,15 +220,15 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
         $syntax = "CREATE TABLE IF NOT EXISTS `" . $table . "` (\n";
         // Columns
         $syntax .= implode(",\n", $columnsSyntax);
-        
+
         // Keys...
         $tableKeys = array('unique' => array(),);
-        
+
         $usedKeyNames = array();
-        
+
         foreach ($formattedFields as $fieldName => $fieldInfo) {
-            
-            
+
+
             // Determine key field name (can't use same key name twice, so we have to append a number)
             $fieldKeyName = $fieldName;
             while(in_array($fieldKeyName, $usedKeyNames)) {
@@ -265,7 +244,7 @@ class Sqlite extends PDO\BaseAbstract implements AdapterInterface
                 $usedKeyNames[] = $fieldKeyName;
             }
         }
-        
+
         // UNIQUE
         foreach($tableKeys['unique'] as $keyName => $keyFields) {
             $syntax .= "\n, UNIQUE(" . implode(', ', $keyFields) . ")";
