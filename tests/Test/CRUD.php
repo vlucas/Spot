@@ -129,12 +129,17 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
             'tag_id' => 2145,
             'post_id' => 1295
         );
+        $where = array(
+            'tag_id' => 2145
+        );
 
         // Posttags has unique constraint on tag+post, so insert will fail the second time
-        $result = $mapper->upsert('Entity_PostTag', $data);
-        $result2 = $mapper->upsert('Entity_PostTag', $data);
+        $result = $mapper->upsert('Entity_PostTag', $data, $where);
+        $result2 = $mapper->upsert('Entity_PostTag', array_merge($data, array('random' => 'blah blah')), $where);
+        $postTag = $mapper->first('Entity_PostTag', $where);
 
         $this->assertTrue((boolean) $result);
         $this->assertTrue((boolean) $result2);
+        $this->assertSame('blah blah', $postTag->random);
     }
 }
