@@ -18,8 +18,7 @@ $db_dsn  = getenv('SPOT_DB_DSN');
 
 if (!empty($db_type)) {
     $cfg->addConnection('test', $db_dsn);
-}
-else {
+} else {
     die('DSN not configured');
 }
 

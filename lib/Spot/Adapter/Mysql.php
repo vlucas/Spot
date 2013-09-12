@@ -199,7 +199,7 @@ class Mysql extends PDO\BaseAbstract implements AdapterInterface
                 $usedKeyNames[] = $fieldKeyName;
             }
             if($fieldInfo['index']) {
-        $fieldKeyName = $fieldName;
+                $fieldKeyName = $fieldName;
                 if(is_string($fieldInfo['index'])) {
                     // Named group
                     $fieldKeyName = $fieldInfo['index'];
