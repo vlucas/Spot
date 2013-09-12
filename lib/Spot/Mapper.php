@@ -264,7 +264,7 @@ class Mapper
 
             $relationObj = $this->loadRelation($collection, $relationName);
 
-            // double execute() to make sure we get the 
+            // double execute() to make sure we get the
             // \Spot\Entity\Collection back (and not just the \Spot\Query)
             $related_entities = $relationObj->execute()->limit(null)->execute();
 
@@ -296,7 +296,7 @@ class Mapper
                 $entity->$relationName->assignCollection($relation_collection);
             }
         }
-        
+
         $resultAfter = $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
         return $collection;
     }
@@ -589,7 +589,8 @@ class Mapper
 
 
     /**
-     * Upsert save entity - insert or update on duplicate key
+     * Upsert save entity - insert or update on duplicate key. Intended to be
+     * used in conjunction with fields that are marked 'unique'
      *
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
@@ -598,16 +599,14 @@ class Mapper
      */
     public function upsert($entityClass, array $data, array $where)
     {
-        $entity = false;
-            $entity = new $entityClass($data);
-            $result = $this->insert($entity);
-            // Unique constraint produces a validation error
-            if($result === false && $entity->hasErrors()) {
-                $dataUpdate = array_diff_key($data, $where);
-                $entity = $this->first($entityClass, $where)->data($dataUpdate);
-                $result = $this->update($entity);
-            }
-
+        $entity = new $entityClass($data);
+        $result = $this->insert($entity);
+        // Unique constraint produces a validation error
+        if($result === false && $entity->hasErrors()) {
+            $dataUpdate = array_diff_key($data, $where);
+            $entity = $this->first($entityClass, $where)->data($dataUpdate);
+            $result = $this->update($entity);
+        }
         return $entity;
     }
 
@@ -632,7 +631,7 @@ class Mapper
             if (false === $this->triggerInstanceHook($entity, 'beforeDelete', $this)) {
                 return false;
             }
-            
+
 
             $result = $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
 
