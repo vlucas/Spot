@@ -9,7 +9,12 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
     public static function setupBeforeClass()
     {
         $mapper = test_spot_mapper();
-        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author') as $entity) {
+
+        // Add encrypted type
+        $mapper->config()->typeHandler('encrypted', '\Test\Type\Encrypted');
+        Test\Type\Encrypted::$_key = 'SOUPER-SEEKRET1!';
+
+        foreach(array('Entity_Post', 'Entity_Post_Comment', 'Entity_Tag', 'Entity_PostTag', 'Entity_Author', 'Entity_Setting') as $entity) {
             $mapper->migrate($entity);
         }
     }
@@ -141,5 +146,26 @@ class Test_CRUD extends PHPUnit_Framework_TestCase
         $this->assertTrue((boolean) $result);
         $this->assertTrue((boolean) $result2);
         $this->assertSame('blah blah', $postTag->random);
+    }
+
+    public function testUniqueConstraintUpsert()
+    {
+        $mapper = test_spot_mapper();
+        $data = array(
+            'skey' => 'my_setting',
+            'svalue' => 'abc123'
+        );
+        $where = array(
+            'skey' => 'my_setting'
+        );
+
+        // Posttags has unique constraint on tag+post, so insert will fail the second time
+        $result = $mapper->upsert('Entity_Setting', $data, $where);
+        $result2 = $mapper->upsert('Entity_Setting', array_merge($data, array('svalue' => 'abcdef123456')), $where);
+        $entity = $mapper->first('Entity_Setting', $where);
+
+        $this->assertTrue((boolean) $result);
+        $this->assertTrue((boolean) $result2);
+        $this->assertSame('abcdef123456', $entity->svalue);
     }
 }

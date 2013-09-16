@@ -264,7 +264,7 @@ class Mapper
 
             $relationObj = $this->loadRelation($collection, $relationName);
 
-            // double execute() to make sure we get the 
+            // double execute() to make sure we get the
             // \Spot\Entity\Collection back (and not just the \Spot\Query)
             $related_entities = $relationObj->execute()->limit(null)->execute();
 
@@ -296,7 +296,7 @@ class Mapper
                 $entity->$relationName->assignCollection($relation_collection);
             }
         }
-        
+
         $resultAfter = $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
         return $collection;
     }
@@ -589,7 +589,8 @@ class Mapper
 
 
     /**
-     * Upsert save entity - insert or update on duplicate key
+     * Upsert save entity - insert or update on duplicate key. Intended to be
+     * used in conjunction with fields that are marked 'unique'
      *
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
@@ -598,19 +599,15 @@ class Mapper
      */
     public function upsert($entityClass, array $data, array $where)
     {
-
-        try {
-            $entity = new $entityClass($data);
-            $result = $this->insert($entity);
-        } catch(\Exception $e) {
-            $entity = $this->first($entityClass, $where)->data($data);
-            if(!$entity) {
-                throw $e;
-            }
+        $entity = new $entityClass($data);
+        $result = $this->insert($entity);
+        // Unique constraint produces a validation error
+        if($result === false && $entity->hasErrors()) {
+            $dataUpdate = array_diff_key($data, $where);
+            $entity = $this->first($entityClass, $where)->data($dataUpdate);
             $result = $this->update($entity);
         }
-
-        return $result;
+        return $entity;
     }
 
 
@@ -634,7 +631,7 @@ class Mapper
             if (false === $this->triggerInstanceHook($entity, 'beforeDelete', $this)) {
                 return false;
             }
-            
+
 
             $result = $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
 
@@ -825,6 +822,7 @@ class Mapper
         $v = new \Valitron\Validator($entity->data());
 
         // Check validation rules on each feild
+        $uniqueWhere = array();
         foreach($this->fields($entityName) as $field => $fieldAttrs) {
             // Required field
             if(isset($fieldAttrs['required']) && true === $fieldAttrs['required']) {
@@ -832,9 +830,13 @@ class Mapper
             }
 
             // Unique field
-            if(isset($fieldAttrs['unique']) && true === $fieldAttrs['unique']) {
-                if($this->first($entityName, array($field => $entity->$field)) !== false) {
-                    $entity->error($field, "" . ucwords(str_replace('_', ' ', $field)) . " '" . $entity->$field . "' is already taken.");
+            if($entity->isNew() && isset($fieldAttrs['unique']) && !empty($fieldAttrs['unique'])) {
+                if(is_string($fieldAttrs['unique'])) {
+                    // Named group
+                    $fieldKeyName = $fieldAttrs['unique'];
+                    $uniqueWhere[$fieldKeyName][$field] = $entity->$field;
+                } else {
+                    $uniqueWhere[$field] = $entity->$field;
                 }
             }
 
@@ -853,6 +855,18 @@ class Mapper
                     }
                     $params = array_merge(array($ruleName, $field), $params);
                     call_user_func_array(array($v, 'rule'), $params);
+                }
+            }
+        }
+
+        // Unique validation
+        if(!empty($uniqueWhere)) {
+            foreach($uniqueWhere as $field => $value) {
+                if(!is_array($value)) {
+                    $value = array($field => $entity->$field);
+                }
+                if($this->first($entityName, $value) !== false) {
+                    $entity->error($field, "" . ucwords(str_replace('_', ' ', $field)) . " '" . implode('-', $value) . "' is already taken.");
                 }
             }
         }
