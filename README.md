@@ -121,6 +121,17 @@ namespace, make your own, and register it in `Spot\Config`:
 $config->typeHandler('string', '\Spot\Type\String');
 ```
 
+Migrations / Creating and Updating Tables
+----------------
+
+Spot comes with a method for running migrations on Entities that will automatically CREATE and ALTER tables based on the current Entity's `fields` definition.
+
+```php
+$mapper->migrate('Post');
+```
+
+Your database should now have the `posts` table in it, with all the fields you described in your `Post` entity.
+
 Finders (Mapper)
 ----------------
 
