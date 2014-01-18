@@ -1,6 +1,6 @@
 {
     "name": "vlucas/Spot",
-    "version": "0.9.8",
+    "version": "0.9.9",
     "type": "library",
     "description": "DataMapper ORM for PHP 5.3+",
     "keywords": ["orm", "datamapper", "mysql", "database", "model", "mapper", "entity"],
