@@ -604,7 +604,12 @@ class Mapper
         // Unique constraint produces a validation error
         if($result === false && $entity->hasErrors()) {
             $dataUpdate = array_diff_key($data, $where);
-            $entity = $this->first($entityClass, $where)->data($dataUpdate);
+            $existingEntity = $this->first($entityClass, $where);
+            if(!$existingEntity) {
+                return $entity;
+            }
+            $existingEntity->data($dataUpdate);
+            $entity = $existingEntity;
             $result = $this->update($entity);
         }
         return $entity;
