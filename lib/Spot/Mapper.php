@@ -221,9 +221,6 @@ class Mapper
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
         $entityFields = $this->fields($entityName);
         foreach($cursor as $data) {
-            // Entity with data set
-            $data = array_intersect_key($data, $entityFields);
-
             $data = $this->loadEntity($entityName, $data);
 
             $entity = new $entityName($data);
@@ -674,9 +671,16 @@ class Mapper
     {
         $loadedData = array();
         $fields = $entityName::fields();
+        $entityData = array_intersect_key($data, $fields);
         foreach($data as $field => $value) {
-            $typeHandler = \Spot\Config::typeHandler($fields[$field]['type']);
-            $loadedData[$field] = $typeHandler::_load($value);
+            // Field is in the Entity definitions
+            if(isset($entityData[$field])) {
+                $typeHandler = \Spot\Config::typeHandler($fields[$field]['type']);
+                $loadedData[$field] = $typeHandler::_load($value);
+            // Extra data returned with query (like calculated valeus, etc.)
+            } else {
+                $loadedData[$field] = $value;
+            }
         }
         return $loadedData;
     }

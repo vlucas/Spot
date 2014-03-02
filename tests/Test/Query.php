@@ -20,8 +20,9 @@ class Test_Query extends PHPUnit_Framework_TestCase
         }
 
         // Insert blog dummy data
+        $tags = array();
         for( $i = 1; $i <= 3; $i++ ) {
-            $tag_id = $mapper->insert('Entity_Tag', array(
+            $tags[] = $mapper->insert('Entity_Tag', array(
                 'name' => "Title {$i}"
             ));
         }
@@ -47,10 +48,10 @@ class Test_Query extends PHPUnit_Framework_TestCase
                     'body' => ($j % 2 ? 'odd' : 'even' ). '_comment_body',
                 ));
             }
-            for( $j = 1; $j <= $i % 3; $j++ ) {
+            foreach($tags as $tag_id) {
                 $posttag_id = $mapper->insert('Entity_PostTag', array(
                     'post_id' => $post_id,
-                    'tag_id' => $j
+                    'tag_id' => $tag_id
                 ));
             }
         }
@@ -170,15 +171,28 @@ class Test_Query extends PHPUnit_Framework_TestCase
     public function testQueryHavingClause()
     {
         $mapper = test_spot_mapper();
-        
+
         if ($mapper->config()->connection() instanceof \Spot\Adapter\Sqlite) {
             $this->markTestSkipped('Not support in Sqlite - requires group by');
         }
-        
+
         $posts = $mapper->all('Entity_Post')
             ->select('id, MAX(status) as maximus')
             ->having(array('maximus' => 10));
         $this->assertEquals(1, count($posts->toArray()));
+    }
+
+    public function testQueryPopulatesCustomPropertiesFromQueryResults()
+    {
+        $mapper = test_spot_mapper();
+
+        $posts = $mapper->all('Entity_Post')
+            ->select('id, MAX(status) AS maximus')
+            ->group(array('id'));
+
+        foreach($posts as $post) {
+            $this->assertNotEquals(null, $post->maximus);
+        }
     }
 
     public function testQueryCountIsCachedForSameQueryResult()
@@ -254,7 +268,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $posts->where(array('title' => 'odd_title'));
         $this->assertNotEquals(10, $posts->count());
         foreach ($posts as $post) {}
-        
+
         $this->assertCount(1, $posts->conditions);
         $this->assertNotEquals(10, $posts->count());
     }
@@ -377,6 +391,26 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $count4 = \Spot\Log::queryCount();
 
         $this->assertEquals($count3 + 5, $count4);
+    }
+
+    public function testQueryHasOneWithCount()
+    {
+        $mapper = test_spot_mapper();
+
+        $posts = $mapper->all('Entity_Post')->with('author');
+        foreach($posts as $post) {
+            $this->assertEquals(1, count($post->author));
+        }
+    }
+
+    public function testQueryHasManyWithCount()
+    {
+        $mapper = test_spot_mapper();
+
+        $posts = $mapper->all('Entity_Post')->with('comments');
+        foreach($posts as $post) {
+            $this->assertEquals(2, count($post->comments));
+        }
     }
 
     public function testQueryHasOneWith()
