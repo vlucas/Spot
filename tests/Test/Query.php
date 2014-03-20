@@ -435,4 +435,11 @@ class Test_Query extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($count1 + 2, $count3);
     }
+
+    public function testQueryEmptyArrayIsNullToAvoidSQLErrorOnEmptyINClause()
+    {
+        $mapper = test_spot_mapper();
+        $posts = $mapper->all('Entity_Post')->where(array('status' => array()))->execute();
+        $this->assertEquals(0, count($posts));
+    }
 }

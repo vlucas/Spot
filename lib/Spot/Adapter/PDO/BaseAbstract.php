@@ -730,12 +730,16 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
                 // If WHERE clause not already set by the code above...
                 if(is_array($value)) {
-                    $valueIn = "";
-                    foreach($value as $val) {
-                        $valueIn .= $this->escape($val) . ",";
+                    if(empty($value)) {
+                        $whereClause = $this->escapeField($col) . " IS NULL";
+                    } else {
+                        $valueIn = "";
+                        foreach($value as $val) {
+                            $valueIn .= $this->escape($val) . ",";
+                        }
+                        $value = "(" . trim($valueIn, ',') . ")";
+                        $whereClause = $this->escapeField($col) . " " . $operator . " " . $value;
                     }
-                    $value = "(" . trim($valueIn, ',') . ")";
-                    $whereClause = $this->escapeField($col) . " " . $operator . " " . $value;
                 } elseif(is_null($value)) {
                     $whereClause = $this->escapeField($col) . " " . $operator;
                 }
