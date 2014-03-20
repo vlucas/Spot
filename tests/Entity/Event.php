@@ -30,11 +30,21 @@ class Entity_Event extends \Spot\Entity
     public static function hooks()
     {
         return array(
-            'beforeInsert' => array('hookGenerateToken')
+            'beforeInsert' => array('hookGenerateToken'),
+            'afterSave' => array('hookUpdateSearchIndex')
         );
     }
 
     public function hookGenerateToken(\Spot\Mapper $mapper) {
         $this->token = uniqid();
+    }
+
+    public function hookUpdateSearchIndex(\Spot\Mapper $mapper) {
+        $result = $mapper->upsert('Entity_Event_Search', array(
+            'event_id' => $this->id,
+            'body'     => $this->title . ' ' . $this->description
+        ), array(
+            'event_id' => $this->id
+        ));
     }
 }

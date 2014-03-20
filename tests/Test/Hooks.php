@@ -425,4 +425,27 @@ class Test_Hooks extends PHPUnit_Framework_TestCase
         $mapper->on('Entity_Post', 'beforeSave', array($this, 'asdf'));
         $this->assertEquals(array(), $mapper->getHooks('Entity_Post', 'beforeSave'));
     }
+
+
+    public function testAfterSaveEntityHook()
+    {
+        $mapper = test_spot_mapper();
+        $post = new Entity_Post(array(
+            'title' => 'A title',
+            'body' => '<p>body</p>',
+            'status' => 1,
+            'author_id' => 1,
+            'date_created' => new \DateTime()
+        ));
+
+        $i = $post->status;
+
+        Entity_Post::$hooks = array(
+            'afterSave' => array('mock_save_hook')
+        );
+
+        $mapper->save($post);
+
+        $this->assertEquals($i + 1, $post->status);
+    }
 }

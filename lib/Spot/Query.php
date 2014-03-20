@@ -217,7 +217,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      *
      * @param mixed $fields Single string field or array of field names to use for searching
      * @param string $query Search keywords or query
-     * @param array $options Array of options to pass to db engine
+     * @param array $options Array of options for search
      * @return $this
      */
     public function search($fields, $query, array $options = array())
@@ -241,6 +241,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
                     if(in_array($fields, array_keys($this->mapper()->fields($this->entityName())))) {
                         // FULLTEXT
                         $whereType = ':fulltext';
+                    }
+
+                    // Boolean mode option
+                    if(isset($options['boolean']) && $options['boolean'] === true) {
+                        $whereType = ':fulltext_boolean';
                     }
                 }
             }

@@ -693,7 +693,11 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
                     // MATCH(col) AGAINST(search)
                     case ':fulltext':
                         $colParam = preg_replace('/\W+/', '_', $col) . $ci;
-                        $whereClause = "MATCH(" . $this->escapeField($col) . ") AGAINST(:" . $colParam . ")";
+                        $whereClause = "MATCH(" . $col . ") AGAINST(:" . $colParam . ")";
+                    break;
+                    case ':fulltext_boolean':
+                        $colParam = preg_replace('/\W+/', '_', $col) . $ci;
+                        $whereClause = "MATCH(" . $col . ") AGAINST(:" . $colParam . " IN BOOLEAN MODE)";
                     break;
                     // ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
                     case ':all':

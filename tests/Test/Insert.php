@@ -11,6 +11,7 @@ class Test_Insert extends PHPUnit_Framework_TestCase
         $mapper = test_spot_mapper();
         $mapper->migrate('Entity_Post');
         $mapper->migrate('Entity_Event');
+        $mapper->migrate('Entity_Event_Search');
         $mapper->migrate('Entity_Type');
     }
 

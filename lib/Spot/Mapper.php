@@ -955,7 +955,8 @@ class Mapper
             $arguments = array($arguments);
         }
         $ret = null;
-        foreach($this->getHooks(get_class($object), $hook) as $callable) {
+        $hooks = $this->getHooks(get_class($object), $hook);
+        foreach($hooks as $callable) {
             if (is_callable(array($object, $callable))) {
                 $ret = call_user_func_array(array($object, $callable), $arguments);
             } else {
