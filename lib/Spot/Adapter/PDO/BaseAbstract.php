@@ -303,7 +303,7 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
             }
         }
         if($query->having) {
-            $havingConditions = $this->statementConditions($query->having);
+            $havingConditions = $this->statementConditions($query->having, count($binds) - count($query->having));
         }
 
         $sql = "

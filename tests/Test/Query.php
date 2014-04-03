@@ -1,7 +1,6 @@
 <?php
 /**
  * @package Spot
- * @link http://spot.os.ly
  */
 class Test_Query extends PHPUnit_Framework_TestCase
 {
@@ -180,6 +179,23 @@ class Test_Query extends PHPUnit_Framework_TestCase
             ->select('id, MAX(status) as maximus')
             ->having(array('maximus' => 10));
         $this->assertEquals(1, count($posts->toArray()));
+    }
+
+    // Test created due to bug with 'HAVING' parameter counts starting at 0
+    // again when combined with WHERE clause
+    public function testQueryHavingClauseWithWhere()
+    {
+        $mapper = test_spot_mapper();
+
+        if ($mapper->config()->connection() instanceof \Spot\Adapter\Sqlite) {
+            $this->markTestSkipped('Not support in Sqlite - requires group by');
+        }
+
+        $posts = $mapper->all('Entity_Post')
+            ->select('id, MAX(status) as maximus')
+            ->where(array('author_id' => 1))
+            ->having(array('maximus >' => 10));
+        $this->assertEquals(0, count($posts->toArray()));
     }
 
     public function testQueryPopulatesCustomPropertiesFromQueryResults()
