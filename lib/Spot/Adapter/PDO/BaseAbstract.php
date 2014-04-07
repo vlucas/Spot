@@ -318,7 +318,10 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
 
         // Prepend COUNT(*) if count query
         if($isCount && !empty($fields)) {
-            $fields = "COUNT(*) as count" . ($fields !== '*' ? ', ' . $fields : '');
+            // Remove field wildcard '*' because it will cause errors with COUNT
+            $aFields = explode(',', $fields);
+            $fields = implode(',', array_filter($aFields, function($r) { return trim($r) != '*'; }));
+            $fields = "COUNT(*) as count" . ($fields ? ', ' . $fields : '');
         }
 
         $sql = "

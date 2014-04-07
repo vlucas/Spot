@@ -198,7 +198,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
         $this->assertEquals(0, count($posts->toArray()));
     }
 
-    public function testQueryHavingClauseWithCustomSelectAndCount()
+    public function testQueryHavingClauseWithWildcardAndCustomSelectAndCount()
     {
         $mapper = test_spot_mapper();
 
@@ -207,7 +207,7 @@ class Test_Query extends PHPUnit_Framework_TestCase
         }
 
         $posts = $mapper->all('Entity_Post')
-            ->select('id, MAX(status) as maximus')
+            ->select('*, MAX(status) as maximus')
             ->where(array('author_id' => 1))
             ->having(array('maximus >' => 10));
 
