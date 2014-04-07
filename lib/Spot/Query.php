@@ -61,10 +61,10 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public static function addMethod($method, $callback)
     {
         if(!is_callable($callback)) {
-            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");  
+            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");
         }
         if(method_exists(__CLASS__, $method)) {
-            throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__); 
+            throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__);
         }
         self::$_customMethods[$method] = $callback;
     }
@@ -86,7 +86,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         } else if (method_exists('\\Spot\\Entity\\Collection', $method)) {
             return $this->execute()->$method($args[0]);
         } else {
-            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found"); 
+            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found");
         }
     }
 
@@ -475,7 +475,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * Convenience function passthrough for Collection
      *
-     * @return array 
+     * @return array
      */
     public function toArray($keyColumn = null, $valueColumn = null)
     {
@@ -498,7 +498,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Execute and return query as a collection
-     * 
+     *
      * @return mixed Collection object on success, boolean false on failure
      */
     public function execute()

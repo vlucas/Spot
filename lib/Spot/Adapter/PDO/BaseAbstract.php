@@ -294,26 +294,41 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
      */
     public function read(\Spot\Query $query, array $options = array())
     {
+        $isCount = false;
+        if(isset($options['SPOT_SQL_COUNT']) && $options['SPOT_SQL_COUNT'] === true) {
+            $isCount = true;
+        }
+
         $conditions = $this->statementConditions($query->conditions);
         $binds = $this->statementBinds($query->params());
+
         $order = array();
-        if($query->order) {
-            foreach($query->order as $oField => $oSort) {
-                $order[] = $this->escapeField($oField) . " " . $oSort;
+        if(!$isCount) {
+            if($query->order) {
+                foreach($query->order as $oField => $oSort) {
+                    $order[] = $this->escapeField($oField) . " " . $oSort;
+                }
             }
         }
         if($query->having) {
             $havingConditions = $this->statementConditions($query->having, count($binds) - count($query->having));
         }
 
+        $fields = $this->statementFields($query->fields);
+
+        // Prepend COUNT(*) if count query
+        if($isCount && !empty($fields)) {
+            $fields = "COUNT(*) as count" . ($fields !== '*' ? ', ' . $fields : '');
+        }
+
         $sql = "
-            SELECT " . $this->statementFields($query->fields) . "
+            SELECT " . $fields . "
             FROM " . $query->datasource . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
             " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
             " . ($query->having ? 'HAVING' . $havingConditions : '') . "
             " . ($order ? 'ORDER BY ' . implode(', ', $order) : '') . "
-            " . ($query->limit ? 'LIMIT ' . $query->limit : '') . " " . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
+            " . (!$isCount ? ($query->limit ? 'LIMIT ' . $query->limit : '') . " " . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') : '') . "
             ";
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
@@ -336,7 +351,12 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
             if($stmt) {
                 // Execute
                 if($stmt->execute($binds)) {
-                    $result = $this->toCollection($query, $stmt);
+                    if(isset($options['SPOT_SQL_COUNT'])) {
+                        //the count is returned in the first column
+                        $result = (int) $stmt->fetchColumn();
+                    } else {
+                        $result = $this->toCollection($query, $stmt);
+                    }
                 } else {
                     $result = false;
                 }
@@ -361,49 +381,7 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
      */
     public function count(\Spot\Query $query, array $options = array())
     {
-        $conditions = $this->statementConditions($query->conditions);
-        $binds = $this->statementBinds($query->params());
-        $sql = "
-            SELECT COUNT(*) as count
-            FROM " . $query->datasource . "
-            " . ($conditions ? 'WHERE ' . $conditions : '') . "
-            " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
-
-         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
-        if($binds && count($binds) > 0) {
-            foreach($binds as $field => $value) {
-                if(null === $value) {
-                    unset($binds[$field]);
-                }
-            }
-        }
-
-        // Add query to log
-        \Spot\Log::addQuery($this, $sql,$binds);
-
-        $result = false;
-        try {
-            // Prepare count query
-            $stmt = $this->connection()->prepare($sql);
-
-            //if prepared, execute
-            if($stmt && $stmt->execute($binds)) {
-                //the count is returned in the first column
-                $result = (int) $stmt->fetchColumn();
-            } else {
-                $result = false;
-            }
-        } catch(\PDOException $e) {
-            // Table does not exist
-            if($e->getCode() == "42S02") {
-                throw new \Spot\Exception_Datasource_Missing("Table or datasource '" . $query->datasource . "' does not exist");
-            }
-
-            // Re-throw exception
-            throw $e;
-        }
-
-        return $result;
+        return $this->read($query, array('SPOT_SQL_COUNT' => true));
     }
 
     /**
