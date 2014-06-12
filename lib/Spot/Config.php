@@ -55,6 +55,9 @@ class Config implements \Serializable
 
         $dsnp = \Spot\Adapter\AdapterAbstract::parseDSN($dsn);
         $adapterClass = "\\Spot\\Adapter\\" . ucfirst($dsnp['adapter']);
+        if(!class_exists($adapterClass)) {
+            throw new \InvalidArgumentException("Adapter for database type '" . $dsnp['adapter'] . "' not found!");
+        }
         $adapter = new $adapterClass($dsn, $options);
 
         // Set as default connection?
