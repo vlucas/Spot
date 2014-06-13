@@ -80,9 +80,10 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
     {
         // Setup defaults for options that do not exist
         $options = $options + array(
-            'engine' => $this->_engine,
-            'charset' => $this->_charset,
-            'collate' => $this->_collate,
+            'engine' => isset($this->_engine) ? $this->_engine : '',
+            'charset' => isset($this->_charset) ? $this->_charset : '',
+            'collate' => isset($this->_collate) ? $this->_collate : '',
+            'encoding' => isset($this->_encoding) ? $this->_encoding : '',
         );
 
         // Get current fields for table
@@ -94,7 +95,7 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         }
         if($tableExists) {
             // Update table
-            $this->migrateTableUpdate($table, $fields, $options);
+            $this->migrateTableUpdate($table, $tableColumns, $fields, $options);
         } else {
             // Create table
             $this->migrateTableCreate($table, $fields, $options);
@@ -140,7 +141,7 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
      * @param Array $fields Fields and their attributes as defined in the mapper
      * @param Array $options Options that may affect migrations or how tables are setup
      */
-    public function migrateTableUpdate($table, array $formattedFields, array $options = array())
+    public function migrateTableUpdate($table, array $tableColumns, array $formattedFields, array $options = array())
     {
         /*
             STEPS:
@@ -150,7 +151,6 @@ abstract class BaseAbstract extends Adapter\AdapterAbstract implements Adapter\A
         */
 
         // Prepare fields and get syntax for each
-        $tableColumns = $this->getColumnsForTable($table, $this->_database);
         $updateFormattedFields = array();
         foreach($tableColumns as $fieldName => $columnInfo) {
             if(isset($formattedFields[$fieldName])) {

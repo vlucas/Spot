@@ -513,17 +513,23 @@ class Mapper
         // Ensure there is actually data to update
         $data = $entity->data();
         if(count($data) > 0) {
+            $pkField = $this->primaryKeyField($entityName);
+
             // Save only known, defined fields
             $entityFields = $this->fields($entityName);
             $data = array_intersect_key($data, $entityFields);
 
             $data = $this->dumpEntity($entityName, $data);
 
+            // Don't pass NULL for "serial" columns (causes issues with PostgreSQL + others)
+            if(array_key_exists($pkField, $data) && empty($data[$pkField])) {
+                unset($data[$pkField]);
+            }
+
             // Send to adapter via named connection
             $result = $this->connection($entityName)->create($this->datasource($entityName), $data);
 
             // Update primary key on entity object
-            $pkField = $this->primaryKeyField($entityName);
             $entity->$pkField = $result;
             $entity->isNew(false);
 
