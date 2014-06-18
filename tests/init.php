@@ -24,9 +24,13 @@ if (!empty($dbDsn)) {
 /**
 * Return Spot mapper for use
 */
-$mapper = new \Spot\Mapper($cfg);
-function test_spot_mapper() {
-    global $mapper;
+function test_spot_mapper($entity = null)
+{
+    global $cfg; // you should never do this in real code :)
+    $mapper = new \Spot\Mapper($cfg);
+    if($entity !== null) {
+        $mapper = $mapper->entity($entity);
+    }
     return $mapper;
 }
 

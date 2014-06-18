@@ -102,7 +102,7 @@ abstract class Entity
     {
         // GET
         if(null === $data || !$data) {
-            return array_merge($this->_data, $this->_dataModified);
+            return array_diff_key(array_merge($this->_data, $this->_dataModified), self::relations());
         }
 
         // SET
@@ -285,6 +285,10 @@ abstract class Entity
      */
     public function __set($field, $value)
     {
+        if (array_key_exists($field, self::relations())) {
+            $this->_loadedRelations[$field] = $value;
+            return;
+        }
         $this->_dataModified[$field] = $value;
     }
 

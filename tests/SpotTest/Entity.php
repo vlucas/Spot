@@ -6,19 +6,22 @@ namespace SpotTest;
  */
 class Entity extends \PHPUnit_Framework_TestCase
 {
+    private static $entities = ['Post'];
+
     public static function setupBeforeClass()
     {
         $mapper = test_spot_mapper();
-        foreach(['SpotTest\Entity\Post'] as $entity) {
-            $result = $mapper->entity($entity)->migrate();
+
+        foreach(self::$entities as $entity) {
+            $mapper->entity('\SpotTest\Entity\\' . $entity)->migrate();
         }
     }
 
     public static function tearDownAfterClass()
     {
         $mapper = test_spot_mapper();
-        foreach(['SpotTest\Entity\Post'] as $entity) {
-            $mapper->entity($entity)->dropTable();
+        foreach(self::$entities as $entity) {
+            $mapper->entity('\SpotTest\Entity\\' . $entity)->dropTable();
         }
     }
 

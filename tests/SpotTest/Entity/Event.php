@@ -1,5 +1,5 @@
 <?php
-namespace SpotTest;
+namespace SpotTest\Entity;
 
 /**
  * Post
@@ -42,7 +42,7 @@ class Event extends \Spot\Entity
     }
 
     public function hookUpdateSearchIndex(\Spot\Mapper $mapper) {
-        $result = $mapper->upsert('SpotTest\Entity\Event\Search', [
+        $result = $mapper->entity('SpotTest\Entity\Event\Search')->upsert([
             'event_id' => $this->id,
             'body'     => $this->title . ' ' . $this->description
         ], [

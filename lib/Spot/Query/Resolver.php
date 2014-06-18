@@ -121,7 +121,7 @@ class Resolver
         // Set PDO fetch mode
         $stmt->setFetchMode(\PDO::FETCH_ASSOC);
 
-        $collection = $this->mapper->collection($stmt, $query->with());
+        $collection = $query->mapper()->collection($stmt, $query->with());
 
         // Ensure statement is closed
         $stmt->closeCursor();
@@ -175,10 +175,9 @@ class Resolver
     public function truncate($table)
     {
         $connection = $this->mapper->connection();
-        $connection->transactional(function($conn) use($connection) {
+        return $connection->transactional(function($conn) use($table) {
             $conn->exec("TRUNCATE TABLE " . $table);
         });
-        return $connection->delete($table);
     }
 
     /**

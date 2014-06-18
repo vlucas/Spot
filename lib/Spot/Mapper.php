@@ -14,7 +14,6 @@ class Mapper
 
     // Entity manager
     protected static $_entityManager = [];
-    protected static $resolver;
 
     // Class Names for required classes - Here so they can be easily overridden
     protected $_collectionClass = '\\Spot\\Entity\\Collection';
@@ -100,10 +99,7 @@ class Mapper
      */
     public function resolver()
     {
-        if(static::$resolver === null) {
-            static::$resolver = new Query\Resolver($this);
-        }
-        return static::$resolver;
+        return new Query\Resolver($this);
     }
 
     /**
@@ -234,7 +230,7 @@ class Mapper
             $entity->isNew(false);
 
             // Load relation objects
-            $this->loadRelations($entity);
+            /* $this->loadRelations($entity); */
 
             // Store in array for Collection
             $results[] = $entity;
@@ -347,7 +343,7 @@ class Mapper
             if(!$entity) {
                 return false;
             }
-            $this->loadRelations($entity);
+            /* $this->loadRelations($entity); */
         }
 
         // Set default values if entity not loaded
@@ -551,7 +547,7 @@ class Mapper
             $entity->isNew(false);
 
             // Load relations on new entity
-            $this->loadRelations($entity);
+            /* $this->loadRelations($entity); */
 
             // Run afterInsert
             $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', array($this, $result));
@@ -743,12 +739,10 @@ class Mapper
     /**
      * Truncate data source
      * Should delete all rows and reset serial/auto_increment keys to 0
-     *
-     * @param string $entityName Name of the entity class
      */
-    public function truncate($entityName)
+    public function truncate()
     {
-        return $this->connection()->truncate($this->table());
+        return $this->resolver()->truncate($this->table());
     }
 
     /**
@@ -808,7 +802,8 @@ class Mapper
         }
     }
 
-    protected function getRelationObject($entity, $field, $relation, $reload = false) {
+    protected function getRelationObject($entity, $field, $relation, $reload = false)
+    {
         $entityName = $entity instanceof \Spot\Entity\Collection ? $entity->entityName() : get_class($entity);
         if (!$entityName) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
