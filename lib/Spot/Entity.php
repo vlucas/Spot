@@ -8,9 +8,8 @@ namespace Spot;
 */
 abstract class Entity
 {
-    protected static $_datasource;
-    protected static $_datasourceOptions = array();
-    protected static $_connection;
+    protected static $table;
+    protected static $tableOptions = [];
 
     // Entity data storage
     protected $_data = array();
@@ -21,7 +20,6 @@ abstract class Entity
 
     // Entity error messages (may be present after save attempt)
     protected $_errors = array();
-
 
     /**
      * Constructor - allows setting of object properties with array on construct
@@ -36,7 +34,6 @@ abstract class Entity
         }
     }
 
-
     /**
      * Set all field values to their defualts or null
      */
@@ -50,72 +47,53 @@ abstract class Entity
         }
     }
 
-
     /**
-     * Datasource getter/setter
+     * Table name getter/setter
      */
-    public static function datasource($ds = null)
+    public static function table($tableName = null)
     {
-        if(null !== $ds) {
-            static::$_datasource = $ds;
+        if(null !== $tableName) {
+            static::$table = $tableName;
             return $this;
         }
-        return static::$_datasource;
+        return static::$table;
     }
-
 
     /**
      * Datasource options getter/setter
      */
-    public static function datasourceOptions($dsOpts = null)
+    public static function tableOptions($tableOpts = null)
     {
-        if(null !== $dsOpts) {
-            static::$_datasourceOptions = $dsOpts;
+        if(null !== $tableOpts) {
+            static::$tableOptions = $tableOpts;
             return $this;
         }
-        return static::$_datasourceOptions;
+        return static::$tableOptions;
     }
-
-
-    /**
-     * Named connection getter/setter
-     */
-    public static function connection($connection = null)
-    {
-        if(null !== $connection) {
-            static::$_connection = $connection;
-            return $this;
-        }
-        return static::$_connection;
-    }
-
 
     /**
      * Return defined fields of the entity
      */
     public static function fields()
     {
-        return array();
+        return [];
     }
-
 
     /**
      * Return defined hooks of the entity
      */
     public static function hooks()
     {
-        return array();
+        return [];
     }
-
 
     /**
      * Return defined fields of the entity
      */
     public static function relations()
     {
-        return array();
+        return [];
     }
-
 
     /**
      * Gets and sets data on the current entity
@@ -131,12 +109,6 @@ abstract class Entity
         if(is_object($data) || is_array($data)) {
             $fields = $this->fields();
             foreach($data as $k => $v) {
-                // Ensure value is set with type handler if Entity field type
-                if(array_key_exists($k, $fields)) {
-                    $typeHandler = Config::typeHandler($fields[$k]['type']);
-                    $v = $typeHandler::set($this, $v);
-                }
-
                 if(true === $modified) {
                     $this->_dataModified[$k] = $v;
                 } else {
@@ -149,7 +121,6 @@ abstract class Entity
         }
     }
 
-
     /**
      * Return array of field data with data from the field names listed removed
      *
@@ -159,7 +130,6 @@ abstract class Entity
     {
         return array_diff_key($this->data(), array_flip($except));
     }
-
 
     /**
      * Gets data that has been modified since object construct,
@@ -173,7 +143,6 @@ abstract class Entity
         return $this->_dataModified;
     }
 
-
     /**
      * Gets data that has not been modified since object construct,
      * optionally allowing for selecting a single field
@@ -185,7 +154,6 @@ abstract class Entity
         }
         return $this->_data;
     }
-
 
     /**
      * Is entity new (unsaved)?
@@ -199,7 +167,6 @@ abstract class Entity
         }
         return $this->_isNew;
     }
-
 
     /**
      * Returns true if a field has been modified.
@@ -223,7 +190,6 @@ abstract class Entity
         return !!count($this->_dataModified);
     }
 
-
     /**
      * Alias of self::data()
      */
@@ -231,7 +197,6 @@ abstract class Entity
     {
         return $this->data();
     }
-
 
     /**
      * Check if any errors exist
@@ -247,7 +212,6 @@ abstract class Entity
         return count($this->_errors) > 0;
     }
 
-
     /**
      * Error message getter/setter
      *
@@ -258,7 +222,7 @@ abstract class Entity
     {
         // Return errors for given field
         if(is_string($msgs)) {
-            return isset($this->_errors[$msgs]) ? $this->_errors[$msgs] : array();
+            return isset($this->_errors[$msgs]) ? $this->_errors[$msgs] : [];
 
         // Set error messages from given array
         } elseif(is_array($msgs)) {
@@ -270,7 +234,6 @@ abstract class Entity
         }
         return $this->_errors;
     }
-
 
     /**
      * Add an error to error messages array
@@ -291,7 +254,6 @@ abstract class Entity
         }
     }
 
-
     /**
      * Enable isset() for object properties
      */
@@ -299,7 +261,6 @@ abstract class Entity
     {
         return isset($this->_data[$key]) || isset($this->_dataModified[$key]);
     }
-
 
     /**
      * Getter for field properties
@@ -319,21 +280,13 @@ abstract class Entity
         return $v;
     }
 
-
     /**
      * Setter for field properties
      */
     public function __set($field, $value)
     {
-        $fields = $this->fields();
-        if(isset($fields[$field])) {
-            // Ensure value is set with type handler
-            $typeHandler = Config::typeHandler($fields[$field]['type']);
-            $value = $typeHandler::set($this, $value);
-        }
         $this->_dataModified[$field] = $value;
     }
-
 
     /**
      * String representation of the class

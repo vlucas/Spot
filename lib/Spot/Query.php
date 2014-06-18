@@ -7,33 +7,20 @@ namespace Spot;
  * @package Spot
  * @author Vance Lucas <vance@vancelucas.com>
  */
-class Query implements \Countable, \IteratorAggregate, QueryInterface
+class Query implements \Countable, \IteratorAggregate
 {
     protected $_mapper;
     protected $_entityName;
-    protected $_cache = array();
+    protected $_tableName;
+    protected $_queryBuilder;
+    protected $_noQuote;
 
     // Storage for query properties
-    public $fields = array();
-    public $datasource;
-    public $conditions = array();
-    public $search = array();
-    public $order = array();
-    public $group = array();
-    public $having = array();
-    public $with = array();
-    public $limit;
-    public $offset;
-
+    public $with = [];
+    protected $_data = [];
 
     // Custom methods added by extensions or plugins
-    protected static $_customMethods = array();
-
-    protected static $_resettable = array(
-        'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset', 'with'
-    );
-    protected $_snapshot = array();
-
+    protected static $_customMethods = [];
 
     /**
      *  Constructor Method
@@ -41,28 +28,44 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      *  @param Spot_Mapper
      *  @param string $entityName Name of the entity to query on/for
      */
-    public function __construct(\Spot\Mapper $mapper, $entityName)
+    public function __construct(\Spot\Mapper $mapper)
     {
         $this->_mapper = $mapper;
-        $this->_entityName = $entityName;
-        foreach (static::$_resettable as $field) {
-            $this->_snapshot[$field] = $this->$field;
-        }
+        $this->_entityName = $mapper->entity();
+        $this->_tableName = $mapper->table();
+
+        // Create Doctrine DBAL query builder from Doctrine\DBAL\Connection
+        $this->_queryBuilder = $mapper->connection()->createQueryBuilder();
     }
 
+    /**
+     * Get current Doctrine DBAL query builder object
+     *
+     * @return \Doctrine\DBAL\Query\QueryBuilder
+     */
+    public function builder()
+    {
+        return $this->_queryBuilder;
+    }
+
+    /**
+     * Set field and value quoting on/off - maily used for testing output SQL since quoting is different per platform
+     */
+    public function noQuote($noQuote = true)
+    {
+        $this->_noQuote = $noQuote;
+        return $this;
+    }
 
     /**
      * Add a custom user method via closure or PHP callback
      *
      * @param string $method Method name to add
-     * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
+     * @param callable $callback Callback or closure that will be executed when missing method call matching $method is made
      * @throws InvalidArgumentException
      */
-    public static function addMethod($method, $callback)
+    public static function addMethod($method, callable $callback)
     {
-        if(!is_callable($callback)) {
-            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");
-        }
         if(method_exists(__CLASS__, $method)) {
             throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__);
         }
@@ -90,7 +93,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
     }
 
-
     /**
      * Get current adapter object
      */
@@ -98,7 +100,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         return $this->_mapper;
     }
-
 
     /**
      * Get current entity name query is to be performed on
@@ -108,76 +109,196 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         return $this->_entityName;
     }
 
-
     /**
-     * Called from mapper's select() function
-     *
-     * @param mixed $fields (optional)
-     * @param string $source Data source name
-     * @return string
+     * Select (passthrough to DBAL QueryBuilder)
      */
-    public function select($fields = "*", $datasource = null)
+    public function select()
     {
-        $this->fields = (is_string($fields) ? explode(',', $fields) : $fields);
-        if(null !== $datasource) {
-            $this->from($datasource);
-        }
+        call_user_func_array([$this->builder(), 'select'], func_get_args());
         return $this;
     }
 
-
     /**
-     * From
-     *
-     * @param string $datasource Name of the data source to perform a query on
-     * @todo Support multiple sources/joins
+     * Delete (passthrough to DBAL QueryBuilder)
      */
-    public function from($datasource = null)
+    public function delete()
     {
-        $this->datasource = $datasource;
+        call_user_func_array([$this->builder(), 'delete'], func_get_args());
         return $this;
     }
 
-
     /**
-     * Find records with given conditions
-     * If all parameters are empty, find all records
-     *
-     * @param array $conditions Array of conditions in column => value pairs
+     * From (passthrough to DBAL QueryBuilder)
      */
-    public function all(array $conditions = array())
+    public function from()
     {
-        return $this->where($conditions);
+        call_user_func_array([$this->builder(), 'from'], func_get_args());
+        return $this;
     }
-
 
     /**
      * WHERE conditions
      *
      * @param array $conditions Array of conditions for this clause
      * @param string $type Keyword that will separate each condition - "AND", "OR"
-     * @param string $setType Keyword that will separate the whole set of conditions - "AND", "OR"
      */
-    public function where(array $conditions = array(), $type = "AND", $setType = "AND")
+    public function where(array $where, $type = 'AND')
     {
-        // Don't add WHERE clause if array is empty (easy way to support dynamic request options that modify current query)
-        if($conditions) {
-            $where = array();
-            $where['conditions'] = $conditions;
-            $where['type'] = $type;
-            $where['setType'] = $setType;
-
-            $this->conditions[] = $where;
-        }
+        $whereClause = implode(' ' . $type . ' ', $this->parseWhereToSQLFragments($where));
+        $this->builder()->andWhere($whereClause);
         return $this;
     }
-    public function orWhere(array $conditions = array(), $type = "AND")
+
+    /**
+     * WHERE OR conditions
+     *
+     * @param array $conditions Array of conditions for this clause
+     * @param string $type Keyword that will separate each condition - "AND", "OR"
+     */
+    public function orWhere(array $where, $type = 'AND')
     {
-        return $this->where($conditions, $type, "OR");
+        $whereClause = implode(' ' . $type . ' ', $this->parseWhereToSQLFragments($where));
+        $this->builder()->orWhere($whereClause);
+        return $this;
     }
-    public function andWhere(array $conditions = array(), $type = "AND")
+
+    /**
+     * WHERE AND conditions
+     *
+     * @param array $conditions Array of conditions for this clause
+     * @param string $type Keyword that will separate each condition - "AND", "OR"
+     */
+    public function andWhere(array $where, $type = 'AND')
     {
-        return $this->where($conditions, $type, "AND");
+        return $this->where($where, $type);
+    }
+
+    /**
+     * Parse array-syntax WHERE conditions and translate them to DBAL QueryBuilder syntax
+     *
+     * @param array $where Array of conditions for this clause
+     * @return array SQL fragment strings for WHERE clause
+     */
+    private function parseWhereToSQLFragments(array $where, $useAlias = true)
+    {
+        $builder = $this->builder();
+
+        $sqlFragments = [];
+        foreach($where as $column => $value) {
+            $whereClause = "";
+            // Column name with comparison operator
+            $colData = explode(' ', $column);
+            $operator = isset($colData[1]) ? $colData[1] : '=';
+            if(count($colData) > 2) {
+                $operator = array_pop($colData);
+                $colData = [implode(' ', $colData), $operator];
+            }
+            $col = $colData[0];
+
+            // Prefix column name with alias
+            if ($useAlias === true) {
+                $col = $this->_tableName . '.' . $col;
+            }
+
+            // Determine which operator to use based on custom and standard syntax
+            switch(strtolower($operator)) {
+                case '<':
+                case ':lt':
+                    $operator = '<';
+                break;
+                case '<=':
+                case ':lte':
+                    $operator = '<=';
+                break;
+                case '>':
+                case ':gt':
+                    $operator = '>';
+                break;
+                case '>=':
+                case ':gte':
+                    $operator = '>=';
+                break;
+                // REGEX matching
+                case '~=':
+                case '=~':
+                case ':regex':
+                    $operator = "REGEX";
+                break;
+                // LIKE
+                case ':like':
+                    $operator = "LIKE";
+                break;
+                // FULLTEXT search
+                // MATCH(col) AGAINST(search)
+                case ':fulltext':
+                    $whereClause = "MATCH(" . $this->escapeField($col) . ") AGAINST(" . $builder->createPositionalParameter($value) . ")";
+                break;
+                case ':fulltext_boolean':
+                    $whereClause = "MATCH(" . $this->escapeField($col) . ") AGAINST(" . $builder->createPositionalParameter($value) . " IN BOOLEAN MODE)";
+                break;
+                // In
+                case 'in':
+                case ':in':
+                    $operator = 'IN';
+                    if(!is_array($value)) {
+                        throw new Exception("Use of IN operator expects value to be array. Got " . gettype($value) . ".");
+                    }
+                break;
+                // Not equal
+                case '<>':
+                case '!=':
+                case ':ne':
+                case ':not':
+                    $operator = '!=';
+                    if(is_array($value)) {
+                        $operator = "NOT IN";
+                    } elseif(is_null($value)) {
+                        $operator = "IS NOT NULL";
+                    }
+                break;
+                // Equals
+                case '=':
+                case ':eq':
+                    $operator = '=';
+                    if(is_array($value)) {
+                        $operator = "IN";
+                    } elseif(is_null($value)) {
+                        $operator = "IS NULL";
+                    }
+                break;
+                // Unsupported operator
+                default:
+                    throw new Exception("Unsupported operator '" . $operator . "' in WHERE clause");
+                break;
+            }
+
+            // If WHERE clause not already set by the code above...
+            if(empty($whereClause)) {
+                if(is_array($value)) {
+                    if(empty($value)) {
+                        $whereClause = $this->escapeField($col) . " IS NULL";
+                    } else {
+                        $valueIn = "";
+                        foreach($value as $val) {
+                            $valueIn .= $builder->createPositionalParameter($val) . ",";
+                        }
+                        $value = "(" . trim($valueIn, ',') . ")";
+                        $whereClause = $this->escapeField($col) . " " . $operator . " " . $value;
+                    }
+                } elseif(is_null($value)) {
+                    $whereClause = $this->escapeField($col) . " " . $operator;
+                }
+            }
+
+            if(empty($whereClause)) {
+                // Add to binds array and add to WHERE clause
+                $whereClause = $this->escapeField($col) . " " . $operator . " " . $builder->createPositionalParameter($value) . "";
+            }
+
+            $sqlFragments[] = $whereClause;
+        }
+
+        return $sqlFragments;
     }
 
     /**
@@ -185,24 +306,25 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      *
      * @param mixed $relations Array/string of relation(s) to be loaded.  False to erase all withs.  Null to return existing $with value
      */
-    public function with($relations = null) {
-        if(is_null($relations)) {
+    public function with($relations = null)
+    {
+        if (is_null($relations)) {
             return $this->with;
-        } else if(is_bool($relations) && !$relations) {
-            $this->with = array();
+        } else if (is_bool($relations) && !$relations) {
+            $this->with = [];
         }
 
         $entityName = $this->entityName();
         $entityRelations = array_keys($entityName::relations());
         foreach((array)$relations as $idx => $relation) {
             $add = true;
-            if(!is_numeric($idx) && isset($this->with[$idx])) {
+            if (!is_numeric($idx) && isset($this->with[$idx])) {
                 $add = $relation;
                 $relation = $idx;
             }
-            if($add && in_array($relation, $entityRelations)) {
+            if ($add && in_array($relation, $entityRelations)) {
                 $this->with[] = $relation;
-            } else if(!$add) {
+            } else if (!$add) {
                 foreach (array_keys($this->with, $relation, true) as $key) {
                     unset($this->with[$key]);
                 }
@@ -220,7 +342,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $options Array of options for search
      * @return $this
      */
-    public function search($fields, $query, array $options = array())
+    public function search($fields, $query, array $options = [])
     {
         $fields = (array) $fields;
         $entityDatasourceOptions = $this->mapper()->entityManager()->datasourceOptions($this->entityName());
@@ -254,9 +376,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         // @todo Normal queries can't search mutliple fields, so make them separate searches instead of stringing them together
 
         // Resolve search criteria
-        return $this->where(array($fieldString . ' ' . $whereType => $query));
+        return $this->where([$fieldString . ' ' . $whereType => $query]);
     }
-
 
     /**
      * ORDER BY columns
@@ -264,11 +385,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $fields Array of field names to use for sorting
      * @return $this
      */
-    public function order($fields = array())
+    public function order($fields = [])
     {
-        $orderBy = array();
+        $orderBy = [];
         $defaultSort = "ASC";
-        if(is_array($fields)) {
+        if (is_array($fields)) {
             foreach($fields as $field => $sort) {
                 // Numeric index - field as array entry, not key/value pair
                 if(is_numeric($field)) {
@@ -284,14 +405,13 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         return $this;
     }
 
-
     /**
      * GROUP BY clause
      *
      * @param array $fields Array of field names to use for grouping
      * @return $this
      */
-    public function group(array $fields = array())
+    public function group(array $fields = [])
     {
         foreach($fields as $field) {
             $this->group[] = $field;
@@ -299,18 +419,17 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         return $this;
     }
 
-
     /**
      * Having clause to filter results by a calculated value
      *
      * @param array $having Array (like where) for HAVING statement for filter records by
+     * @param string $type
      */
-    public function having(array $having = array())
+    public function having(array $having, $type ='AND')
     {
-        $this->having[] = array('conditions' => $having);
+        $this->builder()->having(implode(' ' . $type . ' ', $this->parseWhereToSQLFragments($having, false)));
         return $this;
     }
-
 
     /**
      * Limit executed query to specified amount of records
@@ -319,13 +438,14 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param int $limit Number of records to return
      * @param int $offset Record to start at for limited result set
      */
-    public function limit($limit = 20, $offset = null)
+    public function limit($limit, $offset = null)
     {
-        $this->limit = $limit;
-        $this->offset = $offset;
+        $this->builder()->setMaxResults($limit);
+        if($offset !== null) {
+            $this->offset($offset);
+        }
         return $this;
     }
-
 
     /**
      * Offset executed query to skip specified amount of records
@@ -333,144 +453,38 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      *
      * @param int $offset Record to start at for limited result set
      */
-    public function offset($offset = 0)
+    public function offset($offset)
     {
-        $this->offset = $offset;
+        $this->builder()->setFirstResult($offset);
         return $this;
     }
-
-
-    /**
-     * Return array of parameters in key => value format
-     *
-     * @return array Parameters in key => value format
-     */
-    public function params()
-    {
-        $params = array();
-        $ci = 0;
-
-        // WHERE + HAVING
-        $conditions = array_merge($this->conditions, $this->having);
-
-        foreach($conditions as $i => $data) {
-            if(isset($data['conditions']) && is_array($data['conditions'])) {
-                foreach($data['conditions'] as $field => $value) {
-                    // Column name with comparison operator
-                    $colData = explode(' ', $field);
-                    $operator = '=';
-                    if (count($colData) > 2) {
-                        $operator = array_pop($colData);
-                        $colData = array(implode(' ', $colData), $operator);
-                    }
-                    $field = $colData[0];
-                    $params[$field . $ci] = $value;
-                    $ci++;
-                }
-            }
-        }
-        return $params;
-    }
-
-
-
-
 
     // ===================================================================
 
     /**
      * SPL Countable function
      * Called automatically when attribute is used in a 'count()' function call
-     * Caches results when there are no query changes
      *
      * @return int
      */
     public function count()
     {
-        $obj = $this;
-        // New scope with closure to get only PUBLIC properties of object instance (can't include cache property)
-        $cacheParams = function() use($obj) {
-            $props = get_object_vars($obj); // This trick doesn't seem to work by itself in PHP 5.4...
-            // Depends on protected/private properties starting with underscore ('_')
-            $publics = array_filter(array_keys($props), function($key) { return strpos($key, '_') !== 0; });
-            return array_intersect_key($props, array_flip($publics));
-        };
-        $cacheKey = sha1(var_export($cacheParams(), true)) . "_count";
-        $cacheResult = isset($this->_cache[$cacheKey]) ? $this->_cache[$cacheKey] : false;
-
-        // Check cache
-        if($cacheResult) {
-            $result = $cacheResult;
-        } else {
-            // Execute query
-            $result = $this->mapper()->connection($this->entityName())->count($this);
-            // Set cache
-            $this->_cache[$cacheKey] = $result;
-        }
-
-        return is_numeric($result) ? $result : 0;
+        $stmt = $this->builder()->select('COUNT(*)')->execute();
+        return $stmt->fetchColumn(0);
     }
-
 
     /**
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
      *
-     * @return Spot_Query_Set
+     * @return \Spot\Entity\Collection
      */
     public function getIterator()
     {
         // Execute query and return result set for iteration
         $result = $this->execute();
-        return ($result !== false) ? $result : array();
+        return ($result !== false) ? $result : [];
     }
-
-
-    /**
-     * Reset the query back to its original state
-     * Called automatically after a 'foreach' loop
-     * @param $hard_reset boolean Inidicate whether to reset the variables
-     *      to their initial state or just back to the snapshot() state
-     *
-     * @see getIterator
-     * @see snapshot
-     * @return Spot_Query_Set
-     */
-    public function reset($hard_reset = false)
-    {
-        foreach ($this->_snapshot as $field => $value) {
-            if ($hard_reset) {
-                // TODO: Look at an actual 'initialize' type
-                // method that assigns all the defaults for
-                // conditions, etc
-                if (is_array($value)) {
-                    $this->$field = array();
-                } else {
-                    $this->$field = null;
-                }
-            } else {
-                $this->$field = $value;
-            }
-        }
-        return $this;
-    }
-
-
-    /**
-     * Reset the query back to its original state
-     * Called automatically after a 'foreach' loop
-     *
-     * @see getIterator
-     * @return Spot_Query_Set
-     */
-    public function snapshot()
-    {
-        foreach (static::$_resettable as $field) {
-             $this->_snapshot[$field] = $this->$field;
-        }
-        return $this;
-    }
-
 
     /**
      * Convenience function passthrough for Collection
@@ -480,9 +494,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public function toArray($keyColumn = null, $valueColumn = null)
     {
         $result = $this->execute();
-        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : array();
+        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : [];
     }
-
 
     /**
      * Return the first entity matched by the query
@@ -495,7 +508,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         return ($result !== false) ? $result->first() : false;
     }
 
-
     /**
      * Execute and return query as a collection
      *
@@ -503,6 +515,43 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      */
     public function execute()
     {
-        return $this->mapper()->connection($this->entityName())->read($this);
+        // @TODO Add caching to execute based on resulting SQL+data so we don't execute same query w/same data multiple times
+        return $this->mapper()->resolver()->read($this);
+    }
+
+    /**
+     * Get raw SQL string from built query
+     *
+     * @param string $string
+     */
+    public function toSql()
+    {
+        return $this->builder()->getSQL();
+    }
+
+    /**
+     * Escape/quote direct user input
+     *
+     * @param string $string
+     */
+    public function escape($string)
+    {
+        if($this->_noQuote) {
+            return $string;
+        }
+        return $this->mapper()->connection()->quote($string);
+    }
+
+    /**
+     * Escape/quote direct user input
+     *
+     * @param string $string
+     */
+    public function escapeField($field)
+    {
+        if($this->_noQuote) {
+            return $field;
+        }
+        return $this->mapper()->connection()->quoteIdentifier($field);
     }
 }

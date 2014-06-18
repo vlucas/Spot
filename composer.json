@@ -15,11 +15,13 @@
     ],
     "require": {
         "php": ">=5.3.2",
-        "vlucas/valitron": "1.x"
+        "vlucas/valitron": "1.x",
+        "doctrine/dbal": "~2.5"
     },
     "autoload": {
         "psr-0": {
             "Spot": "lib/"
         }
-    }
+    },
+    "minimum-stability": "dev"
 }

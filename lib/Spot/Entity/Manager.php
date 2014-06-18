@@ -10,26 +10,23 @@ use Spot;
  */
 class Manager
 {
-    // Field and relation info
-    protected static $_fields = array();
-    protected static $_fieldsDefined = array();
-    protected static $_fieldDefaultValues = array();
-    protected static $_relations = array();
-    protected static $_primaryKeyField = array();
+    protected $entityName;
 
-    // Connection and datasource info
-    protected static $_connection = array();
-    protected static $_datasource = array();
-    protected static $_datasourceOptions = array();
+    // Field and relation info
+    protected $fields = [];
+    protected $fieldsDefined = [];
+    protected $fieldDefaultValues = [];
+    protected $relations = [];
+    protected $primaryKeyField;
+
+    // Table info
+    protected $table;
+    protected $tableOptions = [];
 
     /**
-     * Get formatted fields with all neccesary array keys and values.
-     * Merges defaults with defined field values to ensure all options exist for each field.
-     *
-     * @param string $entityName Name of the entity class
-     * @return array Defined fields plus all defaults for full array of all possible options
+     * Entity to get information for
      */
-    public function fields($entityName)
+    public function __construct($entityName)
     {
         if(!is_string($entityName)) {
             throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
@@ -39,41 +36,49 @@ class Manager
             throw new \Spot\Exception($entityName . " must be subclass of '\Spot\Entity'.");
         }
 
-        if(isset(self::$_fields[$entityName])) {
-            $returnFields = self::$_fields[$entityName];
+        $this->entityName = $entityName;
+    }
+
+    /**
+     * Get formatted fields with all neccesary array keys and values.
+     * Merges defaults with defined field values to ensure all options exist for each field.
+     *
+     * @return array Defined fields plus all defaults for full array of all possible options
+     */
+    public function fields()
+    {
+        $entityName = $this->entityName;
+
+        if(!empty($this->fields)) {
+            $returnFields = $this->fields;
         } else {
-            // Datasource info
-            $entityDatasource = null;
-            $entityDatasource = $entityName::datasource();
-            if(null === $entityDatasource || !is_string($entityDatasource)) {
-                echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
-                throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named '_datasource' on your '" . $entityName . "' entity class.");
+            // Table info
+            $entityTable = null;
+            $entityTable = $entityName::table();
+            if(null === $entityTable || !is_string($entityTable)) {
+                throw new \InvalidArgumentException("Entity must have a table defined. Please define a protected static property named 'table' on your '" . $entityName . "' entity class.");
             }
-            self::$_datasource[$entityName] = $entityDatasource;
+            $this->table = $entityTable;
 
-            // Datasource Options
-            $entityDatasourceOptions = $entityName::datasourceOptions();
-            self::$_datasourceOptions[$entityName] = $entityDatasourceOptions;
-
-            // Connection info
-            $entityConnection = $entityName::connection();
-            // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
-            self::$_connection[$entityName] = ($entityConnection) ? $entityConnection : false;
+            // Table Options
+            $entityTableOptions = $entityName::tableOptions();
+            $this->tableOptions = $entityTableOptions;
 
             // Default settings for all fields
             $fieldDefaults = array(
                 'type' => 'string',
                 'default' => null,
+                'value' => null,
                 'length' => null,
                 'required' => false,
-                'null' => true,
+                'notnull' => false,
                 'unsigned' => false,
                 'fulltext' => false,
 
                 'primary' => false,
                 'index' => false,
                 'unique' => false,
-                'serial' => false
+                'autoincrement' => false
             );
 
             // Type default overrides for specific field types
@@ -84,7 +89,7 @@ class Manager
                 'float' => array(
                     'length' => array(10,2)
                 ),
-                'int' => array(
+                'integer' => array(
                     'length' => 10,
                     'unsigned' => true
                 )
@@ -97,22 +102,16 @@ class Manager
                 throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
             }
 
-            $returnFields = array();
-            self::$_fieldDefaultValues[$entityName] = array();
+            $returnFields = [];
+            $this->fieldDefaultValues = [];
             foreach($entityFields as $fieldName => $fieldOpts) {
                 // Store field definition exactly how it is defined before modifying it below
-                if($fieldOpts['type'] != 'relation') {
-                    self::$_fieldsDefined[$entityName][$fieldName] = $fieldOpts;
+                if ($fieldOpts['type'] != 'relation') {
+                    $this->fieldsDefined[$fieldName] = $fieldOpts;
                 }
 
-                // Get adapter options and type from typeHandler
-                $typeHandler = Config::typeHandler($fieldOpts['type']);
-                $typeOptions = $typeHandler::adapterOptions();
-                // Use typeOptions as base, merge field options, but keep 'type' from typeOptions
-                $fieldOpts = array_merge($typeOptions, $fieldOpts, array('type' => $typeOptions['type']));
-
                 // Format field will full set of default options
-                if(isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
+                if (isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
                     // Include type defaults
                     $fieldOpts = array_merge($fieldDefaults, $fieldTypeDefaults[$fieldOpts['type']], $fieldOpts);
                 } else {
@@ -121,19 +120,21 @@ class Manager
                 }
 
                 // Store primary key
-                if(true === $fieldOpts['primary']) {
-                    self::$_primaryKeyField[$entityName] = $fieldName;
+                if (true === $fieldOpts['primary']) {
+                    $this->primaryKeyField = $fieldName;
+                } elseif (true === $fieldOpts['autoincrement']) {
+                    $this->primaryKeyField = $fieldName;
                 }
                 // Store default value
-                if(null !== $fieldOpts['default']) {
-                    self::$_fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
+                if (null !== $fieldOpts['value']) {
+                    $this->fieldDefaultValues[$fieldName] = $fieldOpts['value'];
                 } else {
-                    self::$_fieldDefaultValues[$entityName][$fieldName] = null;
+                    $this->fieldDefaultValues[$fieldName] = null;
                 }
 
                 $returnFields[$fieldName] = $fieldOpts;
             }
-            self::$_fields[$entityName] = $returnFields;
+            $this->fields = $returnFields;
 
             // Relations
             $entityRelations = array();
@@ -142,140 +143,166 @@ class Manager
                 throw new \InvalidArgumentException($entityName . " Relation definitons must be formatted as an array.");
             }
             foreach($entityRelations as $relationAlias => $relationOpts) {
-                self::$_relations[$entityName][$relationAlias] = $relationOpts;
+                $this->relations[$relationAlias] = $relationOpts;
             }
         }
         return $returnFields;
     }
 
     /**
+     * Groups field keys into names arrays of fields with key name as index
+     *
+     * @return array Key-named associative array of field names in that index
+     */
+    public function fieldKeys()
+    {
+        $entityName      = $this->entityName;
+        $table           = $entityName::table();
+        $formattedFields = $this->fields();
+
+        // Keys...
+        $ki = 0;
+        $tableKeys = [
+            'primary' => [],
+            'unique' => [],
+            'index' => []
+        ];
+        $usedKeyNames = [];
+        foreach($formattedFields as $fieldName => $fieldInfo) {
+            // Determine key field name (can't use same key name twice, so we have to append a number)
+            $fieldKeyName = $table . '_' . $fieldName;
+            while(in_array($fieldKeyName, $usedKeyNames)) {
+                $fieldKeyName = $fieldName . '_' . $ki;
+            }
+            // Key type
+            if($fieldInfo['primary']) {
+                $tableKeys['primary'][] = $fieldName;
+            }
+            if($fieldInfo['unique']) {
+                if(is_string($fieldInfo['unique'])) {
+                    // Named group
+                    $fieldKeyName = $table . '_' . $fieldInfo['unique'];
+                }
+                $tableKeys['unique'][$fieldKeyName][] = $fieldName;
+                $usedKeyNames[] = $fieldKeyName;
+            }
+            if($fieldInfo['index']) {
+                if(is_string($fieldInfo['index'])) {
+                    // Named group
+                    $fieldKeyName = $table . '_' . $fieldInfo['index'];
+                }
+                $tableKeys['index'][$fieldKeyName][] = $fieldName;
+                $usedKeyNames[] = $fieldKeyName;
+            }
+        }
+
+        return $tableKeys;
+    }
+
+    /**
      * Get field information exactly how it is defined in the class
      *
-     * @param string $entityName Name of the entity class
      * @return array Array of field key => value pairs
      */
-    public function fieldsDefined($entityName)
+    public function fieldsDefined()
     {
-        if(!isset(self::$_fieldsDefined[$entityName])) {
-            $this->fields($entityName);
+        if(!isset($this->fieldsDefined)) {
+            $this->fields();
         }
-        return self::$_fieldsDefined[$entityName];
+        return $this->fieldsDefined;
     }
 
     /**
      * Get field default values as defined in class field definitons
      *
-     * @param string $entityName Name of the entity class
      * @return array Array of field key => value pairs
      */
-    public function fieldDefaultValues($entityName)
+    public function fieldDefaultValues()
     {
-        if(!isset(self::$_fieldDefaultValues[$entityName])) {
-            $this->fields($entityName);
+        if(!isset($this->fieldDefaultValues)) {
+            $this->fields();
         }
-        return self::$_fieldDefaultValues[$entityName];
+        return $this->fieldDefaultValues;
     }
 
     public function resetFields()
     {
-        self::$_fields = array();
-        self::$_fieldsDefined = array();
-        self::$_fieldDefaultValues = array();
-        self::$_relations = array();
-        self::$_primaryKeyField = array();
+        $this->fields = [];
+        $this->fieldsDefined = [];
+        $this->fieldDefaultValues = [];
+        $this->relations = [];
+        $this->primaryKeyField = null;
     }
 
     /**
      * Get defined relations
-     *
-     * @param string $entityName Name of the entity class
      */
-    public function relations($entityName)
+    public function relations()
     {
-        $this->fields($entityName);
-        if(!isset(self::$_relations[$entityName])) {
-            return array();
+        $this->fields();
+        if(!isset($this->relations)) {
+            return [];
         }
-        return self::$_relations[$entityName];
+        return $this->relations;
     }
 
     /**
      * Get value of primary key for given row result
-     *
-     * @param string $entityName Name of the entity class
      */
-    public function primaryKeyField($entityName)
+    public function primaryKeyField()
     {
-        if(!isset(self::$_primaryKeyField[$entityName])) {
-            $this->fields($entityName);
+        if(!isset($this->primaryKeyField)) {
+            $this->fields();
         }
-        return self::$_primaryKeyField[$entityName];
+        return $this->primaryKeyField;
     }
 
     /**
      * Check if field exists in defined fields
      *
-     * @param string $entityName Name of the entity class
      * @param string $field Field name to check for existence
      */
-    public function fieldExists($entityName, $field)
+    public function fieldExists($field)
     {
-        return array_key_exists($field, $this->fields($entityName));
+        return array_key_exists($field, $this->fields());
     }
 
     /**
      * Return field type
      *
-     * @param string $entityName Name of the entity class
      * @param string $field Field name
      * @return mixed Field type string or boolean false
      */
-    public function fieldType($entityName, $field)
+    public function fieldType($field)
     {
-        $fields = $this->fields($entityName);
-        return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
+        $fields = $this->fields();
+        return $this->fieldExists($field) ? $fields[$field]['type'] : false;
     }
 
     /**
-     * Get defined connection to use for entity
+     * Get name of table for given entity class
      *
-     * @param string $entityName Name of the entity class
-     */
-    public function connection($entityName)
-    {
-        $this->fields($entityName);
-        if(!isset(self::$_connection[$entityName])) {
-            return false;
-        }
-        return self::$_connection[$entityName];
-    }
-
-    /**
-     * Get name of datasource for given entity class
-     *
-     * @param string $entityName Name of the entity class
      * @return string
      */
-    public function datasource($entityName)
+    public function table()
     {
-        if(!isset(self::$_datasource[$entityName])) {
-            $this->fields($entityName);
+        if(!isset($this->table)) {
+            $this->fields();
         }
-        return self::$_datasource[$entityName];
+        return $this->table;
     }
 
     /**
-     * Get datasource options for given entity class
+     * Get table options for given entity class
      *
      * @param array Options to pass
      * @return string
      */
-    public function datasourceOptions($entityName)
+    public function tableOptions()
     {
-        if(!isset(self::$_datasourceOptions[$entityName])) {
-            $this->fields($entityName);
+        if(!isset($this->tableOptions)) {
+            $this->fields();
         }
-        return self::$_datasourceOptions[$entityName];
+        return $this->tableOptions;
     }
 }
-

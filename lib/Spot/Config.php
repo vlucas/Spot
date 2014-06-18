@@ -8,54 +8,31 @@ class Config implements \Serializable
 {
     protected $_defaultConnection;
     protected $_connections = array();
-    protected static $_typeHandlers = array();
-
-    public function __construct()
-    {
-        // Setup default type hanlders
-        self::typeHandler('string', '\Spot\Type\String');
-        self::typeHandler('text', '\Spot\Type\Text');
-
-        self::typeHandler('int', '\Spot\Type\Integer');
-        self::typeHandler('integer', '\Spot\Type\Integer');
-
-        self::typeHandler('float', '\Spot\Type\Float');
-        self::typeHandler('double', '\Spot\Type\Float');
-        self::typeHandler('decimal', '\Spot\Type\Float');
-
-        self::typeHandler('bool', '\Spot\Type\Boolean');
-        self::typeHandler('boolean', '\Spot\Type\Boolean');
-
-        self::typeHandler('datetime', '\Spot\Type\Datetime');
-        self::typeHandler('date', '\Spot\Type\Datetime');
-        self::typeHandler('timestamp', '\Spot\Type\Integer');
-        self::typeHandler('year', '\Spot\Type\Integer');
-        self::typeHandler('month', '\Spot\Type\Integer');
-        self::typeHandler('day', '\Spot\Type\Integer');
-
-        self::typeHandler('serialized', '\Spot\Type\Serialized');
-    }
 
     /**
      * Add database connection
      *
      * @param string $name Unique name for the connection
      * @param string $dsn DSN string for this connection
-     * @param array $options Array of key => value options for adapter
      * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
-     * @return Spot_Adapter_Interface Spot adapter instance
-     * @throws Spot_Exception
+     *
+     * @return Doctrine\DBAL\Connection
+     * @throws Spot\Exception
      */
-    public function addConnection($name, $dsn, array $options = array(), $default = false)
+    public function addConnection($name, $dsn, $default = false)
     {
         // Connection name must be unique
         if(isset($this->_connections[$name])) {
             throw new Exception("Connection for '" . $name . "' already exists. Connection name must be unique.");
         }
 
-        $dsnp = \Spot\Adapter\AdapterAbstract::parseDSN($dsn);
-        $adapterClass = "\\Spot\\Adapter\\" . ucfirst($dsnp['adapter']);
-        $adapter = new $adapterClass($dsn, $options);
+        $connectionParams = $this->parseDsn($dsn);
+        if($connectionParams === false) {
+            throw new Exception("Unable to parse given DSN string");
+        }
+
+        $config = new \Doctrine\DBAL\Configuration();
+        $connection = \Doctrine\DBAL\DriverManager::getConnection($connectionParams, $config);
 
         // Set as default connection?
         if(true === $default || null === $this->_defaultConnection) {
@@ -63,17 +40,16 @@ class Config implements \Serializable
         }
 
         // Store connection and return adapter instance
-        $this->_connections[$name] = $adapter;
-        return $adapter;
+        $this->_connections[$name] = $connection;
+        return $connection;
     }
-
 
     /**
      * Get connection by name
      *
      * @param string $name Unique name of the connection to be returned
-     * @return Spot_Adapter_Interface Spot adapter instance
-     * @throws Spot_Exception
+     * @return Doctrine\DBAL\Connection Spot adapter instance
+     * @throws Spot\Exception
      */
     public function connection($name = null)
     {
@@ -89,30 +65,6 @@ class Config implements \Serializable
         return $this->_connections[$name];
     }
 
-
-    /**
-     * Get type handler class by type
-     *
-     * @param string $type Field type (i.e. 'string' or 'int', etc.)
-     * @return Spot_Adapter_Interface Spot adapter instance
-     */
-    public static function typeHandler($type, $class = null)
-    {
-        if(null === $class) {
-            if(!isset(self::$_typeHandlers[$type])) {
-                throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHanlder('$type', '\Namespaced\Path\Class').");
-            }
-            return self::$_typeHandlers[$type];
-        }
-
-        if(!class_exists($class)) {
-            throw new \InvalidArgumentException("Second parameter must be valid className with full namespace. Check the className and ensure the class is loaded before registering it as a type handler.");
-        }
-
-        return self::$_typeHandlers[$type] = $class;
-    }
-
-
     /**
      * Get default connection
      *
@@ -124,6 +76,49 @@ class Config implements \Serializable
         return $this->_connections[$this->_defaultConnection];
     }
 
+    /**
+     * Parse DSN string
+     *
+     * @return array|false of parsed DSN parts
+     */
+    public function parseDsn($dsn, $type = null)
+    {
+        $dsnRegex = '/^(?P<user>\w+)(:(?P<password>\w+))?@(?P<host>[.\w]+)(:(?P<port>\d+))?\/(?P<dbname>\w+)$/im';
+
+        // DSN prefixed with database type
+        if(strpos($dsn, '://') !== false) {
+            list($type, $dsn) = explode('://', $dsn);
+        }
+
+        $result = [
+            'driver' => 'pdo_' . $type,
+            'user' => '',
+            'password' => '',
+            'host' => 'localhost',
+            'port' => 3306,
+            'dbname' => ''
+        ];
+
+        if (strlen($dsn) == 0) {
+            return false;
+        }
+
+        if (!preg_match($dsnRegex, $dsn, $matches)) {
+            return false;
+        }
+
+        if (count($matches) == 0) {
+            return false;
+        }
+
+        foreach ($result as $key => $value) {
+            if (array_key_exists($key, $matches) and !empty($matches[$key])) {
+                $result[$key] = $matches[$key];
+            }
+        }
+
+        return $result;
+    }
 
     /**
      * Default serialization behavior is to not attempt to serialize stored
