@@ -2,6 +2,11 @@ Spot PHP ORM
 ============
 For RDBMS (Currently has a MySQL and Sqlite adapter)
 
+DEPRECATION NOTICE
+------------------
+**WORK ON THIS PROJECT HAS STOPPED**. Please use [Spot v2](https://github.com/vlucas/spot2) instead - it is actively maintained, and is based on a more solid foundation in the Doctrine DBAL (database abstraction layer, not Doctrine ORM), and had much wider and mroe robust database support (MySQL, SQLite, PostgreSQL, SQLServer, Oracle, etc.).
+
+
 Using Spot In Your Project
 --------------------------
 
